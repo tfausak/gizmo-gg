@@ -1,0 +1,12 @@
+*
+
+!package.json
+!.babelrc
+!.eslintignore
+!.eslintrc.js
+!index.html
+
+!build/
+!config/
+!src/
+!static/
