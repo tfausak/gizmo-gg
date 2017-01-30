@@ -1,5 +1,7 @@
 # Jalopy
 
+Jalopy is the back end for gizmo.gg.
+
 Jalopy analyzes Rocket League replays. It is a Haskell web server that you can
 upload replays to. It will parse and analyze those replays. It provides an API
 for getting the analysis.
@@ -9,7 +11,6 @@ for getting the analysis.
 -   [Migrate](#migrate)
 -   [Run](#run)
 -   [Develop](#develop)
--   [Deploy](#deploy)
 
 ## Install
 
@@ -143,26 +144,6 @@ server.
 If you need to change how the database looks, you'll need to add a migration to
 the `migrations` folder. Follow the naming format of the files in there
 already, namely `yyyy-mm-dd-HH-MM-SS-short-description.sql`.
-
-## Deploy
-
-Currently Jalopy is deployed to a DigitalOcean droplet. It runs as a systemd
-service. Its configuration file lives in `/lib/systemd/system/jalopy.service`.
-You can view its logs with `sudo journalctl -u jalopy`. If it crashes for some
-reason, you can control it with `sudo systemctl COMMAND jalopy`. Typical
-commands include `start`, `restart`, `stop`. If you make a change to its config
-file, be sure to run `sudo systemctl daemon-reload`. See
-[jalopy.service](./tools/jalopy.service) for the current config.
-
-Jalopy itself does not talk to the internet at large. It sits behind nginx,
-which acts as a reverse proxy. This allows both Jalopy (the back end) and Merc
-(the front end) to be served at the same time. Jalopy responds to requests at
-`/api` and Merc gets everything else. The nginx config for all this lives at
-`/etc/nginx/sites-available/gizmo`. Since nginx also runs as a systemd service,
-you can administer it in pretty much the same way as Jalopy. In particular,
-restarting nginx after changing its config can be done with
-`sudo systemctl restart nginx`. See [gizmo.nginx](./tools/gizmo.nginx) for the
-current config.
 
 [PostgreSQL]: https://www.postgresql.org
 [Stack]: https://docs.haskellstack.org/en/stable/README/

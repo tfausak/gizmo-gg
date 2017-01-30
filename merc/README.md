@@ -1,6 +1,6 @@
-# gizmogg-app
+# Merc
 
-> Gizmo.gg front end app
+Merc is the front end for gizmo.gg.
 
 ## Build Setup
 

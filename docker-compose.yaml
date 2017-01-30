@@ -22,9 +22,9 @@ services:
     ports:
       - 5432
 
-  nginx:
-    image: gizmo-gg/nginx
-    build: .
+  venom:
+    image: gizmo-gg/venom
+    build: venom
     ports:
       - 8080:80
     depends_on:

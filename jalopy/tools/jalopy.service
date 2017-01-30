@@ -1,5 +1,0 @@
-[Unit]
-Description=rocket league replay parser server
-
-[Service]
-ExecStart=/bin/sh -c 'cd /home/tfausak/jalopy && sudo -u www-data env JALOPY_CONNECT=/api PGUSER=jalopy STACK_ROOT=/home/tfausak/.stack stack --allow-different-user exec jalopy'
