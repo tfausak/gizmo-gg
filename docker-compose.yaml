@@ -1,15 +1,15 @@
 version: '2'
 services:
 
-  jalopy:
-    image: gizmo-gg/jalopy
-    build: jalopy
+  paladin:
+    image: gizmo-gg/paladin
+    build: paladin
     ports:
       - 8080
     depends_on:
       - postgres
     environment:
-      - JALOPY_DATABASE=host=postgres user=postgres
+      - PALADIN_DATABASE=host=postgres user=postgres
 
   merc:
     image: gizmo-gg/merc
@@ -28,5 +28,5 @@ services:
     ports:
       - 8080:80
     depends_on:
-      - jalopy
+      - paladin
       - merc
