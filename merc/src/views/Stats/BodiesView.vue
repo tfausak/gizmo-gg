@@ -24,69 +24,37 @@
     border-radius: 0;
   }
 }
-.is-sort {
-  font-size: 12px;
-  width: 12px;
-  height: auto;
-  margin-top: 1px;
-  margin-bottom: -1px;
-}
 .is-circle-32x32 {
   background-color: $grey-lighter;
   border-radius: 16px;
-  padding: 2px;
-}
-.level-split {
-  justify-content: space-between!important;
-}
-.level-split > .level-item {
-  flex-grow: 0!important;
 }
 </style>
 
 <template>
   <section class="section">
+<pre>sort: {{ sort }}
+dir: {{ dir }}
+</pre>
     <div class="container">
       <h1 class="title">Bodies</h1>
       <hr>
       <table class="table is-striped table-bodies">
         <thead>
           <tr>
-            <th class="has-text-right" style="width: 60px;">
-              #
-              <span class="icon is-sort">
-                <i class="fa fa-sort"></i>
-              </span>
-            </th>
-            <th>Body</th>
-            <th>Win Rate</th>
-            <th class="has-text-right" style="width: 130px;">
-              Games Played
-              <span class="icon is-sort">
-                <i class="fa fa-sort"></i>
-              </span>
-            </th>
-            <th>
-              <div class="level level-split">
-                <div class="level-item">Avg Points</div>
-                <div class="level-item">
-                  <span class="icon is-sort">
-                    <i class="fa fa-sort"></i>
-                  </span>
-                </div>
-              </div>
-            </th>
-            <th>Accuracy</th>
+            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'body'">Body</th-sortable>
+            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'winpct'">Win Pct</th-sortable>
+            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'games'">Games Played</th-sortable>
+            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'pts'">Avg Pts</th-sortable>
+            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'acc'">Accuracy</th-sortable>
           </tr>
         </thead>
         <tbody>
           <tr v-for="row in rows">
-            <td class="has-text-right">{{ row.id }}</td>
             <td>
               <div class="level">
                 <div class="level-item">
                   <figure class="image is-32x32 is-circle-32x32">
-                    <img :src="'/static/img/bodies/' + row.body.toLowerCase() + '.png'">
+                    <img :src="'/static/img/bodies/' + slug(row.body) + '.png'">
                   </figure>
                 </div>
                 <div class="level-item">
@@ -119,19 +87,21 @@
           </tr>
         </tbody>
       </table>
-      maxWinPct: {{ maxWinPct }}<br>
-      maxPts: {{ maxPts }}
     </div>
   </section>
 </template>
 
 <script>
+import mock from '../../mock/stats-bodies.js'
+import bodies from '../../assets/bodies.js'
+import SortableThComponent from '../../components/SortableThComponent.vue'
+
 export default {
+  components: {
+    ThSortable: SortableThComponent
+  },
   data: function () {
-    let rows = [
-      { id: 1, body: 'Octane', winPct: '52.55', games: '183', pts: '655', acc: '44.8' },
-      { id: 2, body: 'Dominus', winPct: '52.25', games: '96', pts: '683', acc: '45.2' }
-    ]
+    let rows = mock
     let maxWinPct = 0
     let maxPts = 0
     for (let i in rows) {
@@ -142,7 +112,16 @@ export default {
     return {
       rows: rows,
       maxWinPct: maxWinPct,
-      maxPts: maxPts
+      maxPts: maxPts,
+      sort: null,
+      dir: 0
+    }
+  },
+  methods: {
+    slug: bodies.slug,
+    orderByCol: function (col, dir) {
+      this.$data.sort = col
+      this.$data.dir = dir
     }
   }
 }

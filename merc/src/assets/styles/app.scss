@@ -18,13 +18,17 @@ table.is-transparent td {
   background-color: transparent;
 }
 
-table.is-skinny {
-  max-width: 150px;
-  margin: 0 auto;
-}
-
+// default echarts size. it ships with something huge like 600x400
 .echarts {
   width: 300px!important;
   height: 150px!important;
   margin: 0 auto!important;
+}
+
+// when you want a level like this: [A       B]
+.level-split {
+  justify-content: space-between!important;
+}
+.level-split > .level-item {
+  flex-grow: 0!important;
 }

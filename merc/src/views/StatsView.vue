@@ -1,3 +1,9 @@
+<style scoped lang="scss">
+.tabs {
+  justify-content: center;
+}
+</style>
+
 <template>
   <div id="stats">
     <section class="hero is-info">
@@ -15,9 +21,6 @@
             <ul>
               <router-link to="/stats" tag="li" exact><a>Summary</a></router-link>
               <router-link to="/stats/bodies" tag="li"><a>Bodies</a></router-link>
-              <router-link to="/stats/wheels" tag="li"><a>Wheels</a></router-link>
-              <router-link to="/stats/toppers" tag="li"><a>Toppers</a></router-link>
-              <router-link to="/stats/boosts" tag="li"><a>Boosts</a></router-link>
               <router-link to="/stats/maps" tag="li"><a>Maps</a></router-link>
             </ul>
           </div>

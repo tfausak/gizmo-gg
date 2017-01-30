@@ -23,18 +23,6 @@ export default new Router({
           component: require('../views/Stats/BodiesView')
         },
         {
-          path: 'wheels',
-          component: require('../views/Stats/WheelsView')
-        },
-        {
-          path: 'toppers',
-          component: require('../views/Stats/ToppersView')
-        },
-        {
-          path: 'boosts',
-          component: require('../views/Stats/BoostsView')
-        },
-        {
           path: 'maps',
           component: require('../views/Stats/MapsView')
         }
