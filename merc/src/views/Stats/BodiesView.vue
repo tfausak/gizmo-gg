@@ -32,9 +32,6 @@
 
 <template>
   <section class="section">
-<pre>sort: {{ sort }}
-dir: {{ dir }}
-</pre>
     <div class="container">
       <h1 class="title">Bodies</h1>
       <hr>
@@ -42,14 +39,14 @@ dir: {{ dir }}
         <thead>
           <tr>
             <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'body'">Body</th-sortable>
-            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'winpct'">Win Pct</th-sortable>
+            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'winPct'">Win Pct</th-sortable>
             <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'games'">Games Played</th-sortable>
             <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'pts'">Avg Pts</th-sortable>
             <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'acc'">Accuracy</th-sortable>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in rows">
+          <tr v-for="row in sortedRows">
             <td>
               <div class="level">
                 <div class="level-item">
@@ -95,10 +92,20 @@ dir: {{ dir }}
 import mock from '../../mock/stats-bodies.js'
 import bodies from '../../assets/bodies.js'
 import SortableThComponent from '../../components/SortableThComponent.vue'
+var _ = require('lodash')
 
 export default {
   components: {
     ThSortable: SortableThComponent
+  },
+  computed: {
+    sortedRows: function () {
+      var sorted = _.sortBy(this.$data.rows, [this.$data.sort])
+      if (!this.$data.dir) {
+        _.reverse(sorted)
+      }
+      return sorted
+    }
   },
   data: function () {
     let rows = mock
@@ -114,7 +121,7 @@ export default {
       maxWinPct: maxWinPct,
       maxPts: maxPts,
       sort: null,
-      dir: 0
+      dir: 1
     }
   },
   methods: {

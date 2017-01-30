@@ -46,6 +46,9 @@ export default {
   },
   methods: {
     orderByCol: function () {
+      if (this.sort !== this.col) {
+        this.$data.dir = 0
+      }
       this.$emit('orderByCol', String(this.col), Number(this.$data.dir))
       this.$data.dir = !this.$data.dir
     }
