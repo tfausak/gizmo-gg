@@ -2,6 +2,7 @@ version: '2'
 services:
 
   jalopy:
+    image: gizmo-gg/jalopy
     build: jalopy
     ports:
       - 8080
@@ -11,6 +12,7 @@ services:
       - JALOPY_DATABASE=host=postgres user=postgres
 
   merc:
+    image: gizmo-gg/merc
     build: merc
     ports:
       - 8081
@@ -21,6 +23,7 @@ services:
       - 5432
 
   nginx:
+    image: gizmo-gg/nginx
     build: .
     ports:
       - 8080:80
