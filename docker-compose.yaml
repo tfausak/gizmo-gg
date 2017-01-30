@@ -1,0 +1,29 @@
+version: '2'
+services:
+
+  jalopy:
+    build: jalopy
+    ports:
+      - 8080
+    depends_on:
+      - postgres
+    environment:
+      - JALOPY_DATABASE=host=postgres user=postgres
+
+  merc:
+    build: merc
+    ports:
+      - 8081
+
+  postgres:
+    image: postgres:9.6
+    ports:
+      - 5432
+
+  nginx:
+    build: .
+    ports:
+      - 8080:80
+    depends_on:
+      - jalopy
+      - merc

@@ -1,0 +1,17 @@
+@import 'solarized.scss';
+
+// override bulma variables here
+// http://bulma.io/documentation/overview/variables/
+$primary: $solarized_blue;
+$primary-dark: darken($primary, 10%);
+$primary-darker: darken($primary, 20%);
+$primary-lighter: lighten($primary, 10%);
+$info: $solarized_cyan;
+$success: $solarized_green;
+$warning: $solarized_yellow;
+$danger: $solarized_red;
+$light: $solarized_base2;
+$dark: $solarized_base02;
+
+@import '~bulma/sass/utilities/_all.sass';
+

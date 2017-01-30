@@ -1,0 +1,545 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Gizmo.gg</title>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/superagent/3.3.2/superagent.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.js"></script>
+
+    <div id="app">
+      <h1>Gizmo.gg</h1>
+
+      <div>
+        <h2>Upload</h2>
+
+        <p>Note that this form will take you off site. You'll have to come back after it's done.</p>
+
+        <form action="http://159.203.137.158/uploads" enctype="multipart/form-data" method="post">
+          <input accept=".replay" name="replay" required type="file">
+          <input type="submit">
+        </form>
+      </div>
+
+      <div>
+        <h2>Full games</h2>
+
+        <p>This is the same as the raw "games" data except that all the references have been chased down.</p>
+
+        <ul v-if="!_.isEmpty(fullGames)">
+          <li v-for="game in fullGames">
+            <dl>
+              <dt>ID</dt>
+              <dd>{{ game.id }}</dd>
+              <dt>Created at</dt>
+              <dd>{{ game.createdAt.toISOString() }}</dd>
+              <dt>Hash</dt>
+              <dd>{{ game.hash }}</dd>
+              <dt>Game type</dt>
+              <dd>{{ _.get(game.gameType, 'name') }}</dd>
+              <dt>Playlist</dt>
+              <dd>{{ _.get(game.playlist, 'id') }}</dd>
+              <dt>Server</dt>
+              <dd>{{ _.get(game.server, 'name') }}</dd>
+              <dt>Game mode</dt>
+              <dd>{{ _.get(game.gameMode, 'id') }}</dd>
+              <dt>Team size</dt>
+              <dd>{{ game.teamSize }}</dd>
+              <dt>Arena</dt>
+              <dd>{{ _.get(game.arena, 'name') }}</dd>
+              <dt>Blue score</dt>
+              <dd>{{ game.blueScore }}</dd>
+              <dt>Orange score</dt>
+              <dd>{{ game.orangeScore }}</dd>
+              <dt>Replays</dt>
+              <dd>
+                <ul v-if="!_.isEmpty(game.replays)">
+                  <li v-for="replay in game.replays">
+                    <span v-if="replay.customName">
+                      {{ replay.customName }} ({{ replay.uuid }})
+                    </span>
+                    <span v-else>
+                      {{ replay.uuid }}
+                    </span>
+                  </li>
+                </ul>
+                <p v-else>Somehow this game has no replays.</p>
+              </dd>
+              <dt>Duration</dt>
+              <dd>{{ game.duration }} seconds</dd>
+              <dt>Played at</dt>
+              <dd>{{ _.attempt(function () { return game.playedAt.toISOString() }) }}</dd>
+              <dt>Players</dt>
+              <dd>
+                <ul v-if="!_.isEmpty(game.players)">
+                  <li v-for="player in game.players">
+                    {{ _.get(player.platform, 'name') }}-{{ player.remoteId }}-{{ player.localId }}
+                  </li>
+                </ul>
+                <p v-else>Somehow this game has no players.</p>
+              </dd>
+            </dl>
+          </li>
+        </ul>
+        <p v-else>No full games.</p>
+      </div>
+
+      <div>
+        <h2>Raw data</h2>
+
+        <div>
+          <h3>Arenas</h3>
+
+          <table v-if="!_.isEmpty(arenas)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="arena in arenas">
+                <td>{{ arena.id }}</td>
+                <td>{{ arena.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No arenas.</p>
+        </div>
+
+        <div>
+          <h3>Game modes</h3>
+
+          <table v-if="!_.isEmpty(gameModes)">
+            <thead>
+              <tr>
+                <th>ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="gameMode in gameModes">
+                <td>{{ gameMode.id }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No game modes.</p>
+        </div>
+
+        <div>
+          <h3>Game types</h3>
+
+          <table v-if="!_.isEmpty(gameTypes)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="gameType in gameTypes">
+                <td>{{ gameType.id }}</td>
+                <td>{{ gameType.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No game types.</p>
+        </div>
+
+        <div>
+          <h3>Games</h3>
+
+          <table v-if="!_.isEmpty(games)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Created at</th>
+                <th>Hash</th>
+                <th>Game type ID</th>
+                <th>Playlist ID</th>
+                <th>Server ID</th>
+                <th>Game mode ID</th>
+                <th>Team size</th>
+                <th>Is fair</th>
+                <th>Arena ID</th>
+                <th>Blue score</th>
+                <th>Orange score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="game in games">
+                <td>{{ game.id }}</td>
+                <td>{{ game.createdAt }}</td>
+                <td>{{ game.hash }}</td>
+                <td>{{ game.gameTypeId }}</td>
+                <td>{{ game.playlistId }}</td>
+                <td>{{ game.serverId }}</td>
+                <td>{{ game.gameModeId }}</td>
+                <td>{{ game.teamSize }}</td>
+                <td>{{ game.isFair }}</td>
+                <td>{{ game.arenaId }}</td>
+                <td>{{ game.blueScore }}</td>
+                <td>{{ game.orangeScore }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No games.</p>
+        </div>
+
+        <div>
+          <h3>Games/Players</h3>
+
+          <table v-if="!_.isEmpty(gamesPlayers)">
+            <thead>
+              <tr>
+                <th>Game ID</th>
+                <th>Player ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="gamePlayer in gamesPlayers">
+                <td>{{ gamePlayer.gameId }}</td>
+                <td>{{ gamePlayer.playerId }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No games/players.</p>
+        </div>
+
+        <div>
+          <h3>Parse errors</h3>
+
+          <table v-if="!_.isEmpty(parseErrors)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Content</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="parseError in parseErrors">
+                <td>{{ parseError.id }}</td>
+                <td>{{ parseError.content }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No parse errors.</p>
+        </div>
+
+        <div>
+          <h3>Parsers</h3>
+
+          <table v-if="!_.isEmpty(parsers)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="parser in parsers">
+                <td>{{ parser.id }}</td>
+                <td>{{ parser.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No parsers.</p>
+        </div>
+
+        <div>
+          <h3>Platforms</h3>
+
+          <table v-if="!_.isEmpty(platforms)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="platform in platforms">
+                <td>{{ platform.id }}</td>
+                <td>{{ platform.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No platforms.</p>
+        </div>
+
+        <div>
+          <h3>Players</h3>
+
+          <table v-if="!_.isEmpty(players)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Created at</th>
+                <th>Platform ID</th>
+                <th>Remote ID</th>
+                <th>Local ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="player in players">
+                <td>{{ player.id }}</td>
+                <td>{{ player.createdAt }}</td>
+                <td>{{ player.platformId }}</td>
+                <td>{{ player.remoteId }}</td>
+                <td>{{ player.localId }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No players.</p>
+        </div>
+
+        <div>
+          <h3>Playlists</h3>
+
+          <table v-if="!_.isEmpty(playlists)">
+            <thead>
+              <tr>
+                <th>ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="playlist in playlists">
+                <td>{{ playlist.id }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No playlists.</p>
+        </div>
+
+        <div>
+          <h3>Replays</h3>
+
+          <table v-if="!_.isEmpty(replays)">
+            <thead>
+              <tr>
+                <th>UUID</th>
+                <th>Created at</th>
+                <th>Major version</th>
+                <th>Minor version</th>
+                <th>Recorded at</th>
+                <th>Custom name</th>
+                <th>Duration</th>
+                <th>Game ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="replay in replays">
+                <td>{{ replay.uuid }}</td>
+                <td>{{ replay.createdAt }}</td>
+                <td>{{ replay.majorVersion }}</td>
+                <td>{{ replay.minorVersion }}</td>
+                <td>{{ replay.recordedAt }}</td>
+                <td>{{ replay.customName }}</td>
+                <td>{{ replay.duration }}</td>
+                <td>{{ replay.gameId }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No replays.</p>
+        </div>
+
+        <div>
+          <h3>Servers</h3>
+
+          <table v-if="!_.isEmpty(servers)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="server in servers">
+                <td>{{ server.id }}</td>
+                <td>{{ server.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No servers.</p>
+        </div>
+
+        <div>
+          <h3>Uploads</h3>
+
+          <table v-if="!_.isEmpty(uploads)">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Created at</th>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Hash</th>
+                <th>Started parsing at</th>
+                <th>Parser ID</th>
+                <th>Finished parsing at</th>
+                <th>Parse error ID</th>
+                <th>Replay UUID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="upload in uploads">
+                <td>{{ upload.id }}</td>
+                <td>{{ upload.createdAt }}</td>
+                <td>{{ upload.name }}</td>
+                <td>{{ upload.size }}</td>
+                <td>{{ upload.hash }}</td>
+                <td>{{ upload.startedParsingAt }}</td>
+                <td>{{ upload.parserId }}</td>
+                <td>{{ upload.finishedParsingAt }}</td>
+                <td>{{ upload.parseErrorId }}</td>
+                <td>{{ upload.replayUuid }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No uploads.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      API_ROOT = 'http://159.203.137.158'
+
+      function getResource (url, callback) {
+        return superagent
+          .get(`${API_ROOT}${url}`)
+          .end(function (error, response) {
+            if (error) { callback(error) }
+            else if (!response.ok) { callback(response) }
+            else { callback(undefined, response.body) }
+          })
+      }
+
+      var app = new Vue({
+        el: '#app',
+        data: {
+          arenas: {},
+          gameModes: {},
+          gameTypes: {},
+          games: {},
+          gamesPlayers: {},
+          parseErrors: {},
+          parsers: {},
+          platforms: {},
+          players: {},
+          playlists: {},
+          replays: {},
+          servers: {},
+          uploads: {}
+        },
+        computed: {
+          fullGames: function () {
+            return _.map(this.games, function (game) {
+              var replays = _.filter(this.replays, function (replay) {
+                return replay.gameId === game.id
+              })
+              var gamePlayers = _.filter(this.gamesPlayers, function (gamePlayer) {
+                return gamePlayer.gameId === game.id
+              })
+              var gamePlayerIds = _.map(gamePlayers, 'playerId')
+              var players = _.filter(this.players, function (player) {
+                return _.includes(gamePlayerIds, player.id)
+              })
+
+              return {
+                id: game.id,
+                createdAt: new Date(Date.parse(game.createdAt)),
+                hash: game.hash,
+                gameType: this.gameTypes[game.gameTypeId],
+                playlist: this.playlists[game.playlistId],
+                server: this.servers[game.serverId],
+                gameMode: this.gameModes[game.gameModeId],
+                teamSize: game.isFair ? `${game.teamSize}v${game.teamSize}` : `1v${game.teamSize}`,
+                arena: this.arenas[game.arenaId],
+                blueScore: game.blueScore,
+                orangeScore: game.orangeScore,
+                replays: replays,
+                duration: _.sumBy(replays, 'duration') / _.size(replays),
+                playedAt: new Date(_.sumBy(replays, function (replay) { return (new Date(Date.parse(replay.recordedAt))).getTime() }) / _.size(replays)),
+                players: _.map(players, function (player) {
+                  return {
+                    platform: this.platforms[player.platformId],
+                    remoteId: player.remoteId,
+                    localId: player.localId
+                  }
+                }.bind(this))
+              }
+            }.bind(this))
+          }
+        }
+      })
+
+      getResource('/arenas', function (error, arenas) {
+        if (error) { return console.error(error) }
+        app.arenas = _.keyBy(arenas, 'id')
+      })
+
+      getResource('/game-modes', function (error, gameModes) {
+        if (error) { return console.error(error) }
+        app.gameModes = _.keyBy(gameModes, 'id')
+      })
+
+      getResource('/game-types', function (error, gameTypes) {
+        if (error) { return console.error(error) }
+        app.gameTypes = _.keyBy(gameTypes, 'id')
+      })
+
+      getResource('/games', function (error, games) {
+        if (error) { return console.error(error) }
+        app.games = _.keyBy(games, 'id')
+      })
+
+      getResource('/games-players', function (error, gamesPlayers) {
+        if (error) { return console.error(error) }
+        app.gamesPlayers = _.keyBy(gamesPlayers, function (gamePlayer) {
+          return `${gamePlayer.gameId}-${gamePlayer.playerId}`
+        })
+      })
+
+      getResource('/parse-errors', function (error, parseErrors) {
+        if (error) { return console.error(error) }
+        app.parseErrors = _.keyBy(parseErrors, 'id')
+      })
+
+      getResource('/parsers', function (error, parsers) {
+        if (error) { return console.error(error) }
+        app.parsers = _.keyBy(parsers, 'id')
+      })
+
+      getResource('/platforms', function (error, platforms) {
+        if (error) { return console.error(error) }
+        app.platforms = _.keyBy(platforms, 'id')
+      })
+
+      getResource('/players', function (error, players) {
+        if (error) { return console.error(error) }
+        app.players = _.keyBy(players, 'id')
+      })
+
+      getResource('/playlists', function (error, playlists) {
+        if (error) { return console.error(error) }
+        app.playlists = _.keyBy(playlists, 'id')
+      })
+
+      getResource('/replays', function (error, replays) {
+        if (error) { return console.error(error) }
+        app.replays = _.keyBy(replays, 'uuid')
+      })
+
+      getResource('/servers', function (error, servers) {
+        if (error) { return console.error(error) }
+        app.servers = _.keyBy(servers, 'id')
+      })
+
+      getResource('/uploads', function (error, uploads) {
+        if (error) { return console.error(error) }
+        app.uploads = _.keyBy(uploads, 'id')
+      })
+    </script>
+  </body>
+</html>

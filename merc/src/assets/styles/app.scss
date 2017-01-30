@@ -1,0 +1,30 @@
+@import 'vars.scss';
+@import '~bulma/bulma.sass';
+@import '~font-awesome/css/font-awesome.css';
+@import 'icomoon.css';
+
+.is-fullwidth {
+  width: 100%;
+}
+
+.button.is-white-outlined {
+  background-color: transparent;
+  border: 1px solid #fff;
+}
+
+table.is-transparent,
+table.is-transparent th,
+table.is-transparent td {
+  background-color: transparent;
+}
+
+table.is-skinny {
+  max-width: 150px;
+  margin: 0 auto;
+}
+
+.echarts {
+  width: 300px!important;
+  height: 150px!important;
+  margin: 0 auto!important;
+}
