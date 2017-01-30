@@ -1,9 +1,28 @@
 <style scoped lang="scss">
-.level-progress {
-  flex-grow: 5!important;
-}
-th {
-  font-weight: normal;
+@import "~styles/vars.scss";
+
+.table-bodies {
+  border: 1px solid $border;
+
+  th {
+    font-weight: normal;
+    .has-text-right {
+      text-align: right;
+    }
+  }
+
+  .level {
+    justify-content: flex-start;
+  }
+  .level > .level-item {
+    flex-grow: 0;
+    padding: 0 0 0 10px;
+  }
+
+  progress {
+    width: 100px;
+    border-radius: 0;
+  }
 }
 .is-sort {
   font-size: 12px;
@@ -12,11 +31,16 @@ th {
   margin-top: 1px;
   margin-bottom: -1px;
 }
-th.has-text-right {
-  text-align: right;
+.is-circle-32x32 {
+  background-color: $grey-lighter;
+  border-radius: 16px;
+  padding: 2px;
 }
-table {
-  border: 1px solid #dbdbdb;
+.level-split {
+  justify-content: space-between!important;
+}
+.level-split > .level-item {
+  flex-grow: 0!important;
 }
 </style>
 
@@ -25,7 +49,7 @@ table {
     <div class="container">
       <h1 class="title">Bodies</h1>
       <hr>
-      <table class="table is-striped">
+      <table class="table is-striped table-bodies">
         <thead>
           <tr>
             <th class="has-text-right" style="width: 60px;">
@@ -42,7 +66,16 @@ table {
                 <i class="fa fa-sort"></i>
               </span>
             </th>
-            <th>Points</th>
+            <th>
+              <div class="level level-split">
+                <div class="level-item">Avg Points</div>
+                <div class="level-item">
+                  <span class="icon is-sort">
+                    <i class="fa fa-sort"></i>
+                  </span>
+                </div>
+              </div>
+            </th>
             <th>Accuracy</th>
           </tr>
         </thead>
@@ -50,14 +83,20 @@ table {
           <tr v-for="row in rows">
             <td class="has-text-right">{{ row.id }}</td>
             <td>
-              <figure class="image is-24x24">
-                <img :src="'/static/img/bodies/' + row.body.toLowerCase() + '.png'">
-              </figure>
-              <strong>{{ row.body }}</strong>
+              <div class="level">
+                <div class="level-item">
+                  <figure class="image is-32x32 is-circle-32x32">
+                    <img :src="'/static/img/bodies/' + row.body.toLowerCase() + '.png'">
+                  </figure>
+                </div>
+                <div class="level-item">
+                  <strong>{{ row.body }}</strong>
+                </div>
+              </div>
             </td>
             <td>
               <div class="level">
-                <div class="level-item level-progress">
+                <div class="level-item">
                   <progress class="progress is-small" :class="{ 'is-primary': row.winPct >= 50 }" :value="row.winPct" :max="maxWinPct"></progress>
                 </div>
                 <div class="level-item">
@@ -68,7 +107,7 @@ table {
             <td class="has-text-right">{{ row.games }}</td>
             <td>
               <div class="level">
-                <div class="level-item level-progress">
+                <div class="level-item">
                   <progress class="progress is-small is-success" :value="row.pts" :max="maxPts"></progress>
                 </div>
                 <div class="level-item">
