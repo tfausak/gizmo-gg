@@ -22,7 +22,10 @@ getStatsSummaryHandler _config connection _request = do
       FROM GAMES
     |]
   let ratio :: Integer -> Integer -> Float
-      ratio n d = if d == 0 then 0 else fromRational (n Ratio.% d)
+      ratio n d =
+        if d == 0
+          then 0
+          else fromRational (n Ratio.% d)
   let blueWinPercentage = ratio numBlueWins numGames
   let orangeWinPercentage = ratio numOrangeWins numGames
   let status = Http.status200

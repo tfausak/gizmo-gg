@@ -63,6 +63,15 @@ session = do
   do let request = Test.defaultRequest & setPath "/servers"
      response <- Test.request request
      assertJson 200 ([] :: [Paladin.Server]) response
+  do let request = Test.defaultRequest & setPath "/stats/summary"
+     response <- Test.request request
+     let json =
+           Aeson.object
+             [ ( "win_pct"
+               , Aeson.object
+                   [("blue", Aeson.Number 0), ("orange", Aeson.Number 0)])
+             ]
+     assertJson 200 json response
   do let request = Test.defaultRequest & setPath "/uploads"
      response <- Test.request request
      assertJson 200 ([] :: [Paladin.Upload]) response
