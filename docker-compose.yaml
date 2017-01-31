@@ -10,6 +10,8 @@ services:
       - postgres
     environment:
       - PALADIN_DATABASE=host=postgres user=postgres
+    volumes:
+      - paladin_data:/project/data
 
   merc:
     image: gizmo-gg/merc
@@ -30,3 +32,6 @@ services:
     depends_on:
       - paladin
       - merc
+
+volumes:
+  paladin_data: null
