@@ -5,7 +5,7 @@
 </style>
 
 <template>
-  <div id="stats">
+  <div>
     <section class="hero is-info">
       <div class="hero-body">
         <div class="container has-text-centered">
