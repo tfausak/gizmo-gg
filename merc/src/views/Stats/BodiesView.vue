@@ -1,62 +1,25 @@
-<style scoped lang="scss">
-@import "~styles/vars.scss";
-
-.table-bodies {
-  th {
-    font-weight: normal;
-    .has-text-right {
-      text-align: right;
-    }
-  }
-  .level {
-    justify-content: flex-start;
-  }
-  .level > .level-item {
-    flex-grow: 0;
-    padding: 0 0 0 10px;
-  }
-  progress {
-    width: 100px;
-    border-radius: 0;
-  }
-}
-.is-circle-32x32 {
-  background-color: $grey-lighter;
-  border-radius: 16px;
-}
-</style>
-
 <template>
   <section class="section">
     <div class="container">
       <div class="columns">
-
         <div class="column is-one-quarter">
           <filter-panel title="Tier" :options="[ 'All', 'Prospect', 'Challenger', 'Star', 'Champion' ]"></filter-panel>
         </div>
-
         <div class="column is-one-quarter">
           <filter-panel title="Time" :options="[ 'Current Season', 'Last Month', 'Last Week' ]"></filter-panel>
         </div>
-
         <div class="column is-one-quarter">
           <filter-panel title="Map" :options="[ 'All', 'Standard', 'Wasteland', 'ARC' ]"></filter-panel>
         </div>
-
         <div class="column is-one-quarter">
           <filter-panel title="Playlist" :options="[ 'All', 'Ranked 1v1', 'Ranked 2v2', 'Ranked 3v3', 'Ranked 3v3 Solo' ]"></filter-panel>
         </div>
-
       </div>
 
-      <table class="table is-striped table-outerborder table-bodies">
+      <table class="table is-striped table-outerborder table-stats">
         <thead>
           <tr>
-            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'body'">Body</th-sortable>
-            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'winPct'">Win Pct</th-sortable>
-            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'games'">Games Played</th-sortable>
-            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'pts'">Avg Pts</th-sortable>
-            <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'acc'">Accuracy</th-sortable>
+            <th-sortable v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</th-sortable>
           </tr>
         </thead>
         <tbody>
@@ -103,7 +66,7 @@
 </template>
 
 <script>
-import mock from '../../mock/stats-bodies.js'
+import mock from '../../mock/index.js'
 import bodies from '../../assets/bodies.js'
 import SortableThComponent from '../../components/SortableThComponent.vue'
 import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
@@ -124,7 +87,7 @@ export default {
     }
   },
   data: function () {
-    let rows = mock
+    let rows = mock.getStatBodies()
     let maxWinPct = 0
     let maxPts = 0
     for (let i in rows) {
@@ -137,7 +100,14 @@ export default {
       maxWinPct: maxWinPct,
       maxPts: maxPts,
       sort: null,
-      dir: 1
+      dir: 1,
+      cols: [
+        { key: 'body', name: 'Body' },
+        { key: 'winPct', name: 'Win Pct' },
+        { key: 'games', name: 'Games Played' },
+        { key: 'pts', name: 'Avg Pts' },
+        { key: 'acc', name: 'Accuracy' }
+      ]
     }
   },
   methods: {

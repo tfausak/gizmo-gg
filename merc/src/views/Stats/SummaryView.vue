@@ -2,10 +2,10 @@
   <section class="section">
     <div class="container">
       <div class="columns">
-        <div class="column">
+        <div class="column is-one-quarter">
           <filter-panel title="Time" :options="[ 'Current Season', 'Last Month', 'Last Week' ]"></filter-panel>
         </div>
-        <div class="column">
+        <div class="column is-one-quarter">
           <filter-panel title="Playlist" :options="[ 'All', 'Ranked 1v1', 'Ranked 2v2', 'Ranked 3v3', 'Ranked 3v3 Solo' ]"></filter-panel>
         </div>
       </div>

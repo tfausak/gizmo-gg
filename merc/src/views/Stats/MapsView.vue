@@ -1,8 +1,107 @@
 <template>
   <section class="section">
     <div class="container">
-      <h1 class="title">Maps</h1>
-      <hr>
+      <div class="columns">
+        <div class="column is-one-quarter">
+          <filter-panel title="Tier" :options="[ 'All', 'Prospect', 'Challenger', 'Star', 'Champion' ]"></filter-panel>
+        </div>
+        <div class="column is-one-quarter">
+          <filter-panel title="Time" :options="[ 'Current Season', 'Last Month', 'Last Week' ]"></filter-panel>
+        </div>
+        <div class="column is-one-quarter">
+          <filter-panel title="Playlist" :options="[ 'All', 'Ranked 1v1', 'Ranked 2v2', 'Ranked 3v3', 'Ranked 3v3 Solo' ]"></filter-panel>
+        </div>
+      </div>
+
+      <table class="table is-striped table-outerborder table-stats">
+        <thead>
+          <tr>
+            <th-sortable v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</th-sortable>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in sortedRows">
+            <td>{{ row.map }}</td>
+            <td>
+              <div class="level">
+                <div class="level-item">
+                  <progress class="progress is-small" :value="row.freqPct" :max="maxFreqPct"></progress>
+                </div>
+                <div class="level-item">
+                  {{ row.freqPct }}%
+                </div>
+              </div>
+            </td>
+            <td class="has-text-right">{{ row.games }}</td>
+            <td>
+              <div class="level">
+                <div class="level-item">
+                  <progress class="progress is-small is-success" :value="row.pts" :max="maxPts"></progress>
+                </div>
+                <div class="level-item">
+                  {{ row.pts }}
+                </div>
+              </div>
+            </td>
+            <td>{{ row.acc }}%</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 </template>
+
+<script>
+import mock from '../../mock/index.js'
+import bodies from '../../assets/bodies.js'
+import SortableThComponent from '../../components/SortableThComponent.vue'
+import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
+var _ = require('lodash')
+
+export default {
+  components: {
+    ThSortable: SortableThComponent,
+    FilterPanel: FilterPanelComponent
+  },
+  computed: {
+    sortedRows: function () {
+      var sorted = _.sortBy(this.$data.rows, [this.$data.sort])
+      if (!this.$data.dir) {
+        _.reverse(sorted)
+      }
+      return sorted
+    }
+  },
+  data: function () {
+    let rows = mock.getStatMaps()
+    let maxFreqPct = 0
+    let maxPts = 0
+    for (let i in rows) {
+      let row = rows[i]
+      maxFreqPct = Math.max(maxFreqPct, row.freqPct)
+      maxPts = Math.max(maxPts, row.pts)
+    }
+    return {
+      rows: rows,
+      maxFreqPct: maxFreqPct,
+      maxPts: maxPts,
+      sort: null,
+      dir: 1,
+      cols: [
+        { key: 'map', name: 'Map' },
+        { key: 'freqPct', name: 'Freq. Pct' },
+        { key: 'games', name: 'Games Played' },
+        { key: 'pts', name: 'Avg Pts' },
+        { key: 'acc', name: 'Accuracy' }
+      ]
+    }
+  },
+  methods: {
+    slug: bodies.slug,
+    orderByCol: function (col, dir) {
+      this.$data.sort = col
+      this.$data.dir = dir
+    }
+  }
+}
+</script>

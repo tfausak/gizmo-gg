@@ -36,3 +36,29 @@ table.is-transparent td {
 .table-outerborder {
   border: 1px solid $border;
 }
+
+.table-stats {
+  td {
+    vertical-align: middle;
+  }
+  th {
+    font-weight: normal;
+    .has-text-right {
+      text-align: right;
+    }
+  }
+  .level {
+    justify-content: flex-start;
+  }
+  .level > .level-item {
+    flex-grow: 0;
+    padding: 0 0 0 10px;
+  }
+  progress {
+    width: 100px;
+  }
+}
+.is-circle-32x32 {
+  background-color: $grey-lighter;
+  border-radius: 16px;
+}
