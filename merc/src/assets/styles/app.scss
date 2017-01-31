@@ -32,3 +32,7 @@ table.is-transparent td {
 .level-split > .level-item {
   flex-grow: 0!important;
 }
+
+.table-outerborder {
+  border: 1px solid $border;
+}

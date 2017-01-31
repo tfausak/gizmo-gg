@@ -2,6 +2,14 @@
 .mybox h2.subtitle {
   margin-bottom: 5px;
 }
+.gizmo {
+  background-image: url('/static/img/gizmo/gizmo-green-hq.png');
+  background-position: center center;
+  height: 150px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: relative;
+}
 </style>
 
 <template>
@@ -10,9 +18,7 @@
       <div class="hero-body">
         <div class="container">
           <h1 class="title">
-            <div>
-              <img src="/static/img/pixel-gizmo-small.png">
-            </div>
+            <div class="gizmo"></div>
             gizmo.gg
           </h1>
           <div>

@@ -2,8 +2,6 @@
 @import "~styles/vars.scss";
 
 .table-bodies {
-  border: 1px solid $border;
-
   th {
     font-weight: normal;
     .has-text-right {
@@ -33,9 +31,27 @@
 <template>
   <section class="section">
     <div class="container">
-      <h1 class="title">Bodies</h1>
-      <hr>
-      <table class="table is-striped table-bodies">
+      <div class="columns">
+
+        <div class="column is-one-quarter">
+          <filter-panel title="Tier" :options="[ 'All', 'Prospect', 'Challenger', 'Star', 'Champion' ]"></filter-panel>
+        </div>
+
+        <div class="column is-one-quarter">
+          <filter-panel title="Time" :options="[ 'Current Season', 'Last Month', 'Last Week' ]"></filter-panel>
+        </div>
+
+        <div class="column is-one-quarter">
+          <filter-panel title="Map" :options="[ 'All', 'Standard', 'Wasteland', 'ARC' ]"></filter-panel>
+        </div>
+
+        <div class="column is-one-quarter">
+          <filter-panel title="Playlist" :options="[ 'All', 'Ranked 1v1', 'Ranked 2v2', 'Ranked 3v3', 'Ranked 3v3 Solo' ]"></filter-panel>
+        </div>
+
+      </div>
+
+      <table class="table is-striped table-outerborder table-bodies">
         <thead>
           <tr>
             <th-sortable @orderByCol="orderByCol" :sort="sort" :col="'body'">Body</th-sortable>
@@ -92,11 +108,13 @@
 import mock from '../../mock/stats-bodies.js'
 import bodies from '../../assets/bodies.js'
 import SortableThComponent from '../../components/SortableThComponent.vue'
+import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
 var _ = require('lodash')
 
 export default {
   components: {
-    ThSortable: SortableThComponent
+    ThSortable: SortableThComponent,
+    FilterPanel: FilterPanelComponent
   },
   computed: {
     sortedRows: function () {

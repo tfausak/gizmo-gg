@@ -33,7 +33,7 @@ aside > ul {
 
 <template>
   <p class="control has-addons has-addons-centered">
-    <span class="platform button is-medium" @click="toggleDropdown">
+    <span class="platform button" @click="toggleDropdown">
       <span class="icon is-small">
         <i :class="platform.icon"></i>
       </span>
@@ -59,8 +59,8 @@ aside > ul {
         </aside>
       </div>
     </span>
-    <input id="player" class="input is-medium" type="text" :placeholder="platform.placeholder" v-focus="focused" @focus="focused = true" @blur="focused = false">
-    <span class="button is-medium">
+    <input id="player" class="input" type="text" :placeholder="platform.placeholder" v-focus="focused" @focus="focused = true" @blur="focused = false">
+    <span class="button">
       <span class="icon is-small">
         <i class="fa fa-search"></i>
       </span>
