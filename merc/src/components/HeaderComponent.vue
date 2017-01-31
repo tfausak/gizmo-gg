@@ -13,7 +13,6 @@
 #header .nav {
   background-color: transparent;
 }
-
 .nav-item a.is-tab:hover, a.nav-item.is-tab:hover,
 .nav-item a.is-tab.is-active, a.nav-item.is-tab.is-active {
   border-bottom-color: #fff;

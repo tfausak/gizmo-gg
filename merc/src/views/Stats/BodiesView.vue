@@ -8,7 +8,6 @@
       text-align: right;
     }
   }
-
   .level {
     justify-content: flex-start;
   }
@@ -16,7 +15,6 @@
     flex-grow: 0;
     padding: 0 0 0 10px;
   }
-
   progress {
     width: 100px;
     border-radius: 0;

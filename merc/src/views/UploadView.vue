@@ -11,15 +11,23 @@
     </section>
     <section class="section">
       <div class="container">
-        <input type="file">
-        <a class="button is-primary">Upload</a>
+        <files-uploader name="replays" multiple :action="action"></files-uploader>
       </div>
     </section>
   </div>
 </template>
 
 <script>
+import FilesUploaderComponent from '../components/FilesUploaderComponent.vue'
+
 export default {
-  methods: {}
+  data: function () {
+    return {
+      action: process.env.API_URL
+    }
+  },
+  components: {
+    filesUploader: FilesUploaderComponent
+  }
 }
 </script>
