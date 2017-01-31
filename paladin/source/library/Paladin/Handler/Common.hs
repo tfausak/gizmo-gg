@@ -12,10 +12,10 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Proxy as Proxy
 import qualified Database.PostgreSQL.Simple as Sql
-import qualified Paladin.Config as Config
-import qualified Paladin.Database as Database
 import qualified Network.HTTP.Types as Http
 import qualified Network.Wai as Wai
+import qualified Paladin.Config as Config
+import qualified Paladin.Database as Database
 
 type Handler = Config.Config -> Sql.Connection -> Wai.Request -> IO Wai.Response
 

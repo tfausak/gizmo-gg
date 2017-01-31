@@ -1,8 +1,8 @@
 module Paladin.Handler.Root where
 
 import qualified Data.Aeson as Aeson
-import qualified Paladin.Handler.Common as Common
 import qualified Network.HTTP.Types as Http
+import qualified Paladin.Handler.Common as Common
 
 getRootHandler :: Common.Handler
 getRootHandler _config _connection _request =

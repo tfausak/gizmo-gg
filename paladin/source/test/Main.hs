@@ -6,9 +6,9 @@ import Data.Function ((&))
 
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
-import qualified Paladin
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Test as Test
+import qualified Paladin
 
 main :: IO ()
 main = do

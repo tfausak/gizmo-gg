@@ -10,13 +10,13 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.Text as Text
 import qualified Database.PostgreSQL.Simple as Sql
+import qualified Network.HTTP.Types as Http
+import qualified Network.Wai.Parse as Parse
 import qualified Paladin.Config as Config
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Paladin.Storage as Storage
 import qualified Paladin.Utility as Utility
-import qualified Network.HTTP.Types as Http
-import qualified Network.Wai.Parse as Parse
 import qualified System.FilePath as FilePath
 import qualified Text.Read as Read
 
@@ -128,6 +128,5 @@ getUploadHandler rawUploadId _config connection _request =
           [uploadId :: Int]
       case uploads of
         [upload] ->
-          pure
-            (Common.jsonResponse Http.status200 [] (upload :: Common.Upload))
+          pure (Common.jsonResponse Http.status200 [] (upload :: Common.Upload))
         _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)

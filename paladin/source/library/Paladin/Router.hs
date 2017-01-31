@@ -2,8 +2,8 @@
 
 module Paladin.Router where
 
-import qualified Paladin.Handler as Handler
 import qualified Network.Wai as Wai
+import qualified Paladin.Handler as Handler
 
 route :: Wai.Request -> Handler.Handler
 route request =

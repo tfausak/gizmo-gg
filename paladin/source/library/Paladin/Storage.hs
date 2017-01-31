@@ -7,10 +7,9 @@ import qualified Paladin.Utility as Utility
 import qualified System.Directory as Directory
 import qualified System.FilePath as FilePath
 
-getUploadFile
-  :: Config.Config
-  -> Utility.Tagged Hash.SHA1 String
-  -> IO LazyByteString.ByteString
+getUploadFile :: Config.Config
+              -> Utility.Tagged Hash.SHA1 String
+              -> IO LazyByteString.ByteString
 getUploadFile config hash = do
   path <- getUploadFilePath config hash
   LazyByteString.readFile path
