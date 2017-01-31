@@ -6,6 +6,7 @@ import qualified Control.Concurrent as Concurrent
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
+import qualified Network.Wai.Middleware.Cors as Cors
 import qualified Network.Wai.Middleware.Gzip as Gzip
 import qualified Network.Wai.Middleware.RequestLogger as Logger
 import qualified Paladin.Config as Config
@@ -27,4 +28,4 @@ makeApplication config connection request respond = do
 
 applyMiddleware :: Wai.Middleware
 applyMiddleware application =
-  application & Gzip.gzip Gzip.def & Logger.logStdout
+  application & Cors.simpleCors & Gzip.gzip Gzip.def & Logger.logStdout

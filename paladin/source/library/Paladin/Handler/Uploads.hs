@@ -128,5 +128,6 @@ getUploadHandler rawUploadId _config connection _request =
           [uploadId :: Int]
       case uploads of
         [upload] ->
-          pure (Common.jsonResponse Http.status200 [] (upload :: Common.Upload))
+          pure
+            (Common.jsonResponse Http.status200 [] (upload :: Common.Upload))
         _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
