@@ -21,6 +21,7 @@ route request =
     ("GET", ["playlists"]) -> Handler.getPlaylistsHandler
     ("GET", ["replays"]) -> Handler.getReplaysHandler
     ("GET", ["servers"]) -> Handler.getServersHandler
+    ("GET", ["stats", "summary"]) -> Handler.getStatsSummaryHandler
     ("GET", ["uploads"]) -> Handler.getUploadsHandler
     ("POST", ["uploads"]) -> Handler.postUploadHandler
     ("GET", ["uploads", uploadId]) -> Handler.getUploadHandler uploadId

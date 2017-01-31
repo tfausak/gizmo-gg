@@ -16,4 +16,5 @@ import Paladin.Handler.Playlists as Export
 import Paladin.Handler.Replays as Export
 import Paladin.Handler.Root as Export
 import Paladin.Handler.Servers as Export
+import Paladin.Handler.Stats as Export
 import Paladin.Handler.Uploads as Export
