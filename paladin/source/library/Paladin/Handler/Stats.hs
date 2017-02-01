@@ -16,12 +16,12 @@ getStatsSummaryHandler _config connection _request = do
     Database.query_
       connection
       [Common.sql|
-      SELECT
-        count(*),
-        count(CASE WHEN blue_score > orange_score THEN 1 END),
-        count(CASE WHEN blue_score < orange_score THEN 1 END)
-      FROM GAMES
-    |]
+        SELECT
+          count(*),
+          count(CASE WHEN blue_score > orange_score THEN 1 END),
+          count(CASE WHEN blue_score < orange_score THEN 1 END)
+        FROM GAMES
+      |]
   let blueWinPercentage = makeRatio numBlueWins numGames
   let orangeWinPercentage = makeRatio numOrangeWins numGames
   let status = Http.status200
