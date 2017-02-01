@@ -17,18 +17,39 @@ getStatsSummaryHandler _config connection _request = do
       connection
       [Common.sql|
         SELECT
-          count(*),
+          count(id),
           count(CASE WHEN blue_score > orange_score THEN 1 END),
           count(CASE WHEN blue_score < orange_score THEN 1 END)
-        FROM GAMES
+        FROM games
       |]
   let blueWinPercentage = makeRatio numBlueWins numGames
   let orangeWinPercentage = makeRatio numOrangeWins numGames
+  arenaFrequencies <-
+    Database.query_
+      connection
+      [Common.sql|
+        SELECT
+          arenas.name,
+          count(games.id)
+        FROM games
+        INNER JOIN arenas
+          ON arenas.id = games.arena_id
+        GROUP BY arenas.name
+      |]
+  let arenaPercents =
+        map
+          (\(arena, frequency) -> (arena, makeRatio frequency numGames))
+          arenaFrequencies
   let status = Http.status200
   let headers = []
   let body =
         Aeson.object
-          [ ( Text.pack "win_pct"
+          [ ( Text.pack "map_freq_pct"
+            , Aeson.object
+                (map
+                   (\(arena, percent) -> (arena, Aeson.toJSON percent))
+                   arenaPercents))
+          , ( Text.pack "win_pct"
             , Aeson.object
                 [ (Text.pack "blue", Aeson.toJSON blueWinPercentage)
                 , (Text.pack "orange", Aeson.toJSON orangeWinPercentage)
