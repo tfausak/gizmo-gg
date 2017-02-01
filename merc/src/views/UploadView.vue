@@ -204,17 +204,13 @@ export default {
       let handler = function (response) {
         // console.log('handler', response)
         vm.uploaded.unshift({
-          file: vm.uploading,
-          response: response
+          'file': vm.uploading,
+          'response': response
         })
         vm.uploading = null
         vm.uploadFile()
       }
-      this.$http.post(process.env.API_URL + 'uploads', formData).then(function (response) {
-        handler(response)
-      }, function (response) {
-        handler(response)
-      })
+      this.$http.post(process.env.API_URL + 'uploads', formData).then(handler, handler)
     },
 
     onFileChange: function (event) {
