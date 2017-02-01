@@ -79,7 +79,7 @@ These are the environment variables that Paladin uses:
   slash. For example, `http://example.com/paladin`.
 
 - **PALADIN_MIGRATE**: Defaults to `True`. Set this to `False` to avoid running
-  database migrations when starting the server.
+  database migrations when starting up.
 
 - **PALADIN_SERVER**: Defaults to `True`. Set this to `False` to avoid
   launching the HTTP server. You may want to do this to run extra workers, for
