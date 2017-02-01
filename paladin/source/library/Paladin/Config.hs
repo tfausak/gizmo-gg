@@ -17,6 +17,7 @@ data Config = Config
   , configDirectory :: String
   , configMigrate :: Bool
   , configPort :: Warp.Port
+  , configServer :: Bool
   , configUrl :: String
   } deriving (Eq, Show)
 
@@ -28,6 +29,7 @@ instance Envy.DefConfig Config where
        , configDirectory = "data"
        , configMigrate = True
        , configPort = port
+       , configServer = True
        , configUrl = "http://localhost:" ++ show port
        }
 
@@ -39,6 +41,7 @@ instance Envy.FromEnv Config where
     maybeDirectory <- envMaybe "DIRECTORY"
     maybeMigrate <- envMaybe "MIGRATE"
     maybePort <- envMaybe "PORT"
+    maybeServer <- envMaybe "SERVER"
     maybeUrl <- envMaybe "CONNECT"
     let withDefault field = Maybe.fromMaybe (field Envy.defConfig)
     pure
@@ -47,5 +50,6 @@ instance Envy.FromEnv Config where
       , configDirectory = withDefault configDirectory maybeDirectory
       , configMigrate = withDefault configMigrate maybeMigrate
       , configPort = withDefault configPort maybePort
+      , configServer = withDefault configServer maybeServer
       , configUrl = withDefault configUrl maybeUrl
       }
