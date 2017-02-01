@@ -1,7 +1,7 @@
 version: '2'
 services:
 
-  paladin:
+  paladin-server:
     image: gizmo-gg/paladin
     build: paladin
     ports:
@@ -10,8 +10,20 @@ services:
       - postgres
     environment:
       - PALADIN_DATABASE=host=postgres user=postgres
+      - PALADIN_WORKER=False
     volumes:
-      - paladin_data:/project/data
+      - paladin-data:/project/data
+
+  paladin-worker:
+    image: gizmo-gg/paladin
+    build: paladin
+    depends_on:
+      - postgres
+    environment:
+      - PALADIN_DATABASE=host=postgres user=postgres
+      - PALADIN_SERVER=False
+    volumes:
+      - paladin-data:/project/data
 
   merc:
     image: gizmo-gg/merc
@@ -30,8 +42,8 @@ services:
     ports:
       - 8080:80
     depends_on:
-      - paladin
+      - paladin-server
       - merc
 
 volumes:
-  paladin_data: null
+  paladin-data: null
