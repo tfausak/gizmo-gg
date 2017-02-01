@@ -3,6 +3,7 @@
 module Paladin.Handler.Stats where
 
 import qualified Data.Aeson as Aeson
+import qualified Data.Fixed as Fixed
 import qualified Data.Ratio as Ratio
 import qualified Data.Text as Text
 import qualified Network.HTTP.Types as Http
@@ -21,13 +22,8 @@ getStatsSummaryHandler _config connection _request = do
         count(CASE WHEN blue_score < orange_score THEN 1 END)
       FROM GAMES
     |]
-  let ratio :: Integer -> Integer -> Float
-      ratio n d =
-        if d == 0
-          then 0
-          else fromRational (n Ratio.% d)
-  let blueWinPercentage = ratio numBlueWins numGames
-  let orangeWinPercentage = ratio numOrangeWins numGames
+  let blueWinPercentage = makeRatio numBlueWins numGames
+  let orangeWinPercentage = makeRatio numOrangeWins numGames
   let status = Http.status200
   let headers = []
   let body =
@@ -40,3 +36,9 @@ getStatsSummaryHandler _config connection _request = do
           ]
   let response = Common.jsonResponse status headers body
   pure response
+
+makeRatio :: Integer -> Integer -> Fixed.Centi
+makeRatio numerator denominator =
+  if denominator == 0
+    then 0
+    else fromRational (numerator Ratio.% denominator)
