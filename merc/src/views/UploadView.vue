@@ -31,10 +31,33 @@
     font-size: 40px;
   }
 }
+.selectButton.is-disabled {
+  color: $grey;
+}
 .submitButton {
   width: 200px;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
+}
+
+.panel-block {
+  border-left-width: 3px;
+}
+.response-fail {
+  border-left: 3px solid $danger;
+  .fa {
+    color: $danger;
+  }
+}
+.response-ok {
+  border-left: 3px solid $success;
+  .fa {
+    color: $success;
+  }
+}
+.level-columns {
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>
 
@@ -54,7 +77,7 @@
         <div class="columns">
           <div class="column">
             <form @submit.prevent="submit" role="form" enctype="multipart/form-data">
-              <div class="level selectButton" @click="selectFiles">
+              <div class="level selectButton" @click="selectFiles" v-if="!isUploading()">
                 <div class="level-item">
                   <i class="fa fa-cloud-upload"></i>
                 </div>
@@ -65,8 +88,16 @@
                   <span v-if="anySelected()">{{ this.files.length }} selected</span>
                 </div>
               </div>
+              <div class="level selectButton is-disabled" v-if="isUploading()">
+                <div class="level-item">
+                  <i class="fa fa-circle-o-notch fa-spin"></i>
+                </div>
+                <div class="level-item">
+                  Uploading..
+                </div>
+              </div>
               <div class="has-text-centered">
-                <button type="submit" class="button submitButton" :class="{ 'is-primary': !hasPending() && anySelected() }" :disabled="hasPending() || !anySelected()">Start Upload</button>
+                <button type="submit" class="button submitButton" :class="{ 'is-primary': !isUploading() && anySelected() }" :disabled="isUploading() || !anySelected()">Start Upload</button>
               </div>
               <input type="file" name="files[]" id="files" @change="onFileChange" multiple class="is-hidden">
             </form>
@@ -77,24 +108,34 @@
               <p class="panel-heading">
                 Uploads
               </p>
-              <a class="panel-block" v-if="hasPending()">
+              <div class="panel-block" v-if="!uploaded.length && !isUploading()">
+                Select replays to upload
+              </div>
+              <div class="panel-block" v-if="hasPending()">
                 <span class="panel-icon">
                   <i class="fa fa-clock-o"></i>
                 </span>
-                {{ pending.length }} pending
-              </a>
-              <a class="panel-block is-active" v-if="uploading">
+                {{ pending.length }} waiting
+              </div>
+              <div class="panel-block is-active" v-if="uploading">
                 <span class="panel-icon">
                   <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
                 </span>
-                Uploading {{ uploading.name }}..
-              </a>
-              <a class="panel-block" v-for="upload in uploaded">
+                <div class="level level-columns">
+                  <div class="level-item">{{ uploading.name }}</div>
+                  <div class="level-item">Uploading..</div>
+                </div>
+              </div>
+              <div class="panel-block" v-for="upload in uploaded" :class="{ 'response-ok': upload.response.ok, 'response-fail': !upload.response.ok}">
                 <span class="panel-icon">
-                  <i class="fa fa-file"></i>
+                  <i class="is-success fa fa-check-circle-o" v-if="upload.response.ok"></i>
+                  <i class="is-danger fa fa-times-circle-o" v-if="!upload.response.ok"></i>
                 </span>
-                {{ upload.file.name }}
-              </a>
+                <div class="level level-columns">
+                  <div class="level-item">{{ upload.file.name }}</div>
+                  <div class="level-item">{{ upload.response.statusText }}</div>
+                </div>
+              </div>
             </nav>
           </div>
         </div>
@@ -104,8 +145,6 @@
 </template>
 
 <script>
-// var _ = require('lodash')
-
 export default {
   data: function () {
     return {
@@ -116,6 +155,10 @@ export default {
     }
   },
   methods: {
+    isUploading: function () {
+      return this.hasPending() || this.uploading
+    },
+
     anySelected: function () {
       return this.files !== null && this.files.length
     },
@@ -165,7 +208,7 @@ export default {
       var vm = this
       let handler = function (response) {
         console.log('handle', response)
-        vm.uploaded.push({
+        vm.uploaded.unshift({
           file: vm.uploading,
           response: response
         })
@@ -173,9 +216,9 @@ export default {
         vm.uploadFile()
       }
       this.$http.post(process.env.API_URL + 'uploads', formData).then(function (response) {
-        setTimeout(function () { handler(response) }, 2000)
+        handler(response)
       }, function (response) {
-        setTimeout(function () { handler(response) }, 2000)
+        handler(response)
       })
     },
 
