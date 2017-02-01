@@ -32,11 +32,11 @@ export default {
   },
   methods: {
     filterWith: function (option) {
-      this.$data.selected = option
-      this.$emit('filterWith', String(this.title), Number(this.$data.selected))
+      this.selected = option
+      this.$emit('filterWith', String(this.title), Number(this.selected))
     },
     isSelected: function (option) {
-      return this.$data.selected === option
+      return this.selected === option
     }
   }
 }

@@ -89,19 +89,19 @@ export default {
   methods: {
     toggleDropdown: function () {
       var vm = this
-      this.$data.show_dropdown = !this.$data.show_dropdown
-      if (this.$data.show_dropdown) {
+      this.show_dropdown = !this.show_dropdown
+      if (this.show_dropdown) {
         setTimeout(function () {
           document.addEventListener('click', vm.toggleDropdown)
         }, 0)
       } else {
         document.removeEventListener('click', vm.toggleDropdown)
-        this.$data.focused = true
+        this.focused = true
       }
     },
     choosePlatform: function (p) {
-      this.$data.platform = p
-      this.$data.focused = true
+      this.platform = p
+      this.focused = true
     }
   }
 }

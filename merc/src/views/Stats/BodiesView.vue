@@ -79,8 +79,8 @@ export default {
   },
   computed: {
     sortedRows: function () {
-      var sorted = _.sortBy(this.$data.rows, [this.$data.sort])
-      if (!this.$data.dir) {
+      var sorted = _.sortBy(this.rows, [this.sort])
+      if (!this.dir) {
         _.reverse(sorted)
       }
       return sorted
@@ -113,8 +113,8 @@ export default {
   methods: {
     slug: bodies.slug,
     orderByCol: function (col, dir) {
-      this.$data.sort = col
-      this.$data.dir = dir
+      this.sort = col
+      this.dir = dir
     }
   }
 }
