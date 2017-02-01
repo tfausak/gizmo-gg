@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 services:
 
   paladin-server:
@@ -9,6 +9,11 @@ services:
     depends_on:
       - postgres
     environment:
+      # This must be set at run time to the URL that the API is available at.
+      # For local development, Paladin is proxied behind Venom. In production,
+      # that's also true, but the entire site is at `gizmo.gg` instead of
+      # `localhost:8080`. Don't include a trailing slash in this URL!
+      - PALADIN_CONNECT=${PALADIN_CONNECT:-http://localhost:8080/api}
       - PALADIN_DATABASE=host=postgres user=postgres
       - PALADIN_WORKER=False
     volumes:
@@ -18,9 +23,11 @@ services:
     image: gizmo-gg/paladin
     build: paladin
     depends_on:
+      - paladin-server
       - postgres
     environment:
       - PALADIN_DATABASE=host=postgres user=postgres
+      - PALADIN_MIGRATE=False
       - PALADIN_SERVER=False
     volumes:
       - paladin-data:/project/data
@@ -30,7 +37,11 @@ services:
     build:
       context: merc
       args:
-        API_URL: '"http://gizmo.gg/api/"'
+        # This must be set at build time to the URL that the API will be
+        # availabe at. In that way it's similar to the `PALADIN_CONNECT`
+        # variable. This one (a) needs a trailing slash and (b) must be a valid
+        # JavaScript expression. That means wrapping it in quotes.
+        API_URL: '${MERC_API_URL:-"http://localhost:8080/api/"}'
     ports:
       - 8081
     depends_on:
@@ -40,6 +51,8 @@ services:
     image: postgres:9.6
     ports:
       - 5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   venom:
     image: gizmo-gg/venom
@@ -52,3 +65,4 @@ services:
 
 volumes:
   paladin-data: null
+  postgres-data: null
