@@ -11,4 +11,4 @@ dependencies:
 
 test:
   override:
-    - docker-compose run paladin stack test
+    - docker-compose run paladin-server stack test
