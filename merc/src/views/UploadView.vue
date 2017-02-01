@@ -175,7 +175,6 @@ export default {
     submit: function () {
       // Don't allow a submit if we have pending uploads
       if (this.hasPending() || this.uploading !== null) {
-        console.log('submit denied: pending uploads')
         return
       }
       // Copy list of files to upload from the input
@@ -186,28 +185,24 @@ export default {
       // Reset the input
       let elem = document.getElementById('files')
       elem.value = elem.defaultValue
-      console.log('submitting..')
       this.uploadFile(0)
     },
 
     uploadFile: function () {
       // Don't allow a file upload if we have a current upload
       if (this.uploading !== null) {
-        console.log('upload denied: still uploading')
         return
       }
       // When there is nothing left to upload
       if (!this.hasPending()) {
-        console.log('upload denied: no pending')
         return
       }
       this.uploading = this.pending.shift()
-      console.log('uploading file..', this.uploading)
       let formData = new FormData()
       formData.append('replay', this.uploading)
       var vm = this
       let handler = function (response) {
-        console.log('handle', response)
+        // console.log('handler', response)
         vm.uploaded.unshift({
           file: vm.uploading,
           response: response
