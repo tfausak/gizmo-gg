@@ -67,7 +67,8 @@ session = do
      response <- Test.request request
      let json =
            Aeson.object
-             [ ( "win_pct"
+             [ ("map_freq_pct", Aeson.object [])
+             , ( "win_pct"
                , Aeson.object
                    [("blue", Aeson.Number 0), ("orange", Aeson.Number 0)])
              ]

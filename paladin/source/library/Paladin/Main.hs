@@ -13,6 +13,12 @@ main = do
   print config
   connection <- Database.connect config
   Database.runMigrations config connection
-  _ <- Worker.startWorker config connection
-  _ <- Server.startServer config connection
+  Monad.when
+    (Config.configWorker config)
+    (do _ <- Worker.startWorker config connection
+        pure ())
+  Monad.when
+    (Config.configServer config)
+    (do _ <- Server.startServer config connection
+        pure ())
   Monad.forever (Concurrent.threadDelay 1000000)

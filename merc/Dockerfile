@@ -6,6 +6,7 @@ WORKDIR /project
 COPY package.json /project
 RUN npm install
 
+ARG API_URL
 COPY . /project
 RUN npm run build
 

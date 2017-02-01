@@ -81,6 +81,14 @@ These are the environment variables that Paladin uses:
 - **PALADIN_MIGRATE**: Defaults to `True`. Set this to `False` to avoid running
   database migrations when starting the server.
 
+- **PALADIN_SERVER**: Defaults to `True`. Set this to `False` to avoid
+  launching the HTTP server. You may want to do this to run extra workers, for
+  instance.
+
+- **PALADIN_WORKER**: Defaults to `True`. Set this to `False` to avoid
+  launching the worker that parses replays. You may want to do this to run
+  extra servers, for instance.
+
 ## Migrate
 
 It used to be that you had to run the migrations manually. Now they are run
