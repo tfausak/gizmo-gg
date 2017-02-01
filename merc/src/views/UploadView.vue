@@ -56,7 +56,7 @@ export default {
       console.log('upload file', this.uploading)
       let formData = new FormData()
       // formData.append('Content-Type', this.uploading || 'application/octet-stream')
-      // formData.append('replay', this.uploading)
+      formData.append('replay', this.uploading)
       this.$http.post(process.env.API_URL + 'uploads', formData).then(function (response) {
         console.log('success', response)
         this.uploaded.push({
