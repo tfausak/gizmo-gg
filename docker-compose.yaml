@@ -27,9 +27,14 @@ services:
 
   merc:
     image: gizmo-gg/merc
-    build: merc
+    build:
+      context: merc
+      args:
+        API_URL: http://paladin-server:8080/
     ports:
       - 8081
+    depends_on:
+      - paladin-server
 
   postgres:
     image: postgres:9.6

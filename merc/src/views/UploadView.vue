@@ -23,7 +23,8 @@ import FilesUploaderComponent from '../components/FilesUploaderComponent.vue'
 export default {
   data: function () {
     return {
-      action: process.env.API_URL
+      // TODO: This doesn't appear to actually work.
+      action: `#{process.env.API_URL}uploads`
     }
   },
   components: {
