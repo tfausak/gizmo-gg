@@ -145,6 +145,8 @@
 </template>
 
 <script>
+import {getEndpointUrl} from '../store/api'
+
 export default {
   data: function () {
     return {
@@ -210,7 +212,7 @@ export default {
         vm.uploading = null
         vm.uploadFile()
       }
-      this.$http.post(process.env.API_URL + 'uploads', formData)
+      this.$http.post(getEndpointUrl('uploads'), formData)
         .then(function (response) {
           response.ok = true
           handler(response)
