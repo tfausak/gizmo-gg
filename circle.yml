@@ -1,9 +1,12 @@
 machine:
   pre:
-    - curl -fsSL https://get.docker.com | sh
+    - curl https://get.docker.com/builds/Linux/x86_64/docker-1.13.0.tgz > docker.tgz
+    - tar xf docker.tgz
+    - sudo cp docker/docker /usr/bin/docker
     - docker --version
-    - sudo curl -L "https://github.com/docker/compose/releases/download/1.10.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    - sudo chmod +x /usr/local/bin/docker-compose
+    - curl --location "https://github.com/docker/compose/releases/download/1.10.1/docker-compose-$(uname -s)-$(uname -m)" > docker-compose
+    - chmod +x docker-compose
+    - sudo cp docker-compose /usr/bin/docker-compose
     - docker-compose --version
   services:
     - docker
