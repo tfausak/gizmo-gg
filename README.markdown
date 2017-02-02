@@ -43,6 +43,7 @@ cat <<EOF | sudo tee /etc/nginx/sites-available/gizmo-gg
 server {
   listen 80 default_server;
   server_name _;
+  client_max_body_size 10M;
   location / {
     proxy_pass http://127.0.0.1:8080;
   }
