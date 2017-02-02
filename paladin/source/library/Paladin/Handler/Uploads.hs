@@ -72,7 +72,14 @@ postUploadHandler config connection request = do
                    ]
                    ())
         _ -> pure (Common.jsonResponse Http.status415 [] Aeson.Null)
-    _ -> pure (Common.jsonResponse Http.status422 [] Aeson.Null)
+    _ -> do
+      let code = 422
+      let message = ByteString.pack "Unprocessable Entity"
+      let status = Http.mkStatus code message
+      let headers = []
+      let body = Aeson.Null
+      let response = Common.jsonResponse status headers body
+      pure response
 
 saveUpload :: Config.Config
            -> Hash.Digest Hash.SHA1
