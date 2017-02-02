@@ -59,7 +59,7 @@ postUploadHandler config connection request = do
           let hash = Utility.Tagged (show digest)
           fileExists <- Storage.doesUploadFileExist config hash
           if fileExists
-            then pure (Common.jsonResponse Http.status400 [] Aeson.Null)
+            then pure (Common.jsonResponse Http.status409 [] Aeson.Null)
             else do
               saveUpload config digest contents
               uploadId <- insertUpload connection name digest contents
@@ -71,8 +71,8 @@ postUploadHandler config connection request = do
                      , ByteString.pack (Common.makeUrl config url))
                    ]
                    ())
-        _ -> pure (Common.jsonResponse Http.status400 [] Aeson.Null)
-    _ -> pure (Common.jsonResponse Http.status400 [] Aeson.Null)
+        _ -> pure (Common.jsonResponse Http.status415 [] Aeson.Null)
+    _ -> pure (Common.jsonResponse Http.status422 [] Aeson.Null)
 
 saveUpload :: Config.Config
            -> Hash.Digest Hash.SHA1
