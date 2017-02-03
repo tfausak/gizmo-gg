@@ -12,7 +12,7 @@
 
       <div class="columns">
         <div class="column">
-          <wins-component></wins-component>
+          <wins-component :source="source"></wins-component>
         </div>
         <div class="column">
           <body-component></body-component>
@@ -35,6 +35,11 @@ export default {
     BodyComponent: BodyComponent,
     MapFreqComponent: MapFreqComponent,
     FilterPanel: FilterPanelComponent
+  },
+  data: function () {
+    return {
+      source: this.$store.dispatch('GET_STATS_SUMMARY')
+    }
   }
 }
 </script>

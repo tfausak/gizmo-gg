@@ -2,44 +2,47 @@
   <article class="message">
     <div class="message-body">
       <p class="heading is-1">Win Pct by Team</p>
-      <echart :options="chart"></echart>
+      <echart :options="chartOptions" v-if="chartOptions"></echart>
     </div>
   </article>
 </template>
 
 <script>
 export default {
+  props: [ 'source' ],
   data: function () {
-    let source = {
-      'Orange': 48.1,
-      'Blue': 51.9
-    }
-    let data = []
-    for (let key in source) {
-      let color = '#000000'
-      if (key === 'Orange') {
-        color = '#CB4B16'
-      } else {
-        color = '#268BD2'
-      }
-      data.push({
-        value: source[key],
-        name: key,
-        itemStyle: { normal: { color: color } }
-      })
-    }
     return {
-      chart: {
+      chartOptions: null
+    }
+  },
+  beforeMount () {
+    var vm = this
+    this.source.then(function (source) {
+      let chartData = []
+      for (let key in source.win_pct) {
+        let color = '#000000'
+        if (key === 'orange') {
+          color = '#CB4B16'
+        } else {
+          color = '#268BD2'
+        }
+        chartData.push({
+          value: source.win_pct[key],
+          name: key,
+          itemStyle: { normal: { color: color } }
+        })
+      }
+      vm.chartOptions = {
         series: [
           {
             type: 'pie',
             radius: ['45%', '75%'],
-            data: data,
+            data: chartData,
             label: { normal: { formatter: `{b}\n{d}%` } }
           }
         ]
       }
-    }
+    })
   }
 }
 </script>

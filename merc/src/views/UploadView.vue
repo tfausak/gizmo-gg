@@ -145,6 +145,8 @@
 </template>
 
 <script>
+import {getEndpointUrl} from '../store/api'
+
 export default {
   data: function () {
     return {
@@ -202,7 +204,7 @@ export default {
       formData.append('replay', this.uploading)
       var vm = this
       let handler = function (response) {
-        // console.log('handler', response)
+        console.log('handler', response)
         vm.uploaded.unshift({
           'file': vm.uploading,
           'response': response
@@ -210,7 +212,15 @@ export default {
         vm.uploading = null
         vm.uploadFile()
       }
-      this.$http.post(process.env.API_URL + 'uploads', formData).then(handler, handler)
+      this.$http.post(getEndpointUrl('uploads'), formData)
+        .then(function (response) {
+          response.ok = true
+          handler(response)
+        })
+        .catch(function (error) {
+          error.response.ok = false
+          handler(error.response)
+        })
     },
 
     onFileChange: function (event) {

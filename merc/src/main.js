@@ -2,12 +2,11 @@ import Vue from 'vue'
 import App from './App'
 import store from './store'
 import router from './router'
-import VueResource from 'vue-resource'
 import ECharts from 'vue-echarts'
-
+import axios from 'axios'
 import './assets/styles/app.scss'
 
-Vue.use(VueResource)
+Vue.prototype.$http = axios
 Vue.component('echart', ECharts)
 
 // create the app instance.
