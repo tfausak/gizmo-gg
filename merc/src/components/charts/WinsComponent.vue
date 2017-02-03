@@ -9,18 +9,17 @@
 
 <script>
 export default {
+  props: [ 'source' ],
   data: function () {
     return {
-      loading: true,
       chartOptions: null
     }
   },
   beforeMount () {
     var vm = this
-    this.$store.dispatch('GET_STATS_SUMMARY').then(function (data) {
-      vm.loading = false
+    this.source.then(function (source) {
       let chartData = []
-      for (let key in data.win_pct) {
+      for (let key in source.win_pct) {
         let color = '#000000'
         if (key === 'orange') {
           color = '#CB4B16'
@@ -28,7 +27,7 @@ export default {
           color = '#268BD2'
         }
         chartData.push({
-          value: data.win_pct[key],
+          value: source.win_pct[key],
           name: key,
           itemStyle: { normal: { color: color } }
         })
