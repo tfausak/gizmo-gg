@@ -5,6 +5,7 @@
 !.eslintignore
 !.eslintrc.js
 !index.html
+!index.js
 
 !build/
 !config/
