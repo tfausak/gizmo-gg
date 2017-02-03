@@ -5,15 +5,16 @@ export function getResource (endpoint) {
   return new Promise(function (resolve, reject) {
     axios.get(url)
       .then(function (response) {
-        // handle successful api response
         resolve(response.data)
       })
-      .catch(reject)
+      .catch(function (error) {
+        reject(error.message)
+      })
   })
 }
 
 export function getEndpointUrl (endpoint) {
-  var url = process.env.API_URL.replace(/\/+$/, '')
-  endpoint = endpoint.replace(/^\/+/, '')
-  return url + '/' + endpoint
+  var url = process.env.API_URL.replace(/\/+$/, '') // remove trailing slashes
+  endpoint = endpoint.replace(/^\/+/, '') // remove leading slashes
+  return url + '/' + endpoint // add slash back in the middle
 }
