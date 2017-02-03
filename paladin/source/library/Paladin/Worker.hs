@@ -40,13 +40,21 @@ parseUploads config connection = do
     Sql.query_
       connection
       [Sql.sql|
-        SELECT id, hash
-        FROM uploads
-        WHERE started_parsing_at IS NULL
-        ORDER BY created_at DESC
+        UPDATE uploads
+        SET started_parsing_at = now()
+        FROM (
+          SELECT id AS upload_id
+          FROM uploads
+          WHERE started_parsing_at IS NULL
+          ORDER BY created_at ASC
+          LIMIT 1
+        ) AS it
+        WHERE id = upload_id
+        RETURNING id, hash
       |]
-  mapM_ (parseUpload config connection) uploads
-  sleep 1
+  case uploads of
+    [] -> sleep 1
+    _ -> mapM_ (parseUpload config connection) uploads
   parseUploads config connection
 
 parseUpload
