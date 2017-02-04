@@ -48,7 +48,7 @@ This directory contains script for managing DigitalOcean droplets.
   it will look like this:
 
   ```
-  * * * * * /root/gizmo-gg/ops/cron.sh /root/gizmo-gg 'tfausak' 'd89...' '277...' 'wme...'
+  */5 * * * * env PATH="/usr/local/bin:$PATH" /root/gizmo-gg/ops/cron.sh /root/gizmo-gg 'tfausak' 'd89...' '277...' 'wme...'
   ```
 
 [personal access token]: https://help.github.com/articles/creating-an-access-token-for-command-line-use/
