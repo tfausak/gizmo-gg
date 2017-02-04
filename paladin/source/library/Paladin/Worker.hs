@@ -73,7 +73,7 @@ parseUpload
   -> Sql.Connection
   -> (Int, Utility.Tagged Hash.SHA1 String)
   -> IO ()
-parseUpload config connection (uploadId, hash) = do
+parseUpload config connection (uploadId, hash) =
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
