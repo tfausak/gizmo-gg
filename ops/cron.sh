@@ -7,6 +7,8 @@ GITHUB_TOKEN="$3"
 DISCORD_ID="$4"
 DISCORD_TOKEN="$5"
 
+echo "$(date)"
+
 sh "$REPO_DIR/ops/clone.sh" "$REPO_DIR" "$GITHUB_USER" "$GITHUB_TOKEN"
 
 cd "$REPO_DIR"
