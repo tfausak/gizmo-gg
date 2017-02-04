@@ -3,10 +3,12 @@
     <div class="container">
       <div class="columns">
         <div class="column is-one-quarter">
-          <filter-panel title="Time" :options="[ 'Current Season', 'Last Month', 'Last Week' ]"></filter-panel>
+          <filter-panel v-model="time" title="Time" :options="timeOptions"></filter-panel>
+          {{ time }}
         </div>
         <div class="column is-one-quarter">
-          <filter-panel title="Playlist" :options="[ 'All', 'Ranked 1v1', 'Ranked 2v2', 'Ranked 3v3', 'Ranked 3v3 Solo' ]"></filter-panel>
+          <filter-panel v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel>
+          {{ playlist }}
         </div>
       </div>
 
@@ -24,6 +26,8 @@
 </template>
 
 <script>
+var _ = require('lodash')
+
 import WinsComponent from '../../components/charts/WinsComponent.vue'
 import BodyComponent from '../../components/charts/BodyComponent.vue'
 import MapFreqComponent from '../../components/charts/MapFreqComponent.vue'
@@ -37,8 +41,31 @@ export default {
     FilterPanel: FilterPanelComponent
   },
   data: function () {
+    let timeOptions = {
+      season: 'Current Season',
+      month: 'Last Month',
+      week: 'Last Week'
+    }
+    let playlistOptions = {
+      all: 'All',
+      ranked1v1: 'Ranked 1v1',
+      ranked2v2: 'Ranked 2v2',
+      ranked3v3: 'Ranked 3v3',
+      ranked3v3solor: 'Ranked 3v3 Solo'
+    }
     return {
-      source: this.$store.dispatch('GET_STATS_SUMMARY')
+      timeOptions: timeOptions,
+      time: _.head(_.keys(timeOptions)),
+      playlistOptions: playlistOptions,
+      playlist: _.head(_.keys(playlistOptions))
+    }
+  },
+  computed: {
+    source: function () {
+      return this.$store.dispatch('GET_STATS_SUMMARY', {
+        time: this.time,
+        playlist: this.playlist
+      })
     }
   }
 }
