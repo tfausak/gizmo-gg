@@ -49,7 +49,9 @@ parseUploads config connection = do
       connection
       [Sql.sql|
         UPDATE uploads
-        SET started_parsing_at = now()
+        SET
+          started_parsing_at = now(),
+          parser_id = (SELECT id FROM parsers WHERE name = ?)
         FROM (
           SELECT id AS upload_id
           FROM uploads
@@ -71,16 +73,6 @@ parseUpload
   -> (Int, Utility.Tagged Hash.SHA1 String)
   -> IO ()
 parseUpload config connection (uploadId, hash) = do
-  Database.execute
-    connection
-    [Sql.sql|
-      UPDATE uploads
-      SET
-        started_parsing_at = now(),
-        parser_id = (SELECT id FROM parsers WHERE name = ?)
-      WHERE id = ?
-    |]
-    (parser, uploadId)
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
