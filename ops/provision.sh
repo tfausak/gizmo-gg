@@ -6,7 +6,7 @@ apt update
 apt install --assume-yes curl nginx ufw
 
 # Set up firewall.
-ufw enable
+yes | ufw enable
 ufw allow OpenSSH
 ufw allow 'Nginx HTTP'
 
@@ -32,5 +32,5 @@ apt update
 apt install --assume-yes docker-engine
 
 # Install Docker Compose.
-curl 'https://github.com/docker/compose/releases/download/1.10.1/docker-compose-Linux-x86_64' --output /usr/local/bin/docker-compose
+curl --location 'https://github.com/docker/compose/releases/download/1.10.1/docker-compose-Linux-x86_64' --output /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
