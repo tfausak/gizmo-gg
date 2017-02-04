@@ -31,6 +31,17 @@ const store = new Vuex.Store({
       let endpoint = 'stats/summary' + getQueryString(params)
       return dispatch('FETCH', { endpoint })
     },
+
+    GET_PLATFORMS: function ({ dispatch }) {
+      let endpoint = 'platforms'
+      return dispatch('FETCH', { endpoint })
+    },
+
+    FIND_PLAYER: function ({ dispatch }, params) {
+      let endpoint = 'players/find' + getQueryString(params)
+      return dispatch('FETCH', { endpoint })
+    },
+
     FETCH: function ({ commit, state }, { endpoint }) {
       if (endpoint in state.cache) {
         return Promise.resolve(state.cache[endpoint])

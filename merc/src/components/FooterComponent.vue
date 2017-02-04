@@ -1,3 +1,11 @@
+<style scoped lang="scss">
+@import "~styles/vars.scss";
+
+#footer {
+  box-shadow: 0px 500px 0px 500px $white-ter;
+}
+</style>
+
 <template>
   <div id="footer">
     <footer class="footer">

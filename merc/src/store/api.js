@@ -2,13 +2,18 @@ import axios from 'axios'
 
 export function getResource (endpoint) {
   var url = getEndpointUrl(endpoint)
+  var delay = 1000
   return new Promise(function (resolve, reject) {
     axios.get(url)
       .then(function (response) {
-        resolve(response.data)
+        setTimeout(function () {
+          resolve(response.data)
+        }, delay)
       })
       .catch(function (error) {
-        reject(error.message)
+        setTimeout(function () {
+          reject(error.message)
+        }, delay)
       })
   })
 }

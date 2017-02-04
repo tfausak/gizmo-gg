@@ -23,9 +23,9 @@ export default {
   methods: {
     updateChartOptions: function () {
       var vm = this
-      this.source.then(function (source) {
+      this.source.then(function (result) {
         let chartData = []
-        for (let key in source.win_pct) {
+        for (let key in result.win_pct) {
           let color = '#000000'
           if (key === 'orange') {
             color = '#CB4B16'
@@ -34,7 +34,7 @@ export default {
           }
           chartData.push({
             name: key,
-            value: source.win_pct[key],
+            value: result.win_pct[key],
             itemStyle: { normal: { color: color } }
           })
         }

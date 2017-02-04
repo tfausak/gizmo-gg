@@ -9,7 +9,7 @@ export default new Router({
   linkActiveClass: 'is-active',
   routes: [
     { path: '/upload', component: require('../views/UploadView.vue') },
-    { path: '/app', component: require('../views/AppView.vue') },
+    { path: '/desktop-app', component: require('../views/DesktopView.vue') },
     {
       path: '/stats',
       component: require('../views/StatsView.vue'),
@@ -25,6 +25,17 @@ export default new Router({
         {
           path: 'maps',
           component: require('../views/Stats/MapsView')
+        }
+      ]
+    },
+    {
+      path: '/player/:platform/:id',
+      component: require('../views/PlayerView'),
+      props: true,
+      children: [
+        {
+          path: '',
+          component: require('../views/Player/HomeView')
         }
       ]
     },

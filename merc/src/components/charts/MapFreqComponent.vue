@@ -35,12 +35,12 @@ export default {
   methods: {
     updateChartOptions: function () {
       var vm = this
-      this.source.then(function (source) {
+      this.source.then(function (result) {
         let chartData = []
-        for (let key in source.map_freq_pct) {
+        for (let key in result.map_freq_pct) {
           chartData.push({
             name: key,
-            value: source.map_freq_pct[key]
+            value: result.map_freq_pct[key]
           })
         }
         vm.chartOptions = {

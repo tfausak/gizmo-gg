@@ -40,7 +40,9 @@
             <div class="level-item has-text-centered">
               <div>
                 <p class="heading">Players</p>
-                <p class="title">123</p>
+                <p class="title">
+                  <router-link to="/player/steam/12345" exact>123</router-link>
+                </p>
               </div>
             </div>
             <div class="level-item has-text-centered">
@@ -81,7 +83,7 @@
                 </span>
                 <div>
                   <h2 class="subtitle">Track Your Progress</h2>
-                  <p>Download our <router-link to="app">desktop app</router-link> to automatically upload your replays. Your stats will be generated as you play.</p>
+                  <p>Download our <router-link to="/desktop-app">desktop app</router-link> to automatically upload your replays. Your stats will be generated as you play.</p>
                 </div>
               </div>
             </div>
