@@ -45,7 +45,7 @@ startWorker config connection = do
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
 parseUploads config connection = do
   uploads <-
-    Sql.query_
+    Sql.query
       connection
       [Sql.sql|
         UPDATE uploads
@@ -62,6 +62,7 @@ parseUploads config connection = do
         WHERE id = upload_id
         RETURNING id, hash
       |]
+      [parser]
   case uploads of
     [] -> sleep 1
     _ -> mapM_ (parseUpload config connection) uploads
