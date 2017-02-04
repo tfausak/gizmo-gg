@@ -3,13 +3,13 @@
     <div class="container">
       <div class="columns">
         <div class="column is-one-quarter">
-          <filter-panel title="Tier" :options="[ 'All', 'Prospect', 'Challenger', 'Star', 'Champion' ]"></filter-panel>
+          <filter-panel v-model="tier" title="Tier" :options="tierOptions"></filter-panel>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel title="Time" :options="[ 'Current Season', 'Last Month', 'Last Week' ]"></filter-panel>
+          <filter-panel v-model="time" title="Time" :options="timeOptions"></filter-panel>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel title="Playlist" :options="[ 'All', 'Ranked 1v1', 'Ranked 2v2', 'Ranked 3v3', 'Ranked 3v3 Solo' ]"></filter-panel>
+          <filter-panel v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel>
         </div>
       </div>
 
@@ -56,6 +56,11 @@ import mock from '../../mock/index.js'
 import bodies from '../../assets/bodies.js'
 import SortableThComponent from '../../components/SortableThComponent.vue'
 import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
+
+import playlistOptions from '../../store/options/playlist.js'
+import timeOptions from '../../store/options/time.js'
+import tierOptions from '../../store/options/tier.js'
+
 var _ = require('lodash')
 
 export default {
@@ -82,6 +87,12 @@ export default {
       maxPts = Math.max(maxPts, row.pts)
     }
     return {
+      tierOptions: tierOptions,
+      tier: _.head(_.keys(tierOptions)),
+      playlistOptions: playlistOptions,
+      playlist: _.head(_.keys(playlistOptions)),
+      timeOptions: timeOptions,
+      time: _.head(_.keys(timeOptions)),
       rows: rows,
       maxFreqPct: maxFreqPct,
       maxPts: maxPts,

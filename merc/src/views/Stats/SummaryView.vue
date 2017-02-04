@@ -31,6 +31,9 @@ import BodyComponent from '../../components/charts/BodyComponent.vue'
 import MapFreqComponent from '../../components/charts/MapFreqComponent.vue'
 import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
 
+import playlistOptions from '../../store/options/playlist.js'
+import timeOptions from '../../store/options/time.js'
+
 export default {
   components: {
     WinsComponent: WinsComponent,
@@ -39,18 +42,6 @@ export default {
     FilterPanel: FilterPanelComponent
   },
   data: function () {
-    let timeOptions = {
-      season: 'Current Season',
-      month: 'Last Month',
-      week: 'Last Week'
-    }
-    let playlistOptions = {
-      all: 'All',
-      ranked1v1: 'Ranked 1v1',
-      ranked2v2: 'Ranked 2v2',
-      ranked3v3: 'Ranked 3v3',
-      ranked3v3solo: 'Ranked 3v3 Solo'
-    }
     return {
       timeOptions: timeOptions,
       time: _.head(_.keys(timeOptions)),
