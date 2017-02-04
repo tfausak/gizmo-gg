@@ -27,27 +27,37 @@ export default {
       chartOptions: null
     }
   },
+  watch: {
+    source: function (val) {
+      this.updateChartOptions()
+    }
+  },
+  methods: {
+    updateChartOptions: function () {
+      var vm = this
+      this.source.then(function (source) {
+        let chartData = []
+        for (let key in source.map_freq_pct) {
+          chartData.push({
+            name: key,
+            value: source.map_freq_pct[key]
+          })
+        }
+        vm.chartOptions = {
+          series: [
+            {
+              type: 'pie',
+              radius: ['45%', '75%'],
+              data: chartData,
+              label: { normal: { formatter: `{b}\n{d}%` } }
+            }
+          ]
+        }
+      })
+    }
+  },
   beforeMount () {
-    var vm = this
-    this.source.then(function (source) {
-      let chartData = []
-      for (let key in source.map_freq_pct) {
-        chartData.push({
-          name: key,
-          value: source.map_freq_pct[key]
-        })
-      }
-      vm.chartOptions = {
-        series: [
-          {
-            type: 'pie',
-            radius: ['45%', '75%'],
-            data: chartData,
-            label: { normal: { formatter: `{b}\n{d}%` } }
-          }
-        ]
-      }
-    })
+    this.updateChartOptions()
   }
 }
 </script>

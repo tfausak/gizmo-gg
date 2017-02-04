@@ -4,11 +4,9 @@
       <div class="columns">
         <div class="column is-one-quarter">
           <filter-panel v-model="time" title="Time" :options="timeOptions"></filter-panel>
-          {{ time }}
         </div>
         <div class="column is-one-quarter">
           <filter-panel v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel>
-          {{ playlist }}
         </div>
       </div>
 
@@ -17,10 +15,10 @@
           <wins-component :source="source"></wins-component>
         </div>
         <div class="column">
-          <body-component></body-component>
+          <body-component :source="source"></body-component>
         </div>
       </div>
-      <map-freq-component></map-freq-component>
+      <map-freq-component :source="source"></map-freq-component>
     </div>
   </section>
 </template>
@@ -51,7 +49,7 @@ export default {
       ranked1v1: 'Ranked 1v1',
       ranked2v2: 'Ranked 2v2',
       ranked3v3: 'Ranked 3v3',
-      ranked3v3solor: 'Ranked 3v3 Solo'
+      ranked3v3solo: 'Ranked 3v3 Solo'
     }
     return {
       timeOptions: timeOptions,
