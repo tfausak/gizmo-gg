@@ -31,7 +31,15 @@ import qualified Paladin.Utility as Utility
 import qualified Rattletrap
 
 startWorker :: Config.Config -> Sql.Connection -> IO Concurrent.ThreadId
-startWorker config connection =
+startWorker config connection = do
+  Database.execute
+    connection
+    [Sql.sql|
+      INSERT INTO parsers (name)
+      VALUES (?)
+      ON CONFLICT DO NOTHING
+    |]
+    [parser]
   Concurrent.forkIO (parseUploads config connection)
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
@@ -63,14 +71,6 @@ parseUpload
   -> (Int, Utility.Tagged Hash.SHA1 String)
   -> IO ()
 parseUpload config connection (uploadId, hash) = do
-  Database.execute
-    connection
-    [Sql.sql|
-      INSERT INTO parsers (name)
-      VALUES (?)
-      ON CONFLICT DO NOTHING
-    |]
-    [parser]
   Database.execute
     connection
     [Sql.sql|
