@@ -10,6 +10,7 @@ DISCORD_TOKEN="$5"
 sh "$REPO_DIR/ops/clone.sh" "$REPO_DIR" "$GITHUB_USER" "$GITHUB_TOKEN"
 
 cd "$REPO_DIR"
+git reset --hard origin/master
 OLD="$(git rev-parse HEAD)"
 git pull
 NEW="$(git rev-parse HEAD)"
