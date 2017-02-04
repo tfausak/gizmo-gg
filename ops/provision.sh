@@ -3,7 +3,7 @@ set -o errexit -o xtrace
 
 # Install dependencies.
 apt update
-apt install --assume-yes curl nginx ufw
+apt install --assume-yes cron curl nginx ufw
 
 # Set up firewall.
 yes | ufw enable

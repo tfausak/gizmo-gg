@@ -2,7 +2,7 @@
 set -o errexit -o xtrace
 
 # Where the repo has been cloned.
-REPO_DIR=$1
+REPO_DIR="$1"
 
 # Bring the repo up to date.
 cd "$REPO_DIR"

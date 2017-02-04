@@ -1,10 +1,10 @@
 #!/bin/sh
 set -o errexit -o xtrace
 
-WEB_HOOK_ID=$1
-WEB_HOOK_TOKEN=$2
+DISCORD_ID="$1"
+DISCORD_TOKEN="$2"
 
 curl \
   --request POST \
-  --data '{ "content": "Deployed gizmo.gg!" }' \
-  "https://discordapp.com/api/webhooks/$WEB_HOOK_ID/$WEB_HOOK_TOKEN"
+  --data '{ "content": "Deployed the site!" }' \
+  "https://discordapp.com/api/webhooks/$DISCORD_ID/$DISCORD_TOKEN"

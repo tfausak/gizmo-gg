@@ -2,11 +2,11 @@
 set -o errexit -o xtrace
 
 # Where to clone the repo on disk.
-REPO_DIR=$1
+REPO_DIR="$1"
 
 # How to authenticate with GitHub.
-GITHUB_USER=$2
-GITHUB_TOKEN=$3
+GITHUB_USER="$2"
+GITHUB_TOKEN="$3"
 
 # Which repo to clone.
 GITHUB_REPO=tfausak/gizmo-gg
