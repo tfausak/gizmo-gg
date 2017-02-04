@@ -13,30 +13,30 @@
     <p class="panel-heading">
       <span class="heading">{{ title }}</span>
     </p>
-    <a class="panel-block" v-for="option in options" @click="filterWith(option)" :class="{ 'is-active': isSelected(option) }">
+    <a class="panel-block" v-for="(value, key) in options" @click="updateValue(key)" :class="{ 'is-active': isSelected(key) }">
       <span class="panel-icon">
-        <i class="fa" :class="{ 'fa-circle-thin': !isSelected(option), 'fa-check-circle-o': isSelected(option) }"></i>
+        <i class="fa" :class="{ 'fa-circle-thin': !isSelected(key), 'fa-check-circle-o': isSelected(key) }"></i>
       </span>
-      {{ option }}
+      {{ value }}
     </a>
   </nav>
 </template>
 
 <script>
 export default {
-  props: [ 'title', 'options' ],
+  props: [ 'title', 'options', 'value' ],
   data: function () {
     return {
-      selected: this.options[0]
+      selected: this.value
     }
   },
   methods: {
-    filterWith: function (option) {
-      this.selected = option
-      this.$emit('filterWith', String(this.title), Number(this.selected))
+    updateValue: function (key) {
+      this.selected = key
+      this.$emit('input', String(key))
     },
-    isSelected: function (option) {
-      return this.selected === option
+    isSelected: function (key) {
+      return this.selected === key
     }
   }
 }
