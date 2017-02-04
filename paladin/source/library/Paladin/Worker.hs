@@ -31,7 +31,15 @@ import qualified Paladin.Utility as Utility
 import qualified Rattletrap
 
 startWorker :: Config.Config -> Sql.Connection -> IO Concurrent.ThreadId
-startWorker config connection =
+startWorker config connection = do
+  Database.execute
+    connection
+    [Sql.sql|
+      INSERT INTO parsers (name)
+      VALUES (?)
+      ON CONFLICT DO NOTHING
+    |]
+    [parser]
   Concurrent.forkIO (parseUploads config connection)
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
@@ -41,7 +49,9 @@ parseUploads config connection = do
       connection
       [Sql.sql|
         UPDATE uploads
-        SET started_parsing_at = now()
+        SET
+          started_parsing_at = now(),
+          parser_id = (SELECT id FROM parsers WHERE name = ?)
         FROM (
           SELECT id AS upload_id
           FROM uploads
@@ -63,24 +73,6 @@ parseUpload
   -> (Int, Utility.Tagged Hash.SHA1 String)
   -> IO ()
 parseUpload config connection (uploadId, hash) = do
-  Database.execute
-    connection
-    [Sql.sql|
-      INSERT INTO parsers (name)
-      VALUES (?)
-      ON CONFLICT DO NOTHING
-    |]
-    [parser]
-  Database.execute
-    connection
-    [Sql.sql|
-      UPDATE uploads
-      SET
-        started_parsing_at = now(),
-        parser_id = (SELECT id FROM parsers WHERE name = ?)
-      WHERE id = ?
-    |]
-    (parser, uploadId)
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
