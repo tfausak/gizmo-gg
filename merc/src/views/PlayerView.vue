@@ -19,14 +19,17 @@
           <div class="container has-text-centered" v-else>
             <h1 class="title">
               <div>
-                <span class="icon is-large">
-                  <i class="fa fa-exclamation-circle"></i>
+                <span class="icon is-large is-muted">
+                  <i class="fa fa-exclamation-triangle"></i>
                 </span>
               </div>
-              Sorry, we don't have any record of that player!
+              Player not found!
             </h1>
             <h2 class="subtitle">
-              Players only show up if they appear in at least one uploaded replay.<br><router-link to="/upload">Upload a replay</router-link> to get your own player page.
+              Players only show up if they appear in at least one replay.<br><router-link to="/upload">Upload a replay</router-link> to get your own player page.
+            </h2>
+            <h2 class="subtitle">
+              Or you can <router-link to="/">search for another player</router-link>.
             </h2>
           </div>
         </div>

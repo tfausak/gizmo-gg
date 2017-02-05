@@ -7,6 +7,7 @@
   left: 0;
   background-color: #fff;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 999;
 }
 .platform {
   text-align: right;
@@ -37,32 +38,11 @@ aside > ul {
 }
 .input {
   font-size: 14px!important;
-  padding: 6px 10px 2px 10px;
+  padding: 4px 10px 4px 10px;
   box-sizing: content-box;
   border-radius: 0!important;
   border: 0;
   box-shadow: none;
-}
-.control-input-container {
-  position: relative;
-  z-index: 111;
-}
-.control-placeholder {
-  position: absolute;
-  top: 10px;
-  left: 11px;
-  z-index: 999;
-  color: #aaa;
-  font-size: 14px;
-  pointer-events: none;
-  transition: top .2s ease-in-out;
-  transition: font-size .1s ease-in-out;
-
-  &.mini {
-    font-size: 11px;
-    top: 0;
-    left: 10px;
-  }
 }
 </style>
 
@@ -71,9 +51,9 @@ aside > ul {
     <p class="control has-addons has-addons-centered">
       <span class="platform button is-medium" @click="toggleDropdown">
         <span class="icon is-small">
-          <i :class="platform.icon"></i>
+          <i :class="selected_platform.icon"></i>
         </span>
-        <span class="text-smaller">{{ platform.text }}</span>
+        <span class="text-smaller">{{ selected_platform.text }}</span>
         <span class="angle icon is-small">
           <i class="fa" :class="{ 'fa-angle-down': show_dropdown, 'fa-angle-right': !show_dropdown }"></i>
         </span>
@@ -95,10 +75,7 @@ aside > ul {
           </aside>
         </div>
       </span>
-      <span class="control-input-container">
-        <span class="control-placeholder" :class="{ 'mini': search }" @click="focusInput">{{ platform.placeholder }}</span>
-        <input v-model="search" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false">
-      </span>
+      <input v-model="search" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" :placeholder="selected_platform.placeholder">
       <button type="submit" class="button is-medium">
         <span class="icon is-small">
           <i class="fa fa-search"></i>
@@ -111,27 +88,46 @@ aside > ul {
 <script>
 import platforms from '../store/options/platforms.js'
 import { focus } from 'vue-focus'
+var _ = require('lodash')
 
 export default {
+  props: [ 'platform', 'search' ],
   directives: { focus: focus },
   data: function () {
     return {
-      search: '',
       focused: true,
       show_dropdown: false,
-      platform: platforms[0],
+      selected_platform: platforms[0],
       platforms: platforms
+    }
+  },
+  beforeMount: function () {
+    let result = _.find(this.platforms, [ 'slug', this.platform ])
+    if (result) {
+      this.selected_platform = result
     }
   },
   methods: {
     submit: function () {
-      this.$router.push({
-        name: 'player',
-        params: {
-          platform: this.platform.slug,
-          id: this.search
-        }
-      })
+      // TODO: Look for a player. If found, redirect to "player". Otherwise redirect to "search"
+      let i = 1
+      if (i === 1) {
+        this.$router.push({
+          name: 'search',
+          query: {
+            platform: this.selected_platform.slug,
+            search: this.search
+          }
+        })
+      } else {
+        this.$router.push({
+          name: 'player',
+          params: {
+            platform: this.selected_platform.slug,
+            id: this.search
+          }
+        })
+      }
     },
 
     focusInput: function () {
@@ -152,7 +148,7 @@ export default {
     },
 
     choosePlatform: function (p) {
-      this.platform = p
+      this.selected_platform = p
       this.focused = true
     }
   }

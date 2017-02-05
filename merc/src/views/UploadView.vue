@@ -63,7 +63,7 @@
 
 <template>
   <div>
-    <section class="hero is-info is-bold">
+    <section class="hero is-primary">
       <div class="hero-body">
         <div class="container has-text-centered">
           <h1 class="title">
@@ -97,7 +97,7 @@
                 </div>
               </div>
               <div class="has-text-centered">
-                <button type="submit" class="button submitButton" :class="{ 'is-primary': !isUploading() && anySelected() }" :disabled="isUploading() || !anySelected()">Start Upload</button>
+                <button type="submit" class="button submitButton" :class="{ 'is-success': !isUploading() && anySelected() }" :disabled="isUploading() || !anySelected()">Start Upload</button>
               </div>
               <input type="file" name="files[]" id="files" @change="onFileChange" multiple class="is-hidden">
             </form>
@@ -204,7 +204,6 @@ export default {
       formData.append('replay', this.uploading)
       var vm = this
       let handler = function (response) {
-        console.log('handler', response)
         vm.uploaded.unshift({
           'file': vm.uploading,
           'response': response

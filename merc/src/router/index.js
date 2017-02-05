@@ -11,6 +11,12 @@ export default new Router({
     { path: '/upload', component: require('../views/UploadView.vue') },
     { path: '/desktop-app', component: require('../views/DesktopView.vue') },
     {
+      name: 'search',
+      path: '/search',
+      component: require('../views/SearchView.vue'),
+      props: true
+    },
+    {
       path: '/stats',
       component: require('../views/StatsView.vue'),
       children: [
