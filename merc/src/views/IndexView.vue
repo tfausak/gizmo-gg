@@ -41,7 +41,7 @@
               <div>
                 <p class="heading">Players</p>
                 <p class="title">
-                  <router-link to="/player/steam/12345" exact>123</router-link>
+                  123
                 </p>
               </div>
             </div>
@@ -83,6 +83,19 @@
                 <div>
                   <h2 class="subtitle">Join the Community</h2>
                   <p>Have a good idea? Want to help us lower the salt levels? <a target="_blank" href="https://discord.gg/nqZHDpy">Join us on discord</a>.</p>
+                </div>
+              </div>
+            </div>
+            <div class="column">
+              <div class="mybox has-text-centered">
+                <span class="icon is-large">
+                  <i class="fa fa-gears"></i>
+                </span>
+                <div>
+                  <h2 class="subtitle">Test</h2>
+                  <ul>
+                    <li><router-link to="/player-example">player example</router-link></li>
+                  </ul>
                 </div>
               </div>
             </div>

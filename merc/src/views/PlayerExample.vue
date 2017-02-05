@@ -11,15 +11,18 @@
 .normal {
   display: block;
 }
+.hero-main .hero-body {
+  padding-bottom: 0;
+}
 </style>
 
 <template>
-  <section class="hero is-dark">
+  <section class="hero hero-main">
     <div class="hero-body">
       <div class="container">
         <div class="level level-player">
           <div class="level-item">
-            <figure class="image is-128x128 is-outline-128x128">
+            <figure class="image is-128x128 is-circle-dark-128x128">
               <img :src="'/static/img/bodies/octane.png'">
             </figure>
           </div>
@@ -36,12 +39,23 @@
                 </span>
               </h1>
               <h2 class="subtitle" style="margin-top: 0;">
-                Superstar div 4
+                last updated 29 minutes ago
               </h2>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <div class="hero-foot">
+        <nav class="tabs is-boxed">
+          <div class="container has-text-left">
+            <ul>
+              <router-link to="/player-example" tag="li"><a>Summary</a></router-link>
+              <router-link to="/player-example/vehicles" tag="li"><a>Vehicles</a></router-link>
+              <router-link to="/player-example/maps" tag="li"><a>Maps</a></router-link>
+            </ul>
+          </div>
+        </nav>
+      </div>
   </section>
 </template>
