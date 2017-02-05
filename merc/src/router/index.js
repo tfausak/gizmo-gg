@@ -35,10 +35,12 @@ export default new Router({
       children: [
         {
           path: '',
+          name: 'player',
           component: require('../views/Player/HomeView')
         }
       ]
     },
+    { path: '/player-example', component: require('../views/PlayerExample.vue') },
     { path: '/', component: require('../views/IndexView.vue') },
     { path: '*', redirect: '/' }
   ]

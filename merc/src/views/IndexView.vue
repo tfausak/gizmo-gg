@@ -14,7 +14,7 @@
 
 <template>
   <div>
-    <section class="hero is-primary is-medium has-text-centered">
+    <section class="hero is-primary is-bold is-large has-text-centered">
       <div class="hero-body">
         <div class="container">
           <h1 class="title">
@@ -43,18 +43,6 @@
                 <p class="title">
                   <router-link to="/player/steam/12345" exact>123</router-link>
                 </p>
-              </div>
-            </div>
-            <div class="level-item has-text-centered">
-              <div>
-                <p class="heading">Wasteland</p>
-                <p class="title">6.4%</p>
-              </div>
-            </div>
-            <div class="level-item has-text-centered">
-              <div>
-                <p class="heading">Tokyo</p>
-                <p class="title">5.5%</p>
               </div>
             </div>
           </nav>

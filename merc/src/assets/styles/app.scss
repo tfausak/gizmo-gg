@@ -62,3 +62,7 @@ table.is-transparent td {
   background-color: $grey-lighter;
   border-radius: 16px;
 }
+.is-outline-128x128 {
+  border-radius: 64px;
+  background-color: rgba(255, 255, 255, 0.4);
+}

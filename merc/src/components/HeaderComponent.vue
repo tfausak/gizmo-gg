@@ -5,7 +5,7 @@
   font-weight: bold;
 }
 #header {
-  background-color: $primary-darker;
+  background-color: $dark;
 }
 #header a.nav-item {
   color: $white;
