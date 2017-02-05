@@ -116,7 +116,7 @@ export default {
       sort: null,
       dir: 1,
       cols: [
-        { key: 'body', name: 'Body' },
+        { key: 'body', name: 'Battle-Car' },
         { key: 'winPct', name: 'Win Pct' },
         { key: 'games', name: 'Games Played' },
         { key: 'pts', name: 'Avg Pts' },

@@ -2,8 +2,8 @@
   <article class="message">
     <div class="message-body">
       <p class="heading">
-        Body Usage
-        - <router-link to="/stats/bodies">more</router-link>
+        Battle-Car Usage
+        - <router-link to="/stats/battle-cars">more</router-link>
       </p>
       <echart :options="chart"></echart>
     </div>

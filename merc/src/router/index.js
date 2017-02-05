@@ -25,7 +25,7 @@ export default new Router({
           component: require('../views/Stats/SummaryView')
         },
         {
-          path: 'bodies',
+          path: 'battle-cars',
           component: require('../views/Stats/BodiesView')
         },
         {

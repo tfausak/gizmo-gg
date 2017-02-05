@@ -52,7 +52,7 @@
             <div class="container has-text-left">
               <ul>
                 <router-link to="/player-example" tag="li"><a>Summary</a></router-link>
-                <router-link to="/player-example/bodies" tag="li"><a>Bodies</a></router-link>
+                <router-link to="/player-example/battle-cars" tag="li"><a>Battle-Cars</a></router-link>
                 <router-link to="/player-example/maps" tag="li"><a>Maps</a></router-link>
               </ul>
             </div>
