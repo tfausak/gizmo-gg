@@ -45,7 +45,7 @@ startWorker config connection = do
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
 parseUploads config connection = do
   uploads <-
-    Sql.query_
+    Sql.query
       connection
       [Sql.sql|
         UPDATE uploads
@@ -62,6 +62,7 @@ parseUploads config connection = do
         WHERE id = upload_id
         RETURNING id, hash
       |]
+      [parser]
   case uploads of
     [] -> sleep 1
     _ -> mapM_ (parseUpload config connection) uploads
@@ -72,7 +73,7 @@ parseUpload
   -> Sql.Connection
   -> (Int, Utility.Tagged Hash.SHA1 String)
   -> IO ()
-parseUpload config connection (uploadId, hash) = do
+parseUpload config connection (uploadId, hash) =
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents

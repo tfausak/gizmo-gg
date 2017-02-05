@@ -3,17 +3,32 @@
 module Paladin.Handler.Stats where
 
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Fixed as Fixed
 import qualified Data.Ratio as Ratio
 import qualified Data.Text as Text
+import qualified Data.Time as Time
 import qualified Network.HTTP.Types as Http
+import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 
 getStatsSummaryHandler :: Common.Handler
-getStatsSummaryHandler _config connection _request = do
+getStatsSummaryHandler _config connection request = do
+  let query = Wai.queryString request
+  let startOfSeason = Time.fromGregorian 2016 6 20
+  now <- Time.getCurrentTime
+  let today = Time.utctDay now
+  let time =
+        case lookup (ByteString.pack "time") query of
+          Just (Just x) ->
+            case ByteString.unpack x of
+              "month" -> Time.addDays (-28) today
+              "week" -> Time.addDays (-7) today
+              _ -> startOfSeason
+          _ -> startOfSeason
   [[numGames, numBlueWins, numOrangeWins]] <-
-    Database.query_
+    Database.query
       connection
       [Common.sql|
         SELECT
@@ -21,11 +36,14 @@ getStatsSummaryHandler _config connection _request = do
           count(CASE WHEN blue_score > orange_score THEN 1 END),
           count(CASE WHEN blue_score < orange_score THEN 1 END)
         FROM games
+        WHERE
+          created_at >= ?
       |]
+      [time]
   let blueWinPercentage = makeRatio numBlueWins numGames
   let orangeWinPercentage = makeRatio numOrangeWins numGames
   arenaFrequencies <-
-    Database.query_
+    Database.query
       connection
       [Common.sql|
         SELECT
@@ -34,8 +52,11 @@ getStatsSummaryHandler _config connection _request = do
         FROM games
         INNER JOIN arenas
           ON arenas.id = games.arena_id
+        WHERE
+          games.created_at >= ?
         GROUP BY arenas.name
       |]
+      [time]
   let arenaPercents =
         map
           (\(arena, frequency) -> (arena, makeRatio frequency numGames))
