@@ -14,7 +14,7 @@ data ReplayAnalysis = ReplayAnalysis
   , replayAnalysisUuid :: Text.Text
   , replayAnalysisRecordedAt :: Time.LocalTime
   , replayAnalysisCustomName :: Maybe Text.Text
-  , replayAnalysisGameTypeName :: Text.Text
+  , replayAnalysisGameType :: Text.Text
   , replayAnalysisGameModeId :: Maybe Int
   , replayAnalysisPlaylistId :: Int
   , replayAnalysisServerId :: Maybe Int
@@ -69,6 +69,7 @@ makeReplayAnalysis replay = do
   uuid <- getUuid replay
   recordedAt <- getRecordedAt replay
   customName <- getCustomName replay
+  gameType <- getGameType replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -76,7 +77,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisUuid = uuid
     , replayAnalysisRecordedAt = recordedAt
     , replayAnalysisCustomName = customName
-    , replayAnalysisGameTypeName = undefined
+    , replayAnalysisGameType = gameType
     , replayAnalysisGameModeId = undefined
     , replayAnalysisPlaylistId = undefined
     , replayAnalysisServerId = undefined
@@ -149,6 +150,18 @@ getCustomName replay = do
       name & Rattletrap.propertyValue & fromStrProperty &
       fmap Rattletrap.textValue &
       fmap Just
+
+getGameType
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Text.Text
+getGameType replay = do
+  property <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "MatchType"
+  value <- property & Rattletrap.propertyValue & fromStrProperty
+  value & Rattletrap.textValue & pure
 
 lookupThrow
   :: Catch.MonadThrow m
