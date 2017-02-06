@@ -73,6 +73,7 @@ makeReplayAnalysis replay = do
   gameType <- getGameType replay
   gameMode <- getGameMode replay
   playlist <- getPlaylist replay
+  serverId <- getServerId replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -83,7 +84,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisGameType = gameType
     , replayAnalysisGameMode = gameMode
     , replayAnalysisPlaylist = playlist
-    , replayAnalysisServerId = undefined
+    , replayAnalysisServerId = serverId
     , replayAnalysisServerName = undefined
     , replayAnalysisArenaName = undefined
     , replayAnalysisTeamSize = undefined
@@ -201,6 +202,28 @@ getPlaylist replay = do
   value & Rattletrap.intAttributeValue & Rattletrap.int32Value & fromIntegral &
     pure
 
+getServerId
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m (Maybe Int)
+getServerId replay = do
+  let maybeAttribute =
+        replay & Rattletrap.replayContent & Rattletrap.sectionBody &
+        Rattletrap.contentFrames &
+        concatMap Rattletrap.frameReplications &
+        map Rattletrap.replicationValue &
+        Maybe.mapMaybe fromUpdatedReplication &
+        concatMap Rattletrap.updatedReplicationAttributes &
+        filter (attributeNameIs "ProjectX.GRI_X:GameServerID") &
+        headThrow
+  case maybeAttribute of
+    Nothing -> pure Nothing
+    Just attribute -> do
+      value <- attribute & Rattletrap.attributeValue & fromQWordAttribute
+      value & Rattletrap.qWordAttributeValue & Rattletrap.word64Value &
+        fromIntegral &
+        Just &
+        pure
+
 headThrow
   :: Catch.MonadThrow m
   => [a] -> m a
@@ -234,6 +257,14 @@ fromIntAttribute a =
   case a of
     Rattletrap.IntAttributeValue x -> pure x
     _ -> Catch.throwM (userError "not a IntAttribute")
+
+fromQWordAttribute
+  :: Catch.MonadThrow m
+  => Rattletrap.AttributeValue -> m Rattletrap.QWordAttribute
+fromQWordAttribute a =
+  case a of
+    Rattletrap.QWordAttributeValue x -> pure x
+    _ -> Catch.throwM (userError "not a QWordAttribute")
 
 fromStrProperty
   :: Catch.MonadThrow m
