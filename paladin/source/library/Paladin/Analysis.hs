@@ -2,7 +2,6 @@ module Paladin.Analysis where
 
 import Data.Function ((&))
 
-import qualified Control.Monad as Monad
 import qualified Control.Monad.Catch as Catch
 import qualified Data.Map as Map
 import qualified Data.Text as Text
@@ -114,31 +113,26 @@ getMinorVersion replay =
 getUuid
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m Text.Text
-getUuid replay =
-  replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
-  Rattletrap.headerProperties &
-  Rattletrap.dictionaryValue &
-  lookupThrow "Id" &
-  fmap Rattletrap.propertyValue &
-  fmap fromStrProperty &
-  Monad.join &
-  fmap Rattletrap.textValue
+getUuid replay = do
+  property <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "Id"
+  value <- property & Rattletrap.propertyValue & fromStrProperty
+  value & Rattletrap.textValue & pure
 
 getRecordedAt
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m Time.LocalTime
-getRecordedAt replay =
-  replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
-  Rattletrap.headerProperties &
-  Rattletrap.dictionaryValue &
-  lookupThrow "Date" &
-  fmap Rattletrap.propertyValue &
-  fmap fromStrProperty &
-  Monad.join &
-  fmap Rattletrap.textValue &
-  fmap Text.unpack &
-  fmap parseTime &
-  Monad.join
+getRecordedAt replay = do
+  property <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "Date"
+  value <- property & Rattletrap.propertyValue & fromStrProperty
+  value & Rattletrap.textValue & Text.unpack & parseTime
 
 getCustomName
   :: Catch.MonadThrow m
