@@ -74,6 +74,7 @@ makeReplayAnalysis replay = do
   gameMode <- getGameMode replay
   playlist <- getPlaylist replay
   serverId <- getServerId replay
+  serverName <- getServerName replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -85,7 +86,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisGameMode = gameMode
     , replayAnalysisPlaylist = playlist
     , replayAnalysisServerId = serverId
-    , replayAnalysisServerName = undefined
+    , replayAnalysisServerName = serverName
     , replayAnalysisArenaName = undefined
     , replayAnalysisTeamSize = undefined
     , replayAnalysisIsFair = undefined
@@ -224,6 +225,22 @@ getServerId replay = do
         Just &
         pure
 
+getServerName
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Text.Text
+getServerName replay = do
+  attribute <-
+    replay & Rattletrap.replayContent & Rattletrap.sectionBody &
+    Rattletrap.contentFrames &
+    concatMap Rattletrap.frameReplications &
+    map Rattletrap.replicationValue &
+    Maybe.mapMaybe fromUpdatedReplication &
+    concatMap Rattletrap.updatedReplicationAttributes &
+    filter (attributeNameIs "Engine.GameReplicationInfo:ServerName") &
+    headThrow
+  value <- attribute & Rattletrap.attributeValue & fromStringAttribute
+  value & Rattletrap.stringAttributeValue & Rattletrap.textValue & pure
+
 headThrow
   :: Catch.MonadThrow m
   => [a] -> m a
@@ -265,6 +282,14 @@ fromQWordAttribute a =
   case a of
     Rattletrap.QWordAttributeValue x -> pure x
     _ -> Catch.throwM (userError "not a QWordAttribute")
+
+fromStringAttribute
+  :: Catch.MonadThrow m
+  => Rattletrap.AttributeValue -> m Rattletrap.StringAttribute
+fromStringAttribute a =
+  case a of
+    Rattletrap.StringAttributeValue x -> pure x
+    _ -> Catch.throwM (userError "not a StringAttribute")
 
 fromStrProperty
   :: Catch.MonadThrow m
