@@ -4,6 +4,7 @@ import Data.Function ((&))
 
 import qualified Control.Monad.Catch as Catch
 import qualified Data.Map as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Data.Time as Time
 import qualified Rattletrap
@@ -15,7 +16,7 @@ data ReplayAnalysis = ReplayAnalysis
   , replayAnalysisRecordedAt :: Time.LocalTime
   , replayAnalysisCustomName :: Maybe Text.Text
   , replayAnalysisGameType :: Text.Text
-  , replayAnalysisGameModeId :: Maybe Int
+  , replayAnalysisGameMode :: Maybe Int
   , replayAnalysisPlaylistId :: Int
   , replayAnalysisServerId :: Maybe Int
   , replayAnalysisServerName :: Text.Text
@@ -70,6 +71,7 @@ makeReplayAnalysis replay = do
   recordedAt <- getRecordedAt replay
   customName <- getCustomName replay
   gameType <- getGameType replay
+  gameMode <- getGameMode replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -78,7 +80,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisRecordedAt = recordedAt
     , replayAnalysisCustomName = customName
     , replayAnalysisGameType = gameType
-    , replayAnalysisGameModeId = undefined
+    , replayAnalysisGameMode = gameMode
     , replayAnalysisPlaylistId = undefined
     , replayAnalysisServerId = undefined
     , replayAnalysisServerName = undefined
@@ -162,6 +164,25 @@ getGameType replay = do
   value <- property & Rattletrap.propertyValue & fromStrProperty
   value & Rattletrap.textValue & pure
 
+getGameMode
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m (Maybe Int)
+getGameMode replay = do
+  let maybeAttribute =
+        replay & Rattletrap.replayContent & Rattletrap.sectionBody &
+        Rattletrap.contentFrames &
+        concatMap Rattletrap.frameReplications &
+        map Rattletrap.replicationValue &
+        Maybe.mapMaybe fromUpdatedReplication &
+        concatMap Rattletrap.updatedReplicationAttributes &
+        filter (attributeNameIs "TAGame.GameEvent_TA:GameMode") &
+        Maybe.listToMaybe
+  case maybeAttribute of
+    Nothing -> pure Nothing
+    Just attribute -> do
+      value <- attribute & Rattletrap.attributeValue & fromGameModeAttribute
+      value & Rattletrap.gameModeAttributeWord & fromIntegral & Just & pure
+
 lookupThrow
   :: Catch.MonadThrow m
   => String -> Map.Map Text.Text v -> m v
@@ -172,6 +193,14 @@ lookupThrow k m =
       let message = "could not find key: " ++ k
       in Catch.throwM (userError message)
 
+fromGameModeAttribute
+  :: Catch.MonadThrow m
+  => Rattletrap.AttributeValue -> m Rattletrap.GameModeAttribute
+fromGameModeAttribute a =
+  case a of
+    Rattletrap.GameModeAttributeValue x -> pure x
+    _ -> Catch.throwM (userError "not a GameModeAttribute")
+
 fromStrProperty
   :: Catch.MonadThrow m
   => Rattletrap.PropertyValue a -> m Rattletrap.Text
@@ -179,6 +208,18 @@ fromStrProperty p =
   case p of
     Rattletrap.StrProperty x -> pure x
     _ -> Catch.throwM (userError "not a StrProperty")
+
+fromUpdatedReplication
+  :: Catch.MonadThrow m
+  => Rattletrap.ReplicationValue -> m Rattletrap.UpdatedReplication
+fromUpdatedReplication r =
+  case r of
+    Rattletrap.UpdatedReplicationValue x -> pure x
+    _ -> Catch.throwM (userError "not an UpdatedReplication")
+
+attributeNameIs :: String -> Rattletrap.Attribute -> Bool
+attributeNameIs name attribute =
+  Rattletrap.attributeName attribute == Rattletrap.Text (Text.pack name)
 
 parseTime
   :: Catch.MonadThrow m
