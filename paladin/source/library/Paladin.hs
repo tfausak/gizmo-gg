@@ -2,6 +2,7 @@ module Paladin
   ( module Export
   ) where
 
+import Paladin.Analysis as Export
 import Paladin.Config as Export
 import Paladin.Database as Export
 import Paladin.Entity as Export
