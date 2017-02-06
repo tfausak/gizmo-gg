@@ -11,12 +11,16 @@
 .text-normal { font-weight: normal; }
 .is-muted { color: $grey-light; }
 
+.no-margin { margin: 0!important; }
+
 .text-primary { color: $primary; }
 .text-success { color: $success; }
 .text-warning { color: $warning; }
 .text-danger { color: $danger; }
 .text-light { color: $light; }
 .text-dark { color: $dark; }
+.text-small { font-size: 13px; }
+.text-muted { color: $grey; }
 
 .text-right { text-align: right!important; }
 .text-left { text-align: left!important; }
@@ -34,8 +38,12 @@
 
 .level-stacked {
   flex-direction: column;
-  > * {
-    display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  > .level-item,
+  > .level-item:not(.is-narrow) {
+    margin-right: 0;
+    flex-grow: 0;
   }
 }
 
