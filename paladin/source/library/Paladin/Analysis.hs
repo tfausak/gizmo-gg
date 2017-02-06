@@ -17,7 +17,7 @@ data ReplayAnalysis = ReplayAnalysis
   , replayAnalysisCustomName :: Maybe Text.Text
   , replayAnalysisGameType :: Text.Text
   , replayAnalysisGameMode :: Maybe Int
-  , replayAnalysisPlaylistId :: Int
+  , replayAnalysisPlaylist :: Int
   , replayAnalysisServerId :: Maybe Int
   , replayAnalysisServerName :: Text.Text
   , replayAnalysisArenaName :: Text.Text
@@ -72,6 +72,7 @@ makeReplayAnalysis replay = do
   customName <- getCustomName replay
   gameType <- getGameType replay
   gameMode <- getGameMode replay
+  playlist <- getPlaylist replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -81,7 +82,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisCustomName = customName
     , replayAnalysisGameType = gameType
     , replayAnalysisGameMode = gameMode
-    , replayAnalysisPlaylistId = undefined
+    , replayAnalysisPlaylist = playlist
     , replayAnalysisServerId = undefined
     , replayAnalysisServerName = undefined
     , replayAnalysisArenaName = undefined
@@ -176,12 +177,37 @@ getGameMode replay = do
         Maybe.mapMaybe fromUpdatedReplication &
         concatMap Rattletrap.updatedReplicationAttributes &
         filter (attributeNameIs "TAGame.GameEvent_TA:GameMode") &
-        Maybe.listToMaybe
+        headThrow
   case maybeAttribute of
     Nothing -> pure Nothing
     Just attribute -> do
       value <- attribute & Rattletrap.attributeValue & fromGameModeAttribute
       value & Rattletrap.gameModeAttributeWord & fromIntegral & Just & pure
+
+getPlaylist
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Int
+getPlaylist replay = do
+  attribute <-
+    replay & Rattletrap.replayContent & Rattletrap.sectionBody &
+    Rattletrap.contentFrames &
+    concatMap Rattletrap.frameReplications &
+    map Rattletrap.replicationValue &
+    Maybe.mapMaybe fromUpdatedReplication &
+    concatMap Rattletrap.updatedReplicationAttributes &
+    filter (attributeNameIs "ProjectX.GRI_X:ReplicatedGamePlaylist") &
+    headThrow
+  value <- attribute & Rattletrap.attributeValue & fromIntAttribute
+  value & Rattletrap.intAttributeValue & Rattletrap.int32Value & fromIntegral &
+    pure
+
+headThrow
+  :: Catch.MonadThrow m
+  => [a] -> m a
+headThrow xs =
+  case xs of
+    [] -> Catch.throwM (userError "empty list")
+    x:_ -> pure x
 
 lookupThrow
   :: Catch.MonadThrow m
@@ -200,6 +226,14 @@ fromGameModeAttribute a =
   case a of
     Rattletrap.GameModeAttributeValue x -> pure x
     _ -> Catch.throwM (userError "not a GameModeAttribute")
+
+fromIntAttribute
+  :: Catch.MonadThrow m
+  => Rattletrap.AttributeValue -> m Rattletrap.IntAttribute
+fromIntAttribute a =
+  case a of
+    Rattletrap.IntAttributeValue x -> pure x
+    _ -> Catch.throwM (userError "not a IntAttribute")
 
 fromStrProperty
   :: Catch.MonadThrow m
