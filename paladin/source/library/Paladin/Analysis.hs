@@ -20,7 +20,7 @@ data ReplayAnalysis = ReplayAnalysis
   , replayAnalysisPlaylist :: Int
   , replayAnalysisServerId :: Maybe Int
   , replayAnalysisServerName :: Text.Text
-  , replayAnalysisArenaName :: Text.Text
+  , replayAnalysisArena :: Text.Text
   , replayAnalysisTeamSize :: Int
   , replayAnalysisIsFair :: Bool
   , replayAnalysisPlayers :: [PlayerAnalysis]
@@ -75,6 +75,7 @@ makeReplayAnalysis replay = do
   playlist <- getPlaylist replay
   serverId <- getServerId replay
   serverName <- getServerName replay
+  arena <- getArena replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -87,7 +88,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisPlaylist = playlist
     , replayAnalysisServerId = serverId
     , replayAnalysisServerName = serverName
-    , replayAnalysisArenaName = undefined
+    , replayAnalysisArena = arena
     , replayAnalysisTeamSize = undefined
     , replayAnalysisIsFair = undefined
     , replayAnalysisPlayers = undefined
@@ -241,6 +242,22 @@ getServerName replay = do
   value <- attribute & Rattletrap.attributeValue & fromStringAttribute
   value & Rattletrap.stringAttributeValue & Rattletrap.textValue & pure
 
+getArena
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Text.Text
+getArena replay = do
+  property <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "MapName"
+  let propertyValue = Rattletrap.propertyValue property
+  value <-
+    case fromNameProperty propertyValue of
+      Just x -> pure x
+      Nothing -> fromStrProperty propertyValue
+  value & Rattletrap.textValue & pure
+
 headThrow
   :: Catch.MonadThrow m
   => [a] -> m a
@@ -290,6 +307,14 @@ fromStringAttribute a =
   case a of
     Rattletrap.StringAttributeValue x -> pure x
     _ -> Catch.throwM (userError "not a StringAttribute")
+
+fromNameProperty
+  :: Catch.MonadThrow m
+  => Rattletrap.PropertyValue a -> m Rattletrap.Text
+fromNameProperty p =
+  case p of
+    Rattletrap.NameProperty x -> pure x
+    _ -> Catch.throwM (userError "not a NameProperty")
 
 fromStrProperty
   :: Catch.MonadThrow m
