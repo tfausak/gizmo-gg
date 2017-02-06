@@ -139,17 +139,16 @@ getCustomName
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m (Maybe Text.Text)
 getCustomName replay = do
-  let maybeName =
+  let maybeProperty =
         replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
         Rattletrap.headerProperties &
         Rattletrap.dictionaryValue &
         Map.lookup (Text.pack "ReplayName")
-  case maybeName of
+  case maybeProperty of
     Nothing -> pure Nothing
-    Just name ->
-      name & Rattletrap.propertyValue & fromStrProperty &
-      fmap Rattletrap.textValue &
-      fmap Just
+    Just property -> do
+      value <- property & Rattletrap.propertyValue & fromStrProperty
+      value & Rattletrap.textValue & Just & pure
 
 getGameType
   :: Catch.MonadThrow m
