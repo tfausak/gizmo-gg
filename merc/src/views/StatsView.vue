@@ -1,9 +1,3 @@
-<style scoped lang="scss">
-.tabs {
-  justify-content: center;
-}
-</style>
-
 <template>
   <div>
     <section class="hero is-primary">
@@ -16,15 +10,15 @@
       </div>
 
       <div class="hero-foot">
-        <nav class="tabs is-boxed">
-          <div class="container">
+        <div class="container">
+          <nav class="tabs is-boxed is-centered">
             <ul>
               <router-link to="/stats" tag="li" exact><a>Summary</a></router-link>
               <router-link to="/stats/battle-cars" tag="li"><a>Battle-Cars</a></router-link>
               <router-link to="/stats/maps" tag="li"><a>Maps</a></router-link>
             </ul>
-          </div>
-        </nav>
+          </nav>
+        </div>
       </div>
     </section>
     <router-view></router-view>

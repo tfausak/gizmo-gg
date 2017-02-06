@@ -25,7 +25,7 @@
         <tbody>
           <tr v-for="row in sortedRows">
             <td>
-              <div class="level">
+              <div class="level level-chained">
                 <div class="level-item">
                   <figure class="image is-32x32 is-circle-32x32">
                     <img :src="'/static/img/bodies/' + slug(row.body) + '.png'">
@@ -37,7 +37,7 @@
               </div>
             </td>
             <td>
-              <div class="level">
+              <div class="level level-chained">
                 <div class="level-item">
                   <progress class="progress is-small" :class="{ 'is-primary': row.winPct >= 50 }" :value="row.winPct" :max="maxWinPct"></progress>
                 </div>

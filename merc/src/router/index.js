@@ -10,6 +10,7 @@ export default new Router({
   routes: [
     { path: '/upload', component: require('../views/UploadView.vue') },
     { path: '/desktop-app', component: require('../views/DesktopView.vue') },
+    { path: '/about', component: require('../views/AboutView.vue') },
     {
       name: 'search',
       path: '/search',
@@ -46,7 +47,16 @@ export default new Router({
         }
       ]
     },
-    { path: '/player-example', component: require('../views/PlayerExample.vue') },
+    {
+      path: '/player-example',
+      component: require('../views/PlayerExample.vue'),
+      children: [
+        {
+          path: '',
+          component: require('../views/Player/SummaryView.vue')
+        }
+      ]
+    },
     { path: '/', component: require('../views/IndexView.vue') },
     { path: '*', redirect: '/' }
   ]

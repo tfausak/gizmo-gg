@@ -14,7 +14,7 @@
           <p>
             &copy; 2017 <strong>gizmo.gg</strong>. Data from Rocket League replays.
           </p>
-          <p><a href="#">About</a> - <a target="_blank" href="https://discord.gg/nqZHDpy">Contact</a></p>
+          <p><router-link to="/about">About</router-link> - <a target="_blank" href="https://discord.gg/nqZHDpy">Contact</a></p>
         </div>
       </div>
     </footer>

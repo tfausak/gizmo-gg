@@ -18,9 +18,9 @@ th {
 
 <template>
   <th @click="orderByCol" :class="{ 'is-active': isActive }">
-    <div class="level level-split">
-      <div class="level-item"><slot></slot></div>
-      <div class="level-item">
+    <div class="level">
+      <div class="level-left"><slot></slot></div>
+      <div class="level-right">
         <span class="icon is-sort">
           <i class="fa fa-sort" v-if="!isActive"></i>
           <i class="fa fa-sort-desc" v-if="isActive && dir"></i>

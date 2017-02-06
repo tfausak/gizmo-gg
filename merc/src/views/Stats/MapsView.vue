@@ -23,7 +23,7 @@
           <tr v-for="row in sortedRows">
             <td>{{ row.map }}</td>
             <td>
-              <div class="level">
+              <div class="level level-chained">
                 <div class="level-item">
                   <progress class="progress is-small" :value="row.freqPct" :max="maxFreqPct"></progress>
                 </div>
@@ -34,7 +34,7 @@
             </td>
             <td class="has-text-right">{{ row.games }}</td>
             <td>
-              <div class="level">
+              <div class="level level-chained">
                 <div class="level-item">
                   <progress class="progress is-small is-success" :value="row.pts" :max="maxPts"></progress>
                 </div>

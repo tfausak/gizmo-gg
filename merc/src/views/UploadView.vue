@@ -1,13 +1,15 @@
 <style scoped lang="scss">
 @import "~styles/vars.scss";
 
+$upload_width: 300px;
+
 .selectButton {
   margin: 0 auto;
   border: 3px solid $primary;
   color: $primary;
   font-size: 20px;
-  width: 200px;
-  height: 200px;
+  width: $upload_width;
+  height: 150px;
   text-align: center;
   border-radius: 3px;
   padding: 10px;
@@ -35,7 +37,7 @@
   color: $grey;
 }
 .submitButton {
-  width: 200px;
+  width: $upload_width;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
 }
@@ -62,7 +64,8 @@
 </style>
 
 <template>
-  <div>
+  <div id="upload-view">
+
     <section class="hero is-primary">
       <div class="hero-body">
         <div class="container has-text-centered">
@@ -72,9 +75,11 @@
         </div>
       </div>
     </section>
+
     <section class="section">
       <div class="container">
         <div class="columns">
+
           <div class="column">
             <form @submit.prevent="submit" role="form" enctype="multipart/form-data">
               <div class="level selectButton" @click="selectFiles" v-if="!isUploading()">
@@ -104,7 +109,7 @@
           </div>
 
           <div class="column">
-            <nav class="panel">
+            <div class="panel">
               <p class="panel-heading">
                 Uploads
               </p>
@@ -136,11 +141,13 @@
                   <div class="level-item">{{ upload.response.statusText }}</div>
                 </div>
               </div>
-            </nav>
+            </div>
           </div>
+
         </div>
       </div>
     </section>
+
   </div>
 </template>
 

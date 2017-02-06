@@ -3,34 +3,55 @@
 @import '~font-awesome/css/font-awesome.css';
 @import 'icomoon.css';
 
-.is-fullwidth {
-  width: 100%;
+/* Helpers */
+
+.is-bold,
+.text-bold { font-weight: bold; }
+.is-normal,
+.text-normal { font-weight: normal; }
+.is-muted { color: $grey-light; }
+
+.text-primary { color: $primary; }
+.text-success { color: $success; }
+.text-warning { color: $warning; }
+.text-danger { color: $danger; }
+.text-light { color: $light; }
+.text-dark { color: $dark; }
+
+.text-right { text-align: right!important; }
+.text-left { text-align: left!important; }
+
+/* Levels */
+
+.level-chained {
+  justify-content: flex-start;
+  > .level-item,
+  > .level-item:not(.is-narrow) {
+    flex-grow: 0;
+    margin-right: 5px;
+  }
 }
+
+.level-stacked {
+  flex-direction: column;
+  > * {
+    display: flex;
+  }
+}
+
+/* Buttons */
 
 .button.is-white-outlined {
   background-color: rgba(0, 0, 0, 0.1);
   border: 1px solid #fff;
 }
 
+/* Tables */
+
 table.is-transparent,
 table.is-transparent th,
 table.is-transparent td {
   background-color: transparent;
-}
-
-// default echarts size. it ships with something huge like 600x400
-.echarts {
-  width: 300px!important;
-  height: 150px!important;
-  margin: 0 auto!important;
-}
-
-// when you want a level like this: [A       B]
-.level-split {
-  justify-content: space-between!important;
-}
-.level-split > .level-item {
-  flex-grow: 0!important;
 }
 
 .table-outerborder {
@@ -47,17 +68,22 @@ table.is-transparent td {
       text-align: right;
     }
   }
-  .level {
-    justify-content: flex-start;
-  }
-  .level > .level-item {
-    flex-grow: 0;
-    padding: 0 0 0 10px;
-  }
   progress {
     width: 100px;
   }
 }
+
+/* Charts */
+
+// default echarts size. it ships with something huge like 600x400
+.echarts {
+  width: 300px!important;
+  height: 150px!important;
+  margin: 0 auto!important;
+}
+
+/* Images */
+
 .is-circle-32x32 {
   background-color: $grey-lighter;
   border-radius: 16px;
@@ -71,6 +97,12 @@ table.is-transparent td {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.is-muted {
-  color: $grey-light;
+/* Custom */
+
+.potato {
+  background-color: $white-bis;
+  border: 1px solid $grey-lighter;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  padding: 10px;
 }

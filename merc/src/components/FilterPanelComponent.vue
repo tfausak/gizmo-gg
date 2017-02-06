@@ -1,15 +1,22 @@
 <style scoped lang="scss">
 .panel-heading {
+  padding-top: 5px;
+  padding-bottom: 5px;
+
   .heading {
     margin: 0;
     font-size: 13px;
     color: #000;
   }
 }
+.panel-block {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
 </style>
 
 <template>
-  <nav class="panel">
+  <div class="panel">
     <p class="panel-heading">
       <span class="heading">{{ title }}</span>
     </p>
@@ -19,7 +26,7 @@
       </span>
       {{ value }}
     </a>
-  </nav>
+  </div>
 </template>
 
 <script>

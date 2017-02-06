@@ -14,16 +14,19 @@
 .hero-main .hero-body {
   padding-bottom: 0;
 }
+.hero-main .hero-foot {
+  margin-top: 10px;
+}
 </style>
 
 <template>
   <div>
-    <section class="hero hero-main">
+    <section class="hero hero-main is-primary">
       <div class="hero-body">
         <div class="container">
           <div class="level level-player">
             <div class="level-item">
-              <figure class="image is-128x128 is-circle-dark-128x128">
+              <figure class="image is-128x128 is-circle-light-128x128">
                 <img :src="'/static/img/bodies/octane.png'">
               </figure>
             </div>
@@ -48,17 +51,19 @@
         </div>
       </div>
       <div class="hero-foot">
-          <nav class="tabs is-boxed">
-            <div class="container has-text-left">
+          <div class="container">
+            <nav class="tabs is-boxed">
               <ul>
                 <router-link to="/player-example" tag="li"><a>Summary</a></router-link>
                 <router-link to="/player-example/battle-cars" tag="li"><a>Battle-Cars</a></router-link>
                 <router-link to="/player-example/maps" tag="li"><a>Maps</a></router-link>
               </ul>
-            </div>
-          </nav>
+            </nav>
+          </div>
         </div>
     </section>
-    <router-view></router-view>
+    <section class="section">
+      <router-view></router-view>
+    </section>
   </div>
 </template>
