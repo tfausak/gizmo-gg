@@ -1,6 +1,10 @@
 module Paladin.Analysis where
 
+import Data.Function ((&))
+
+import qualified Control.Monad as Monad
 import qualified Control.Monad.Catch as Catch
+import qualified Data.Map as Map
 import qualified Data.Text as Text
 import qualified Data.Time as Time
 import qualified Rattletrap
@@ -60,4 +64,127 @@ data PlayerAnalysis = PlayerAnalysis
 makeReplayAnalysis
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m ReplayAnalysis
-makeReplayAnalysis _replay = undefined
+makeReplayAnalysis replay = do
+  majorVersion <- getMajorVersion replay
+  minorVersion <- getMinorVersion replay
+  uuid <- getUuid replay
+  recordedAt <- getRecordedAt replay
+  customName <- getCustomName replay
+  pure
+    ReplayAnalysis
+    { replayAnalysisMajorVersion = majorVersion
+    , replayAnalysisMinorVersion = minorVersion
+    , replayAnalysisUuid = uuid
+    , replayAnalysisRecordedAt = recordedAt
+    , replayAnalysisCustomName = customName
+    , replayAnalysisGameTypeName = undefined
+    , replayAnalysisGameModeId = undefined
+    , replayAnalysisPlaylistId = undefined
+    , replayAnalysisServerId = undefined
+    , replayAnalysisServerName = undefined
+    , replayAnalysisArenaName = undefined
+    , replayAnalysisTeamSize = undefined
+    , replayAnalysisIsFair = undefined
+    , replayAnalysisPlayers = undefined
+    , replayAnalysisDuration = undefined
+    , replayAnalysisBlueScore = undefined
+    , replayAnalysisOrangeScore = undefined
+    }
+
+getMajorVersion
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Int
+getMajorVersion replay =
+  replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+  Rattletrap.headerEngineVersion &
+  Rattletrap.word32Value &
+  fromIntegral &
+  pure
+
+getMinorVersion
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Int
+getMinorVersion replay =
+  replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+  Rattletrap.headerLicenseeVersion &
+  Rattletrap.word32Value &
+  fromIntegral &
+  pure
+
+getUuid
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Text.Text
+getUuid replay =
+  replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+  Rattletrap.headerProperties &
+  Rattletrap.dictionaryValue &
+  lookupThrow "Id" &
+  fmap Rattletrap.propertyValue &
+  fmap fromStrProperty &
+  Monad.join &
+  fmap Rattletrap.textValue
+
+getRecordedAt
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Time.LocalTime
+getRecordedAt replay =
+  replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+  Rattletrap.headerProperties &
+  Rattletrap.dictionaryValue &
+  lookupThrow "Date" &
+  fmap Rattletrap.propertyValue &
+  fmap fromStrProperty &
+  Monad.join &
+  fmap Rattletrap.textValue &
+  fmap Text.unpack &
+  fmap parseTime &
+  Monad.join
+
+getCustomName
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m (Maybe Text.Text)
+getCustomName replay = do
+  let maybeName =
+        replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+        Rattletrap.headerProperties &
+        Rattletrap.dictionaryValue &
+        Map.lookup (Text.pack "ReplayName")
+  case maybeName of
+    Nothing -> pure Nothing
+    Just name ->
+      name & Rattletrap.propertyValue & fromStrProperty &
+      fmap Rattletrap.textValue &
+      fmap Just
+
+lookupThrow
+  :: Catch.MonadThrow m
+  => String -> Map.Map Text.Text v -> m v
+lookupThrow k m =
+  case Map.lookup (Text.pack k) m of
+    Just v -> pure v
+    Nothing ->
+      let message = "could not find key: " ++ k
+      in Catch.throwM (userError message)
+
+fromStrProperty
+  :: Catch.MonadThrow m
+  => Rattletrap.PropertyValue a -> m Rattletrap.Text
+fromStrProperty p =
+  case p of
+    Rattletrap.StrProperty x -> pure x
+    _ -> Catch.throwM (userError "not a StrProperty")
+
+parseTime
+  :: Catch.MonadThrow m
+  => String -> m Time.LocalTime
+parseTime string =
+  let whitespace = False
+      locale = Time.defaultTimeLocale
+      newFormat = "%Y-%m-%d %H-%M-%S"
+      oldFormat = "%Y-%m-%d:%H-%M"
+  in case Time.parseTimeM whitespace locale newFormat string of
+       Just x -> pure x
+       Nothing ->
+         case Time.parseTimeM whitespace locale oldFormat string of
+           Right x -> pure x
+           Left x -> Catch.throwM (userError x)

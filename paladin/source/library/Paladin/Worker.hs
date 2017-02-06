@@ -2,7 +2,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Paladin.Worker where
+module Paladin.Worker
+  ( startWorker
+  ) where
 
 import Data.Function ((&))
 
