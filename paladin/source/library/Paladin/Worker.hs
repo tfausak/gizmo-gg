@@ -20,7 +20,6 @@ import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import qualified Data.Time as Time
 import qualified Data.Version as Version
 import qualified Data.Word as Word
 import qualified Database.PostgreSQL.Simple as Sql
@@ -211,7 +210,7 @@ insertReplay connection uploadId replay replayAnalysis = do
   let uuid = Analysis.replayAnalysisUuid replayAnalysis
   let majorVersion = Analysis.replayAnalysisMajorVersion replayAnalysis
   let minorVersion = Analysis.replayAnalysisMinorVersion replayAnalysis
-  recordedAt <- getRecordedAt replay
+  let recordedAt = Analysis.replayAnalysisRecordedAt replayAnalysis
   customName <- getCustomName replay
   duration <- getDuration replay
   Database.execute
@@ -426,14 +425,6 @@ attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
 
-getRecordedAt
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Time.LocalTime
-getRecordedAt replay = do
-  let header = getHeader replay
-  rawDate <- getStrProperty "Date" header
-  parseTime (Text.unpack rawDate)
-
 getCustomName
   :: Fail.MonadFail m
   => Rattletrap.Replay -> m (Maybe Text.Text)
@@ -460,15 +451,6 @@ getProperty name header =
   Map.lookup name &
   maybe (fail ("could not find " ++ show name ++ " property")) pure
 
-getStrProperty
-  :: Fail.MonadFail m
-  => Text.Text -> Rattletrap.Header -> m Text.Text
-getStrProperty name header = do
-  property <- header & getProperty name
-  case Rattletrap.propertyValue property of
-    Rattletrap.StrProperty text -> pure (fromText text)
-    _ -> fail (show name ++ " property is not a Str")
-
 getIntProperty
   :: (Integral a, Fail.MonadFail m)
   => Text.Text -> Rattletrap.Header -> m a
@@ -486,19 +468,6 @@ getFloatProperty name header = do
   case Rattletrap.propertyValue property of
     Rattletrap.FloatProperty x -> pure (fromFloat32 x)
     _ -> fail (show name ++ " property is not a Float")
-
-parseTime
-  :: Fail.MonadFail m
-  => String -> m Time.LocalTime
-parseTime string =
-  let newFormat = "%Y-%m-%d %H-%M-%S"
-      oldFormat = "%Y-%m-%d:%H-%M"
-  in case Time.parseTimeM False Time.defaultTimeLocale newFormat string of
-       Just x -> pure x
-       _ ->
-         case Time.parseTimeM False Time.defaultTimeLocale oldFormat string of
-           Right x -> pure x
-           Left x -> fail x
 
 fromText :: Rattletrap.Text -> Text.Text
 fromText text = text & Rattletrap.textValue
