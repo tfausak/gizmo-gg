@@ -208,7 +208,7 @@ insertReplay connection uploadId replay replayAnalysis = do
     , blueScore
     , orangeScore)
   mapM_ (insertGamePlayer connection hash) players
-  uuid <- getUuid replay
+  let uuid = Analysis.replayAnalysisUuid replayAnalysis
   majorVersion <- getMajorVersion replay
   minorVersion <- getMinorVersion replay
   recordedAt <- getRecordedAt replay
@@ -425,11 +425,6 @@ getUpdatedReplicationValue replication =
 attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
-
-getUuid
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Text.Text
-getUuid replay = getStrProperty "Id" (getHeader replay)
 
 getMajorVersion
   :: Fail.MonadFail m
