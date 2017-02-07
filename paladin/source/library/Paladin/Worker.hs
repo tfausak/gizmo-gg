@@ -153,7 +153,7 @@ insertReplay connection uploadId replay replayAnalysis = do
   players <- getPlayers replay
   mapM_ (insertPlayer connection) players
   let teamSize = Analysis.replayAnalysisTeamSize replayAnalysis
-  let isFair = Maybe.fromMaybe True (getIsFair replay)
+  let isFair = Analysis.replayAnalysisIsFair replayAnalysis
   let blueScore = Maybe.fromMaybe 0 (getBlueScore replay)
   let orangeScore = Maybe.fromMaybe 0 (getOrangeScore replay)
   let hash =
@@ -274,11 +274,6 @@ makeGameHash gameType playlist server mode size fair arena blue orange players =
           ]
   in Hash.hash (ByteString.pack key)
 
-getIsFair
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Bool
-getIsFair replay = replay & getHeader & getBoolProperty "bUnfairBots"
-
 getBlueScore
   :: Fail.MonadFail m
   => Rattletrap.Replay -> m Int
@@ -288,15 +283,6 @@ getOrangeScore
   :: Fail.MonadFail m
   => Rattletrap.Replay -> m Int
 getOrangeScore replay = replay & getHeader & getIntProperty "Team1Score"
-
-getBoolProperty
-  :: Fail.MonadFail m
-  => Text.Text -> Rattletrap.Header -> m Bool
-getBoolProperty name header = do
-  property <- header & getProperty name
-  case Rattletrap.propertyValue property of
-    Rattletrap.BoolProperty x -> x & Rattletrap.word8Value & (/= 0) & pure
-    _ -> fail (show name ++ " property is not a Bool")
 
 type Player3 = (Rattletrap.UniqueIdAttribute, Text.Text, Int)
 
