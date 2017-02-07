@@ -10,6 +10,7 @@
 .is-normal,
 .text-normal { font-weight: normal; }
 .is-muted { color: $grey-light; }
+.is-relative { position: relative; }
 
 .no-margin { margin: 0!important; }
 
@@ -19,7 +20,7 @@
 .text-danger { color: $danger; }
 .text-light { color: $light; }
 .text-dark { color: $dark; }
-.text-small { font-size: 13px; }
+.text-small { font-size: 12px; }
 .text-muted { color: $grey; }
 
 .text-right { text-align: right!important; }

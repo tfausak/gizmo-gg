@@ -1,4 +1,6 @@
 <style scoped lang="scss">
+@import "~styles/vars.scss";
+
 .level-player {
   justify-content: flex-start;
 }
@@ -16,6 +18,10 @@
 }
 .hero-main .hero-foot {
   margin-top: 10px;
+}
+.is-offwhite,
+.hero-main li.is-active a {
+  background-color: $white-ter!important;
 }
 </style>
 
@@ -62,7 +68,7 @@
           </div>
         </div>
     </section>
-    <section class="section">
+    <section class="section is-offwhite">
       <router-view></router-view>
     </section>
   </div>
