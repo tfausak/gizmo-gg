@@ -76,6 +76,7 @@ makeReplayAnalysis replay = do
   serverId <- getServerId replay
   serverName <- getServerName replay
   arena <- getArena replay
+  teamSize <- getTeamSize replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -89,7 +90,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisServerId = serverId
     , replayAnalysisServerName = serverName
     , replayAnalysisArena = arena
-    , replayAnalysisTeamSize = undefined
+    , replayAnalysisTeamSize = teamSize
     , replayAnalysisIsFair = undefined
     , replayAnalysisPlayers = undefined
     , replayAnalysisDuration = undefined
@@ -258,6 +259,18 @@ getArena replay = do
       Nothing -> fromStrProperty propertyValue
   value & Rattletrap.textValue & pure
 
+getTeamSize
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Int
+getTeamSize replay = do
+  property <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "TeamSize"
+  value <- property & Rattletrap.propertyValue & fromIntProperty
+  value & Rattletrap.int32Value & fromIntegral & pure
+
 headThrow
   :: Catch.MonadThrow m
   => [a] -> m a
@@ -307,6 +320,14 @@ fromStringAttribute a =
   case a of
     Rattletrap.StringAttributeValue x -> pure x
     _ -> Catch.throwM (userError "not a StringAttribute")
+
+fromIntProperty
+  :: Catch.MonadThrow m
+  => Rattletrap.PropertyValue a -> m Rattletrap.Int32
+fromIntProperty p =
+  case p of
+    Rattletrap.IntProperty x -> pure x
+    _ -> Catch.throwM (userError "not a IntProperty")
 
 fromNameProperty
   :: Catch.MonadThrow m
