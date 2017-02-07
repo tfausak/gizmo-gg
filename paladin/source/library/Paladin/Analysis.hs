@@ -341,6 +341,7 @@ getOrangeScore replay = do
       value <- property & Rattletrap.propertyValue & fromIntProperty
       value & Rattletrap.int32Value & fromIntegral & pure
 
+-- Generic helpers
 headThrow
   :: Catch.MonadThrow m
   => [a] -> m a
@@ -359,6 +360,7 @@ lookupThrow k m =
       let message = "could not find key: " ++ k
       in Catch.throwM (userError message)
 
+-- Attribute converters
 fromGameModeAttribute
   :: Catch.MonadThrow m
   => Rattletrap.AttributeValue -> m Rattletrap.GameModeAttribute
@@ -391,6 +393,7 @@ fromStringAttribute a =
     Rattletrap.StringAttributeValue x -> pure x
     _ -> Catch.throwM (userError "not a StringAttribute")
 
+-- Property converters
 fromBoolProperty
   :: Catch.MonadThrow m
   => Rattletrap.PropertyValue a -> m Rattletrap.Word8
@@ -431,6 +434,7 @@ fromStrProperty p =
     Rattletrap.StrProperty x -> pure x
     _ -> Catch.throwM (userError "not a StrProperty")
 
+-- Replication converters
 fromUpdatedReplication
   :: Catch.MonadThrow m
   => Rattletrap.ReplicationValue -> m Rattletrap.UpdatedReplication
@@ -439,6 +443,7 @@ fromUpdatedReplication r =
     Rattletrap.UpdatedReplicationValue x -> pure x
     _ -> Catch.throwM (userError "not an UpdatedReplication")
 
+-- Misc. helpers
 attributeNameIs :: String -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text (Text.pack name)
