@@ -26,6 +26,7 @@ library:
     - cryptonite
     - directory
     - envy
+    - exceptions
     - filepath
     - http-types
     - postgresql-simple
