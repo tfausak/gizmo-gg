@@ -80,6 +80,7 @@ makeReplayAnalysis replay = do
   isFair <- getIsFair replay
   players <- undefined
   duration <- getDuration replay
+  blueScore <- getBlueScore replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -97,7 +98,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisIsFair = isFair
     , replayAnalysisPlayers = players
     , replayAnalysisDuration = duration
-    , replayAnalysisBlueScore = undefined
+    , replayAnalysisBlueScore = blueScore
     , replayAnalysisOrangeScore = undefined
     }
 
@@ -305,6 +306,21 @@ getDuration replay = do
   rateValue <- rateProperty & Rattletrap.propertyValue & fromFloatProperty
   let rate = rateValue & Rattletrap.float32Value
   frames / rate & realToFrac & pure
+
+getBlueScore
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Int
+getBlueScore replay = do
+  let maybeProperty =
+        replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+        Rattletrap.headerProperties &
+        Rattletrap.dictionaryValue &
+        lookupThrow "Team0Score"
+  case maybeProperty of
+    Nothing -> pure 0
+    Just property -> do
+      value <- property & Rattletrap.propertyValue & fromIntProperty
+      value & Rattletrap.int32Value & fromIntegral & pure
 
 headThrow
   :: Catch.MonadThrow m
