@@ -209,7 +209,7 @@ insertReplay connection uploadId replay replayAnalysis = do
     , orangeScore)
   mapM_ (insertGamePlayer connection hash) players
   let uuid = Analysis.replayAnalysisUuid replayAnalysis
-  majorVersion <- getMajorVersion replay
+  let majorVersion = Analysis.replayAnalysisMajorVersion replayAnalysis
   minorVersion <- getMinorVersion replay
   recordedAt <- getRecordedAt replay
   customName <- getCustomName replay
@@ -425,12 +425,6 @@ getUpdatedReplicationValue replication =
 attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
-
-getMajorVersion
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Int
-getMajorVersion replay =
-  replay & getHeader & Rattletrap.headerEngineVersion & fromWord32 & pure
 
 getMinorVersion
   :: Fail.MonadFail m
