@@ -155,7 +155,7 @@ insertReplay connection uploadId replay replayAnalysis = do
   let teamSize = Analysis.replayAnalysisTeamSize replayAnalysis
   let isFair = Analysis.replayAnalysisIsFair replayAnalysis
   let blueScore = Analysis.replayAnalysisBlueScore replayAnalysis
-  let orangeScore = Maybe.fromMaybe 0 (getOrangeScore replay)
+  let orangeScore = Analysis.replayAnalysisOrangeScore replayAnalysis
   let hash =
         makeGameHash
           gameType
@@ -273,11 +273,6 @@ makeGameHash gameType playlist server mode size fair arena blue orange players =
           , players & NonEmpty.toList & List.sort & show
           ]
   in Hash.hash (ByteString.pack key)
-
-getOrangeScore
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Int
-getOrangeScore replay = replay & getHeader & getIntProperty "Team1Score"
 
 type Player3 = (Rattletrap.UniqueIdAttribute, Text.Text, Int)
 
