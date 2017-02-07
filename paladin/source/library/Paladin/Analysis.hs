@@ -59,12 +59,12 @@ data PlayerAnalysis = PlayerAnalysis
   , playerAnalysisAccentColor :: Int
   , playerAnalysisAccentFinish :: Int
   , playerAnalysisPrimaryFinish :: Int
-  , playerAnalysisFov :: Maybe Float
-  , playerAnalysisHeight :: Maybe Float
-  , playerAnalysisAngle :: Maybe Float
-  , playerAnalysisDistance :: Maybe Float
-  , playerAnalysisStiffness :: Maybe Float
-  , playerAnalysisSwivelSpeed :: Maybe Float
+  , playerAnalysisFov :: Float
+  , playerAnalysisHeight :: Float
+  , playerAnalysisAngle :: Float
+  , playerAnalysisDistance :: Float
+  , playerAnalysisStiffness :: Float
+  , playerAnalysisSwivelSpeed :: Float
   } deriving (Eq, Ord, Show)
 
 makeReplayAnalysis
@@ -370,6 +370,24 @@ defaultIsFair = True
 
 defaultScore :: Int
 defaultScore = 0
+
+defaultFov :: Float
+defaultFov = 90.0
+
+defaultHeight :: Float
+defaultHeight = 100.0
+
+defaultAngle :: Float
+defaultAngle = -5.0
+
+defaultDistance :: Float
+defaultDistance = 240.0
+
+defaultStiffness :: Float
+defaultStiffness = 0.0
+
+defaultSwivelSpeed :: Float
+defaultSwivelSpeed = 2.5
 
 -- Generic helpers
 lastThrow
@@ -916,12 +934,15 @@ makePlayer maybeCamera player car =
           _ -> playerBlueLoadout player
   in PlayerAnalysis
      { playerAnalysisIsPresentAtEnd = not (playerIsDestroyed player)
-     , playerAnalysisFov = fmap cameraFov maybeCamera
-     , playerAnalysisHeight = fmap cameraHeight maybeCamera
-     , playerAnalysisAngle = fmap cameraAngle maybeCamera
-     , playerAnalysisDistance = fmap cameraDistance maybeCamera
-     , playerAnalysisStiffness = fmap cameraStiffness maybeCamera
-     , playerAnalysisSwivelSpeed = fmap cameraSwivelSpeed maybeCamera
+     , playerAnalysisFov = maybe defaultFov cameraFov maybeCamera
+     , playerAnalysisHeight = maybe defaultHeight cameraHeight maybeCamera
+     , playerAnalysisAngle = maybe defaultAngle cameraAngle maybeCamera
+     , playerAnalysisDistance =
+         maybe defaultDistance cameraDistance maybeCamera
+     , playerAnalysisStiffness =
+         maybe defaultStiffness cameraStiffness maybeCamera
+     , playerAnalysisSwivelSpeed =
+         maybe defaultSwivelSpeed cameraSwivelSpeed maybeCamera
      , playerAnalysisRemoteId = playerRemoteId player
      , playerAnalysisLocalId = playerLocalId player
      , playerAnalysisName = playerName player
