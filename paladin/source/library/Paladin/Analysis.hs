@@ -321,7 +321,7 @@ getBlueScore replay = do
         Rattletrap.dictionaryValue &
         lookupThrow "Team0Score"
   case maybeProperty of
-    Nothing -> pure 0
+    Nothing -> pure defaultScore
     Just property -> do
       value <- property & Rattletrap.propertyValue & fromIntProperty
       value & Rattletrap.int32Value & fromIntegral & pure
@@ -336,10 +336,14 @@ getOrangeScore replay = do
         Rattletrap.dictionaryValue &
         lookupThrow "Team1Score"
   case maybeProperty of
-    Nothing -> pure 0
+    Nothing -> pure defaultScore
     Just property -> do
       value <- property & Rattletrap.propertyValue & fromIntProperty
       value & Rattletrap.int32Value & fromIntegral & pure
+
+-- Defaults
+defaultScore :: Int
+defaultScore = 0
 
 -- Generic helpers
 headThrow
