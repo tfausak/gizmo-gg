@@ -120,7 +120,7 @@ insertReplay connection uploadId replay replayAnalysis = do
         |]
         (serverId, serverName)
     _ -> pure ()
-  playlist <- getPlaylist replay
+  let playlist = Analysis.replayAnalysisPlaylist replayAnalysis
   Database.execute
     connection
     [Sql.sql|
@@ -464,20 +464,6 @@ getDuration replay = do
   framesPerSecond <- getFloatProperty "RecordFPS" header
   let exactDuration = fromIntegral (numFrames :: Int) / framesPerSecond
   pure (round exactDuration)
-
-getPlaylist
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Int
-getPlaylist replay = do
-  let attributes = getAttributes "ProjectX.GRI_X:ReplicatedGamePlaylist" replay
-  case Set.toList attributes of
-    [] -> fail "no playlist"
-    [attribute] ->
-      case Rattletrap.attributeValue attribute of
-        Rattletrap.IntAttributeValue x ->
-          x & Rattletrap.intAttributeValue & fromInt32 & pure
-        _ -> fail "playlist is not an int"
-    _ -> fail "more than one playlist"
 
 getAttributes :: Text.Text -> Rattletrap.Replay -> Set.Set Rattletrap.Attribute
 getAttributes name replay =
