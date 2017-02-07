@@ -81,6 +81,7 @@ makeReplayAnalysis replay = do
   players <- undefined
   duration <- getDuration replay
   blueScore <- getBlueScore replay
+  orangeScore <- getOrangeScore replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -99,7 +100,7 @@ makeReplayAnalysis replay = do
     , replayAnalysisPlayers = players
     , replayAnalysisDuration = duration
     , replayAnalysisBlueScore = blueScore
-    , replayAnalysisOrangeScore = undefined
+    , replayAnalysisOrangeScore = orangeScore
     }
 
 getMajorVersion
@@ -316,6 +317,21 @@ getBlueScore replay = do
         Rattletrap.headerProperties &
         Rattletrap.dictionaryValue &
         lookupThrow "Team0Score"
+  case maybeProperty of
+    Nothing -> pure 0
+    Just property -> do
+      value <- property & Rattletrap.propertyValue & fromIntProperty
+      value & Rattletrap.int32Value & fromIntegral & pure
+
+getOrangeScore
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Int
+getOrangeScore replay = do
+  let maybeProperty =
+        replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+        Rattletrap.headerProperties &
+        Rattletrap.dictionaryValue &
+        lookupThrow "Team1Score"
   case maybeProperty of
     Nothing -> pure 0
     Just property -> do
