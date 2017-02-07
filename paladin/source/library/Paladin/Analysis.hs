@@ -280,13 +280,16 @@ getIsFair
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m Bool
 getIsFair replay = do
-  property <-
-    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
-    Rattletrap.headerProperties &
-    Rattletrap.dictionaryValue &
-    lookupThrow "bUnfairBots"
-  value <- property & Rattletrap.propertyValue & fromBoolProperty
-  value & Rattletrap.word8Value & (/= 0) & pure
+  let maybeProperty =
+        replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+        Rattletrap.headerProperties &
+        Rattletrap.dictionaryValue &
+        lookupThrow "bUnfairBots"
+  case maybeProperty of
+    Nothing -> pure True
+    Just property -> do
+      value <- property & Rattletrap.propertyValue & fromBoolProperty
+      value & Rattletrap.word8Value & (/= 0) & pure
 
 getDuration
   :: Catch.MonadThrow m
