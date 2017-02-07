@@ -75,7 +75,7 @@ parseUpload config connection (uploadId, hash) =
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
         replayAnalysis <- Analysis.makeReplayAnalysis replay
-        insertReplay connection uploadId replay replayAnalysis)
+        insertReplay connection uploadId replayAnalysis)
     (insertError connection uploadId)
 
 parseReplay
@@ -86,12 +86,8 @@ parseReplay contents =
     Left message -> fail message
     Right replay -> pure replay
 
-insertReplay :: Sql.Connection
-             -> Int
-             -> Rattletrap.Replay
-             -> Analysis.ReplayAnalysis
-             -> IO ()
-insertReplay connection uploadId _replay replayAnalysis = do
+insertReplay :: Sql.Connection -> Int -> Analysis.ReplayAnalysis -> IO ()
+insertReplay connection uploadId replayAnalysis = do
   let arena = Analysis.replayAnalysisArena replayAnalysis
   Database.execute
     connection
