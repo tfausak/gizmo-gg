@@ -78,6 +78,8 @@ makeReplayAnalysis replay = do
   arena <- getArena replay
   teamSize <- getTeamSize replay
   isFair <- getIsFair replay
+  players <- undefined
+  duration <- getDuration replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -93,8 +95,8 @@ makeReplayAnalysis replay = do
     , replayAnalysisArena = arena
     , replayAnalysisTeamSize = teamSize
     , replayAnalysisIsFair = isFair
-    , replayAnalysisPlayers = undefined
-    , replayAnalysisDuration = undefined
+    , replayAnalysisPlayers = players
+    , replayAnalysisDuration = duration
     , replayAnalysisBlueScore = undefined
     , replayAnalysisOrangeScore = undefined
     }
@@ -284,6 +286,26 @@ getIsFair replay = do
   value <- property & Rattletrap.propertyValue & fromBoolProperty
   value & Rattletrap.word8Value & (/= 0) & pure
 
+getDuration
+  :: Catch.MonadThrow m
+  => Rattletrap.Replay -> m Time.DiffTime
+getDuration replay = do
+  framesProperty <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "NumFrames"
+  framesValue <- framesProperty & Rattletrap.propertyValue & fromIntProperty
+  let frames = framesValue & Rattletrap.int32Value & fromIntegral
+  rateProperty <-
+    replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
+    Rattletrap.headerProperties &
+    Rattletrap.dictionaryValue &
+    lookupThrow "RecordFPS"
+  rateValue <- rateProperty & Rattletrap.propertyValue & fromFloatProperty
+  let rate = rateValue & Rattletrap.float32Value
+  frames / rate & realToFrac & pure
+
 headThrow
   :: Catch.MonadThrow m
   => [a] -> m a
@@ -341,6 +363,14 @@ fromBoolProperty p =
   case p of
     Rattletrap.BoolProperty x -> pure x
     _ -> Catch.throwM (userError "not a BoolProperty")
+
+fromFloatProperty
+  :: Catch.MonadThrow m
+  => Rattletrap.PropertyValue a -> m Rattletrap.Float32
+fromFloatProperty p =
+  case p of
+    Rattletrap.FloatProperty x -> pure x
+    _ -> Catch.throwM (userError "not a FloatProperty")
 
 fromIntProperty
   :: Catch.MonadThrow m
