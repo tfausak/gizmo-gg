@@ -14,13 +14,9 @@ import qualified Control.Monad.Fail as Fail
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
-import qualified Data.List as List
-import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Version as Version
-import qualified Data.Word as Word
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Database.PostgreSQL.Simple.SqlQQ as Sql
 import qualified Database.PostgreSQL.Simple.ToField as Sql
@@ -95,7 +91,7 @@ insertReplay :: Sql.Connection
              -> Rattletrap.Replay
              -> Analysis.ReplayAnalysis
              -> IO ()
-insertReplay connection uploadId replay replayAnalysis = do
+insertReplay connection uploadId _replay replayAnalysis = do
   let arena = Analysis.replayAnalysisArena replayAnalysis
   Database.execute
     connection
@@ -148,7 +144,7 @@ insertReplay connection uploadId replay replayAnalysis = do
       ON CONFLICT DO NOTHING
     |]
     [gameType]
-  players <- getPlayers replay
+  let players = Analysis.replayAnalysisPlayers replayAnalysis
   mapM_ (insertPlayer connection) players
   let teamSize = Analysis.replayAnalysisTeamSize replayAnalysis
   let isFair = Analysis.replayAnalysisIsFair replayAnalysis
@@ -254,7 +250,7 @@ makeGameHash
   -> Text.Text
   -> Int
   -> Int
-  -> NonEmpty.NonEmpty Player3
+  -> Set.Set Analysis.PlayerAnalysis
   -> Hash.Digest Hash.SHA1
 makeGameHash gameType playlist server mode size fair arena blue orange players =
   let key =
@@ -268,11 +264,9 @@ makeGameHash gameType playlist server mode size fair arena blue orange players =
           , arena & Text.unpack
           , blue & show
           , orange & show
-          , players & NonEmpty.toList & List.sort & show
+          , players & Set.toAscList & show
           ]
   in Hash.hash (ByteString.pack key)
-
-type Player3 = (Rattletrap.UniqueIdAttribute, Text.Text, Int)
 
 data PlatformName
   = PlayStation
@@ -284,9 +278,9 @@ data PlatformName
 instance Sql.ToField PlatformName where
   toField name = name & show & ByteString.pack & Sql.Escape
 
-insertPlayer :: Sql.Connection -> Player3 -> IO ()
-insertPlayer connection (playerId, _playerName, _playerXp) = do
-  let (platform, remoteId, localId) = splitPlayerId playerId
+insertPlayer :: Sql.Connection -> Analysis.PlayerAnalysis -> IO ()
+insertPlayer connection player = do
+  let (platform, remoteId, localId) = getPlayerId player
   Database.execute
     connection
     [Sql.sql|
@@ -312,9 +306,12 @@ insertPlayer connection (playerId, _playerName, _playerXp) = do
     |]
     (platform, remoteId, localId)
 
-insertGamePlayer :: Sql.Connection -> Hash.Digest Hash.SHA1 -> Player3 -> IO ()
-insertGamePlayer connection hash (playerId, _playerName, _playerXp) = do
-  let (platform, remoteId, localId) = splitPlayerId playerId
+insertGamePlayer :: Sql.Connection
+                 -> Hash.Digest Hash.SHA1
+                 -> Analysis.PlayerAnalysis
+                 -> IO ()
+insertGamePlayer connection hash player = do
+  let (platform, remoteId, localId) = getPlayerId player
   Database.execute
     connection
     [Sql.sql|
@@ -333,94 +330,27 @@ insertGamePlayer connection hash (playerId, _playerName, _playerXp) = do
     |]
     (show hash, platform, remoteId, localId)
 
-splitPlayerId :: Rattletrap.UniqueIdAttribute
-              -> (PlatformName, Text.Text, Word.Word8)
-splitPlayerId playerId =
-  (getPlatform playerId, getRemoteId playerId, getLocalId playerId)
+getPlayerId :: Analysis.PlayerAnalysis -> (Text.Text, Text.Text, Int)
+getPlayerId player =
+  ( player & Analysis.playerAnalysisRemoteId & toPlatform
+  , player & Analysis.playerAnalysisRemoteId & toRemoteId
+  , Analysis.playerAnalysisLocalId player)
 
-getPlatform :: Rattletrap.UniqueIdAttribute -> PlatformName
-getPlatform playerId =
-  case Rattletrap.uniqueIdAttributeRemoteId playerId of
-    Rattletrap.PlayStationId _ _ -> PlayStation
-    Rattletrap.SplitscreenId _ -> Splitscreen
-    Rattletrap.SteamId _ -> Steam
-    Rattletrap.XboxId _ -> Xbox
+toPlatform :: Rattletrap.RemoteId -> Text.Text
+toPlatform remoteId =
+  case remoteId of
+    Rattletrap.PlayStationId _ _ -> Text.pack "PlayStation"
+    Rattletrap.SplitscreenId _ -> Text.pack "Splitscreen"
+    Rattletrap.SteamId _ -> Text.pack "Steam"
+    Rattletrap.XboxId _ -> Text.pack "Xbox"
 
-getRemoteId :: Rattletrap.UniqueIdAttribute -> Text.Text
-getRemoteId playerId =
-  case Rattletrap.uniqueIdAttributeRemoteId playerId of
+toRemoteId :: Rattletrap.RemoteId -> Text.Text
+toRemoteId remoteId =
+  case remoteId of
     Rattletrap.PlayStationId x _ -> x
     Rattletrap.SplitscreenId x -> x & show & Text.pack
     Rattletrap.SteamId x -> x & Rattletrap.word64Value & show & Text.pack
     Rattletrap.XboxId x -> x & Rattletrap.word64Value & show & Text.pack
-
-getLocalId :: Rattletrap.UniqueIdAttribute -> Word.Word8
-getLocalId playerId =
-  playerId & Rattletrap.uniqueIdAttributeLocalId & Rattletrap.word8Value
-
-getPlayers
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m (NonEmpty.NonEmpty Player3)
-getPlayers replay =
-  replay & Rattletrap.replayContent & Rattletrap.sectionBody &
-  Rattletrap.contentFrames &
-  concatMap Rattletrap.frameReplications &
-  map Rattletrap.replicationValue &
-  Maybe.mapMaybe getUpdatedReplicationValue &
-  map Rattletrap.updatedReplicationAttributes &
-  Maybe.mapMaybe
-    (\attributes -> do
-       idAttribute <-
-         findAttribute attributes "Engine.PlayerReplicationInfo:UniqueId"
-       playerId <-
-         case idAttribute of
-           Rattletrap.UniqueIdAttributeValue x -> pure x
-           _ -> fail "player id is wrong type"
-       nameAttribute <-
-         findAttribute attributes "Engine.PlayerReplicationInfo:PlayerName"
-       playerName <-
-         case nameAttribute of
-           Rattletrap.StringAttributeValue x ->
-             x & Rattletrap.stringAttributeValue & fromText & pure
-           _ -> fail "player name is wrong type"
-       xpAttribute <- findAttribute attributes "TAGame.PRI_TA:TotalXP"
-       playerXp <-
-         case xpAttribute of
-           Rattletrap.IntAttributeValue x ->
-             x & Rattletrap.intAttributeValue & fromInt32 & pure
-           _ -> fail "player xp is wrong type"
-       Just (playerId, playerName, playerXp)) &
-  Set.fromList &
-  Set.toAscList &
-  NonEmpty.nonEmpty &
-  maybe (fail "no players") pure
-
-findAttribute
-  :: Fail.MonadFail m
-  => [Rattletrap.Attribute] -> Text.Text -> m Rattletrap.AttributeValue
-findAttribute attributes name =
-  attributes & filter (attributeNameIs name) & Maybe.listToMaybe &
-  fmap Rattletrap.attributeValue &
-  maybe (fail ("could not find attribute " ++ show name)) pure
-
-getUpdatedReplicationValue :: Rattletrap.ReplicationValue
-                           -> Maybe Rattletrap.UpdatedReplication
-getUpdatedReplicationValue replication =
-  case replication of
-    Rattletrap.UpdatedReplicationValue value -> Just value
-    _ -> Nothing
-
-attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
-attributeNameIs name attribute =
-  Rattletrap.attributeName attribute == Rattletrap.Text name
-
-fromText :: Rattletrap.Text -> Text.Text
-fromText text = text & Rattletrap.textValue
-
-fromInt32
-  :: Integral a
-  => Rattletrap.Int32 -> a
-fromInt32 int32 = int32 & Rattletrap.int32Value & fromIntegral
 
 sleep :: Int -> IO ()
 sleep seconds = Concurrent.threadDelay (seconds * 1000000)
