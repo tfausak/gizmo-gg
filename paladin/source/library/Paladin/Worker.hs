@@ -211,7 +211,7 @@ insertReplay connection uploadId replay replayAnalysis = do
   let majorVersion = Analysis.replayAnalysisMajorVersion replayAnalysis
   let minorVersion = Analysis.replayAnalysisMinorVersion replayAnalysis
   let recordedAt = Analysis.replayAnalysisRecordedAt replayAnalysis
-  customName <- getCustomName replay
+  let customName = Analysis.replayAnalysisCustomName replayAnalysis
   duration <- getDuration replay
   Database.execute
     connection
@@ -424,21 +424,6 @@ getUpdatedReplicationValue replication =
 attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
-
-getCustomName
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m (Maybe Text.Text)
-getCustomName replay = do
-  let header = getHeader replay
-  case getProperty "ReplayName" header of
-    Just nameProperty -> do
-      nameText <-
-        case Rattletrap.propertyValue nameProperty of
-          Rattletrap.StrProperty x -> pure x
-          _ -> fail "ReplayName property is not a string"
-      let name = fromText nameText
-      pure (Just name)
-    _ -> pure Nothing
 
 getHeader :: Rattletrap.Replay -> Rattletrap.Header
 getHeader replay = replay & Rattletrap.replayHeader & Rattletrap.sectionBody
