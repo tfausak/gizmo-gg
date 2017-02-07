@@ -186,7 +186,7 @@ getGameMode replay = do
         Maybe.mapMaybe fromUpdatedReplication &
         concatMap Rattletrap.updatedReplicationAttributes &
         filter (attributeNameIs "TAGame.GameEvent_TA:GameMode") &
-        headThrow
+        lastThrow
   case maybeAttribute of
     Nothing -> pure Nothing
     Just attribute -> do
@@ -205,7 +205,7 @@ getPlaylist replay = do
     Maybe.mapMaybe fromUpdatedReplication &
     concatMap Rattletrap.updatedReplicationAttributes &
     filter (attributeNameIs "ProjectX.GRI_X:ReplicatedGamePlaylist") &
-    headThrow
+    lastThrow
   value <- attribute & Rattletrap.attributeValue & fromIntAttribute
   value & Rattletrap.intAttributeValue & Rattletrap.int32Value & fromIntegral &
     pure
@@ -222,7 +222,7 @@ getServerId replay = do
         Maybe.mapMaybe fromUpdatedReplication &
         concatMap Rattletrap.updatedReplicationAttributes &
         filter (attributeNameIs "ProjectX.GRI_X:GameServerID") &
-        headThrow
+        lastThrow
   case maybeAttribute of
     Nothing -> pure Nothing
     Just attribute -> do
@@ -244,7 +244,7 @@ getServerName replay = do
     Maybe.mapMaybe fromUpdatedReplication &
     concatMap Rattletrap.updatedReplicationAttributes &
     filter (attributeNameIs "Engine.GameReplicationInfo:ServerName") &
-    headThrow
+    lastThrow
   value <- attribute & Rattletrap.attributeValue & fromStringAttribute
   value & Rattletrap.stringAttributeValue & Rattletrap.textValue & pure
 
@@ -346,13 +346,13 @@ defaultScore :: Int
 defaultScore = 0
 
 -- Generic helpers
-headThrow
+lastThrow
   :: Catch.MonadThrow m
   => [a] -> m a
-headThrow xs =
+lastThrow xs =
   case xs of
-    [] -> Catch.throwM (userError "empty list")
-    x:_ -> pure x
+    [] -> Catch.throwM (userError "lastThrow: empty list")
+    _ -> pure (last xs)
 
 lookupThrow
   :: Catch.MonadThrow m
