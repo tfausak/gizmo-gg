@@ -129,7 +129,7 @@ insertReplay connection uploadId replay replayAnalysis = do
       ON CONFLICT DO NOTHING
     |]
     [playlist]
-  maybeGameMode <- getGameMode replay
+  let maybeGameMode = Analysis.replayAnalysisGameMode replayAnalysis
   case maybeGameMode of
     Just gameMode ->
       Database.execute
@@ -441,20 +441,6 @@ getGameType replay = do
   let header = getHeader replay
   getNameProperty "MatchType" header
 
-getGameMode
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m (Maybe Int)
-getGameMode replay = do
-  let attributes = getAttributes "TAGame.GameEvent_TA:GameMode" replay
-  case Set.toList attributes of
-    [] -> pure Nothing
-    [attribute] ->
-      case Rattletrap.attributeValue attribute of
-        Rattletrap.GameModeAttributeValue x ->
-          x & Rattletrap.gameModeAttributeWord & fromWord8 & Just & pure
-        _ -> fail "game mode is not a word"
-    _ -> fail "more than one game mode"
-
 getDuration
   :: Fail.MonadFail m
   => Rattletrap.Replay -> m Int
@@ -464,17 +450,6 @@ getDuration replay = do
   framesPerSecond <- getFloatProperty "RecordFPS" header
   let exactDuration = fromIntegral (numFrames :: Int) / framesPerSecond
   pure (round exactDuration)
-
-getAttributes :: Text.Text -> Rattletrap.Replay -> Set.Set Rattletrap.Attribute
-getAttributes name replay =
-  replay & Rattletrap.replayContent & Rattletrap.sectionBody &
-  Rattletrap.contentFrames &
-  concatMap Rattletrap.frameReplications &
-  map Rattletrap.replicationValue &
-  Maybe.mapMaybe getUpdatedReplicationValue &
-  concatMap Rattletrap.updatedReplicationAttributes &
-  filter (attributeNameIs name) &
-  Set.fromList
 
 getUpdatedReplicationValue :: Rattletrap.ReplicationValue
                            -> Maybe Rattletrap.UpdatedReplication
@@ -599,11 +574,6 @@ fromInt32
   :: Integral a
   => Rattletrap.Int32 -> a
 fromInt32 int32 = int32 & Rattletrap.int32Value & fromIntegral
-
-fromWord8
-  :: Integral a
-  => Word.Word8 -> a
-fromWord8 word8 = word8 & fromIntegral
 
 fromFloat32 :: Rattletrap.Float32 -> Float
 fromFloat32 float32 = float32 & Rattletrap.float32Value
