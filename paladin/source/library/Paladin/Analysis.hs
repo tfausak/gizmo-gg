@@ -178,7 +178,7 @@ getGameType replay = do
     Rattletrap.headerProperties &
     Rattletrap.dictionaryValue &
     lookupThrow "MatchType"
-  value <- property & Rattletrap.propertyValue & fromStrProperty
+  value <- property & Rattletrap.propertyValue & fromNameProperty
   value & Rattletrap.textValue & pure
 
 getGameMode
