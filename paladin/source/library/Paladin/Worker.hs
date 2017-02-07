@@ -26,6 +26,7 @@ import qualified Data.Word as Word
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Database.PostgreSQL.Simple.SqlQQ as Sql
 import qualified Database.PostgreSQL.Simple.ToField as Sql
+import qualified Paladin.Analysis as Analysis
 import qualified Paladin.Config as Config
 import qualified Paladin.Database as Database
 import qualified Paladin.Storage as Storage
@@ -79,7 +80,8 @@ parseUpload config connection (uploadId, hash) =
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
-        insertReplay connection uploadId replay)
+        replayAnalysis <- Analysis.makeReplayAnalysis replay
+        insertReplay connection uploadId replay replayAnalysis)
     (insertError connection uploadId)
 
 parseReplay
@@ -90,9 +92,13 @@ parseReplay contents =
     Left message -> fail message
     Right replay -> pure replay
 
-insertReplay :: Sql.Connection -> Int -> Rattletrap.Replay -> IO ()
-insertReplay connection uploadId replay = do
-  arena <- getArenaName replay
+insertReplay :: Sql.Connection
+             -> Int
+             -> Rattletrap.Replay
+             -> Analysis.ReplayAnalysis
+             -> IO ()
+insertReplay connection uploadId replay replayAnalysis = do
+  let arena = Analysis.replayAnalysisArena replayAnalysis
   Database.execute
     connection
     [Sql.sql|
@@ -520,15 +526,6 @@ getUpdatedReplicationValue replication =
 attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
-
-getArenaName
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Text.Text
-getArenaName replay = do
-  let header = getHeader replay
-  case getNameProperty "MapName" header of
-    Just arena -> pure arena
-    _ -> getStrProperty "MapName" header
 
 getUuid
   :: Fail.MonadFail m
