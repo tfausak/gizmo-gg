@@ -1,4 +1,8 @@
-module Paladin.Analysis where
+module Paladin.Analysis
+  ( ReplayAnalysis(..)
+  , PlayerAnalysis(..)
+  , makeReplayAnalysis
+  ) where
 
 import Data.Function ((&))
 
