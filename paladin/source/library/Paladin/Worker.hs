@@ -107,7 +107,8 @@ insertReplay connection uploadId replay replayAnalysis = do
       ON CONFLICT DO NOTHING
     |]
     [arena]
-  (maybeServerId, serverName) <- getServer replay
+  let maybeServerId = Analysis.replayAnalysisServerId replayAnalysis
+  let serverName = Analysis.replayAnalysisServerName replayAnalysis
   case maybeServerId of
     Just serverId ->
       Database.execute
@@ -478,33 +479,6 @@ getPlaylist replay = do
         _ -> fail "playlist is not an int"
     _ -> fail "more than one playlist"
 
-getServer
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m (Maybe Int, Text.Text)
-getServer replay = do
-  let idAttributes = getAttributes "ProjectX.GRI_X:GameServerID" replay
-  serverId <-
-    case Set.toList idAttributes of
-      [] -> pure Nothing
-      [attribute] ->
-        case Rattletrap.attributeValue attribute of
-          Rattletrap.QWordAttributeValue x ->
-            x & Rattletrap.qWordAttributeValue & fromWord64 & Just & pure
-          _ -> fail "server ID is not a qword"
-      _ -> fail "more than one server ID"
-  let nameAttributes =
-        getAttributes "Engine.GameReplicationInfo:ServerName" replay
-  serverName <-
-    case Set.toList nameAttributes of
-      [] -> fail "no server name"
-      [attribute] ->
-        case Rattletrap.attributeValue attribute of
-          Rattletrap.StringAttributeValue x ->
-            x & Rattletrap.stringAttributeValue & fromText & pure
-          _ -> fail "server name is not a string"
-      _ -> fail "more than one server name"
-  pure (serverId, serverName)
-
 getAttributes :: Text.Text -> Rattletrap.Replay -> Set.Set Rattletrap.Attribute
 getAttributes name replay =
   replay & Rattletrap.replayContent & Rattletrap.sectionBody &
@@ -629,11 +603,6 @@ parseTime string =
 
 fromText :: Rattletrap.Text -> Text.Text
 fromText text = text & Rattletrap.textValue
-
-fromWord64
-  :: Integral a
-  => Rattletrap.Word64 -> a
-fromWord64 word64 = word64 & Rattletrap.word64Value & fromIntegral
 
 fromWord32
   :: Integral a
