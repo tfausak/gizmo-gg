@@ -74,8 +74,8 @@ parseUpload config connection (uploadId, hash) =
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
-        replayAnalysis <- Analysis.makeReplayAnalysis replay
-        insertReplay connection uploadId replayAnalysis)
+        analysis <- Analysis.makeReplayAnalysis replay
+        insertReplay connection uploadId analysis)
     (insertError connection uploadId)
 
 parseReplay
@@ -87,8 +87,8 @@ parseReplay contents =
     Right replay -> pure replay
 
 insertReplay :: Sql.Connection -> Int -> Analysis.ReplayAnalysis -> IO ()
-insertReplay connection uploadId replayAnalysis = do
-  let arena = Analysis.replayAnalysisArena replayAnalysis
+insertReplay connection uploadId replay = do
+  let arena = Analysis.replayAnalysisArena replay
   Database.execute
     connection
     [Sql.sql|
@@ -97,8 +97,8 @@ insertReplay connection uploadId replayAnalysis = do
       ON CONFLICT DO NOTHING
     |]
     [arena]
-  let maybeServerId = Analysis.replayAnalysisServerId replayAnalysis
-  let serverName = Analysis.replayAnalysisServerName replayAnalysis
+  let maybeServerId = Analysis.replayAnalysisServerId replay
+  let serverName = Analysis.replayAnalysisServerName replay
   case maybeServerId of
     Just serverId ->
       Database.execute
@@ -110,7 +110,7 @@ insertReplay connection uploadId replayAnalysis = do
         |]
         (serverId, serverName)
     _ -> pure ()
-  let playlist = Analysis.replayAnalysisPlaylist replayAnalysis
+  let playlist = Analysis.replayAnalysisPlaylist replay
   Database.execute
     connection
     [Sql.sql|
@@ -119,7 +119,7 @@ insertReplay connection uploadId replayAnalysis = do
       ON CONFLICT DO NOTHING
     |]
     [playlist]
-  let maybeGameMode = Analysis.replayAnalysisGameMode replayAnalysis
+  let maybeGameMode = Analysis.replayAnalysisGameMode replay
   case maybeGameMode of
     Just gameMode ->
       Database.execute
@@ -131,7 +131,7 @@ insertReplay connection uploadId replayAnalysis = do
         |]
         [gameMode]
     _ -> pure ()
-  let gameType = Analysis.replayAnalysisGameType replayAnalysis
+  let gameType = Analysis.replayAnalysisGameType replay
   Database.execute
     connection
     [Sql.sql|
@@ -140,12 +140,12 @@ insertReplay connection uploadId replayAnalysis = do
       ON CONFLICT DO NOTHING
     |]
     [gameType]
-  let players = Analysis.replayAnalysisPlayers replayAnalysis
+  let players = Analysis.replayAnalysisPlayers replay
   mapM_ (insertPlayer connection) players
-  let teamSize = Analysis.replayAnalysisTeamSize replayAnalysis
-  let isFair = Analysis.replayAnalysisIsFair replayAnalysis
-  let blueScore = Analysis.replayAnalysisBlueScore replayAnalysis
-  let orangeScore = Analysis.replayAnalysisOrangeScore replayAnalysis
+  let teamSize = Analysis.replayAnalysisTeamSize replay
+  let isFair = Analysis.replayAnalysisIsFair replay
+  let blueScore = Analysis.replayAnalysisBlueScore replay
+  let orangeScore = Analysis.replayAnalysisOrangeScore replay
   let hash =
         makeGameHash
           gameType
@@ -198,12 +198,12 @@ insertReplay connection uploadId replayAnalysis = do
     , blueScore
     , orangeScore)
   mapM_ (insertGamePlayer connection hash) players
-  let uuid = Analysis.replayAnalysisUuid replayAnalysis
-  let majorVersion = Analysis.replayAnalysisMajorVersion replayAnalysis
-  let minorVersion = Analysis.replayAnalysisMinorVersion replayAnalysis
-  let recordedAt = Analysis.replayAnalysisRecordedAt replayAnalysis
-  let customName = Analysis.replayAnalysisCustomName replayAnalysis
-  let duration = Analysis.replayAnalysisDuration replayAnalysis
+  let uuid = Analysis.replayAnalysisUuid replay
+  let majorVersion = Analysis.replayAnalysisMajorVersion replay
+  let minorVersion = Analysis.replayAnalysisMinorVersion replay
+  let recordedAt = Analysis.replayAnalysisRecordedAt replay
+  let customName = Analysis.replayAnalysisCustomName replay
+  let duration = Analysis.replayAnalysisDuration replay
   Database.execute
     connection
     [Sql.sql|
