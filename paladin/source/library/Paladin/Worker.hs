@@ -16,7 +16,6 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
@@ -212,7 +211,7 @@ insertReplay connection uploadId replay replayAnalysis = do
   let minorVersion = Analysis.replayAnalysisMinorVersion replayAnalysis
   let recordedAt = Analysis.replayAnalysisRecordedAt replayAnalysis
   let customName = Analysis.replayAnalysisCustomName replayAnalysis
-  duration <- getDuration replay
+  let duration = Analysis.replayAnalysisDuration replayAnalysis
   Database.execute
     connection
     [Sql.sql|
@@ -232,7 +231,7 @@ insertReplay connection uploadId replay replayAnalysis = do
     , minorVersion
     , recordedAt
     , customName
-    , duration
+    , round duration :: Int
     , show hash)
   Database.execute
     connection
@@ -404,16 +403,6 @@ findAttribute attributes name =
   fmap Rattletrap.attributeValue &
   maybe (fail ("could not find attribute " ++ show name)) pure
 
-getDuration
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Int
-getDuration replay = do
-  let header = getHeader replay
-  numFrames <- getIntProperty "NumFrames" header
-  framesPerSecond <- getFloatProperty "RecordFPS" header
-  let exactDuration = fromIntegral (numFrames :: Int) / framesPerSecond
-  pure (round exactDuration)
-
 getUpdatedReplicationValue :: Rattletrap.ReplicationValue
                            -> Maybe Rattletrap.UpdatedReplication
 getUpdatedReplicationValue replication =
@@ -425,35 +414,6 @@ attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
 
-getHeader :: Rattletrap.Replay -> Rattletrap.Header
-getHeader replay = replay & Rattletrap.replayHeader & Rattletrap.sectionBody
-
-getProperty
-  :: Fail.MonadFail m
-  => Text.Text -> Rattletrap.Header -> m Rattletrap.Property
-getProperty name header =
-  header & Rattletrap.headerProperties & Rattletrap.dictionaryValue &
-  Map.lookup name &
-  maybe (fail ("could not find " ++ show name ++ " property")) pure
-
-getIntProperty
-  :: (Integral a, Fail.MonadFail m)
-  => Text.Text -> Rattletrap.Header -> m a
-getIntProperty name header = do
-  property <- header & getProperty name
-  case Rattletrap.propertyValue property of
-    Rattletrap.IntProperty x -> pure (fromInt32 x)
-    _ -> fail (show name ++ " property is not a Int")
-
-getFloatProperty
-  :: (Fail.MonadFail m)
-  => Text.Text -> Rattletrap.Header -> m Float
-getFloatProperty name header = do
-  property <- header & getProperty name
-  case Rattletrap.propertyValue property of
-    Rattletrap.FloatProperty x -> pure (fromFloat32 x)
-    _ -> fail (show name ++ " property is not a Float")
-
 fromText :: Rattletrap.Text -> Text.Text
 fromText text = text & Rattletrap.textValue
 
@@ -461,9 +421,6 @@ fromInt32
   :: Integral a
   => Rattletrap.Int32 -> a
 fromInt32 int32 = int32 & Rattletrap.int32Value & fromIntegral
-
-fromFloat32 :: Rattletrap.Float32 -> Float
-fromFloat32 float32 = float32 & Rattletrap.float32Value
 
 sleep :: Int -> IO ()
 sleep seconds = Concurrent.threadDelay (seconds * 1000000)
