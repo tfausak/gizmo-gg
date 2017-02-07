@@ -290,7 +290,7 @@ getIsFair replay = do
         Rattletrap.dictionaryValue &
         lookupThrow "bUnfairBots"
   case maybeProperty of
-    Nothing -> pure True
+    Nothing -> pure defaultIsFair
     Just property -> do
       value <- property & Rattletrap.propertyValue & fromBoolProperty
       value & Rattletrap.word8Value & (/= 0) & pure
@@ -346,6 +346,9 @@ getOrangeScore replay = do
       value & Rattletrap.int32Value & fromIntegral & pure
 
 -- Defaults
+defaultIsFair :: Bool
+defaultIsFair = True
+
 defaultScore :: Int
 defaultScore = 0
 
