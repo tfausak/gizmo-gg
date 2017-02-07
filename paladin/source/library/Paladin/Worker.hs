@@ -141,7 +141,7 @@ insertReplay connection uploadId replay replayAnalysis = do
         |]
         [gameMode]
     _ -> pure ()
-  gameType <- getGameType replay
+  let gameType = Analysis.replayAnalysisGameType replayAnalysis
   Database.execute
     connection
     [Sql.sql|
@@ -434,13 +434,6 @@ findAttribute attributes name =
   fmap Rattletrap.attributeValue &
   maybe (fail ("could not find attribute " ++ show name)) pure
 
-getGameType
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Text.Text
-getGameType replay = do
-  let header = getHeader replay
-  getNameProperty "MatchType" header
-
 getDuration
   :: Fail.MonadFail m
   => Rattletrap.Replay -> m Int
@@ -521,15 +514,6 @@ getStrProperty name header = do
   case Rattletrap.propertyValue property of
     Rattletrap.StrProperty text -> pure (fromText text)
     _ -> fail (show name ++ " property is not a Str")
-
-getNameProperty
-  :: Fail.MonadFail m
-  => Text.Text -> Rattletrap.Header -> m Text.Text
-getNameProperty name header = do
-  property <- header & getProperty name
-  case Rattletrap.propertyValue property of
-    Rattletrap.NameProperty text -> pure (fromText text)
-    _ -> fail (show name ++ " property is not a Name")
 
 getIntProperty
   :: (Integral a, Fail.MonadFail m)
