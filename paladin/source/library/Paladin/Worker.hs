@@ -210,7 +210,7 @@ insertReplay connection uploadId replay replayAnalysis = do
   mapM_ (insertGamePlayer connection hash) players
   let uuid = Analysis.replayAnalysisUuid replayAnalysis
   let majorVersion = Analysis.replayAnalysisMajorVersion replayAnalysis
-  minorVersion <- getMinorVersion replay
+  let minorVersion = Analysis.replayAnalysisMinorVersion replayAnalysis
   recordedAt <- getRecordedAt replay
   customName <- getCustomName replay
   duration <- getDuration replay
@@ -426,12 +426,6 @@ attributeNameIs :: Text.Text -> Rattletrap.Attribute -> Bool
 attributeNameIs name attribute =
   Rattletrap.attributeName attribute == Rattletrap.Text name
 
-getMinorVersion
-  :: Fail.MonadFail m
-  => Rattletrap.Replay -> m Int
-getMinorVersion replay =
-  replay & getHeader & Rattletrap.headerLicenseeVersion & fromWord32 & pure
-
 getRecordedAt
   :: Fail.MonadFail m
   => Rattletrap.Replay -> m Time.LocalTime
@@ -508,11 +502,6 @@ parseTime string =
 
 fromText :: Rattletrap.Text -> Text.Text
 fromText text = text & Rattletrap.textValue
-
-fromWord32
-  :: Integral a
-  => Rattletrap.Word32 -> a
-fromWord32 word32 = word32 & Rattletrap.word32Value & fromIntegral
 
 fromInt32
   :: Integral a
