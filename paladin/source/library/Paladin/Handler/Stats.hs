@@ -25,7 +25,43 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
-      let body = Aeson.object []
+      [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins]] <-
+        Database.query
+          connection
+          [Common.sql|
+            SELECT
+              count(CASE WHEN games_players.is_blue THEN 1 END),
+              count(CASE WHEN NOT games_players.is_blue THEN 1 END),
+              count(CASE WHEN games_players.is_blue AND games.blue_score > games.orange_score THEN 1 END),
+              count(CASE WHEN NOT games_players.is_blue and games.orange_score > games.blue_score THEN 1 END)
+            FROM games
+            INNER JOIN games_players
+              ON games_players.game_id = games.id
+            WHERE
+              games_players.player_id = ?
+          |]
+          [playerId]
+      let numGames = numBlueGames + numOrangeGames
+      let numWins = numBlueWins + numOrangeWins
+      let body =
+            Aeson.object
+              [ (Text.pack "num_games", Aeson.toJSON numGames)
+              , (Text.pack "num_wins", Aeson.toJSON numWins)
+              , (Text.pack "num_losses", Aeson.toJSON (numGames - numWins))
+              , ( Text.pack "win_pct"
+                , Aeson.toJSON (makeRatio numWins numGames))
+              , (Text.pack "num_blue_games", Aeson.toJSON numBlueGames)
+              , (Text.pack "num_blue_wins", Aeson.toJSON numBlueWins)
+              , ( Text.pack "num_blue_losses"
+                , Aeson.toJSON (numBlueGames - numBlueWins))
+              , ( Text.pack "blue_win_pct"
+                , Aeson.toJSON (makeRatio numBlueWins numBlueGames))
+              , (Text.pack "num_orange_wins", Aeson.toJSON numOrangeWins)
+              , ( Text.pack "num_orange_losses"
+                , Aeson.toJSON (numOrangeGames - numOrangeWins))
+              , ( Text.pack "orange_win_pct"
+                , Aeson.toJSON (makeRatio numOrangeWins numOrangeGames))
+              ]
       pure (Common.jsonResponse Http.status200 [] body)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
