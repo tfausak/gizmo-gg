@@ -32,12 +32,14 @@ getStatsSummaryHandler _config connection request = do
       connection
       [Common.sql|
         SELECT
-          count(id),
-          count(CASE WHEN blue_score > orange_score THEN 1 END),
-          count(CASE WHEN blue_score < orange_score THEN 1 END)
-        FROM games
+          count(*),
+          count(CASE WHEN games.blue_score > games.orange_score THEN 1 END),
+          count(CASE WHEN games.blue_score < games.orange_score THEN 1 END)
+        FROM replays
+        INNER JOIN games
+        ON games.id = replays.game_id
         WHERE
-          created_at >= ?
+          replays.recorded_at >= ?
       |]
       [time]
   let blueWinPercentage = makeRatio numBlueWins numGames
