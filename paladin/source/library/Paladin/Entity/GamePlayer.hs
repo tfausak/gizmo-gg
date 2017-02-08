@@ -10,6 +10,33 @@ data GamePlayer = GamePlayer
   { gamePlayerId :: Common.Tagged GamePlayer Int
   , gamePlayerGameId :: Common.Tagged Game.Game Int
   , gamePlayerPlayerId :: Common.Tagged Player.Player Int
+  , gamePlayerName :: Common.Text
+  , gamePlayerXp :: Int
+  , gamePlayerIsBlue :: Bool
+  , gamePlayerIsPresentAtEnd :: Bool
+  , gamePlayerScore :: Int
+  , gamePlayerGoals :: Int
+  , gamePlayerAssists :: Int
+  , gamePlayerSaves :: Int
+  , gamePlayerShots :: Int
+  , gamePlayerBodyId :: Int
+  , gamePlayerDecalId :: Int
+  , gamePlayerWheelId :: Int
+  , gamePlayerRocketTrailId :: Int
+  , gamePlayerAntennaId :: Int
+  , gamePlayerTopperId :: Int
+  , gamePlayerWheelPaintId :: Maybe Int
+  , gamePlayerTopperPaintId :: Maybe Int
+  , gamePlayerPrimaryColorId :: Int
+  , gamePlayerAccentColorId :: Int
+  , gamePlayerPrimaryFinishId :: Int
+  , gamePlayerAccentFinishId :: Int
+  , gamePlayerFov :: Float
+  , gamePlayerHeight :: Float
+  , gamePlayerAngle :: Float
+  , gamePlayerDistance :: Float
+  , gamePlayerStiffness :: Float
+  , gamePlayerSwivelSpeed :: Float
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow GamePlayer
