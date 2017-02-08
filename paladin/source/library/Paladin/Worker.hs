@@ -308,23 +308,148 @@ insertGamePlayer :: Sql.Connection
                  -> IO ()
 insertGamePlayer connection hash player = do
   let (platform, remoteId, localId) = getPlayerId player
+  mapM_
+    (insertRequiredAuxiliary connection player)
+    [ ("bodies", Analysis.playerAnalysisBody)
+    , ("decals", Analysis.playerAnalysisDecal)
+    , ("wheels", Analysis.playerAnalysisWheels)
+    , ("rocket_trails", Analysis.playerAnalysisRocketTrail)
+    , ("antennas", Analysis.playerAnalysisAntenna)
+    , ("toppers", Analysis.playerAnalysisTopper)
+    , ("colors", Analysis.playerAnalysisPrimaryColor)
+    , ("colors", Analysis.playerAnalysisAccentColor)
+    , ("finishes", Analysis.playerAnalysisPrimaryFinish)
+    , ("finishes", Analysis.playerAnalysisAccentFinish)
+    ]
+  mapM_
+    (insertOptionalAuxiliary connection player)
+    [ ("paints", Analysis.playerAnalysisWheelsPaint)
+    , ("paints", Analysis.playerAnalysisTopperPaint)
+    ]
   Database.execute
     connection
     [Sql.sql|
       INSERT INTO games_players (
         game_id,
-        player_id
+        player_id,
+        name,
+        xp,
+        is_blue,
+        is_present_at_end,
+        score,
+        goals,
+        assists,
+        saves,
+        shots,
+        body_id,
+        decal_id,
+        wheel_id,
+        rocket_trail_id,
+        antenna_id,
+        topper_id,
+        wheel_paint_id,
+        topper_paint_id,
+        primary_color_id,
+        accent_color_id,
+        primary_finish_id,
+        accent_finish_id,
+        fov,
+        height,
+        angle,
+        distance,
+        stiffness,
+        swivel_speed
       )
       VALUES (
         (SELECT id FROM games WHERE hash = ?),
         (SELECT id FROM players WHERE
           platform_id = (SELECT id FROM platforms WHERE name = ?) AND
           remote_id = ? AND
-          local_id = ?)
+          local_id = ?),
+        ?, -- name
+        ?, -- xp
+        ?, -- is_blue
+        ?, -- is_present_at_end
+        ?, -- score
+        ?, -- goals
+        ?, -- assists
+        ?, -- saves
+        ?, -- shots
+        ?, -- body_id
+        ?, -- decal_id
+        ?, -- wheel_id
+        ?, -- rocket_trail_id
+        ?, -- antenna_id
+        ?, -- topper_id
+        ?, -- wheel_paint_id
+        ?, -- topper_paint_id
+        ?, -- primary_color_id
+        ?, -- accent_color_id
+        ?, -- primary_finish_id
+        ?, -- accent_finish_id
+        ?, -- fov
+        ?, -- height
+        ?, -- angle
+        ?, -- distance
+        ?, -- stiffness
+        ? -- swivel_speed
       )
       ON CONFLICT DO NOTHING
     |]
-    (show hash, platform, remoteId, localId)
+    [ hash & show & Sql.toField
+    , platform & Sql.toField
+    , remoteId & Sql.toField
+    , localId & Sql.toField
+    , player & Analysis.playerAnalysisName & Sql.toField
+    , player & Analysis.playerAnalysisXp & Sql.toField
+    , player & Analysis.playerAnalysisIsBlue & Sql.toField
+    , player & Analysis.playerAnalysisIsPresentAtEnd & Sql.toField
+    , player & Analysis.playerAnalysisScore & Sql.toField
+    , player & Analysis.playerAnalysisGoals & Sql.toField
+    , player & Analysis.playerAnalysisAssists & Sql.toField
+    , player & Analysis.playerAnalysisSaves & Sql.toField
+    , player & Analysis.playerAnalysisShots & Sql.toField
+    , player & Analysis.playerAnalysisBody & Sql.toField
+    , player & Analysis.playerAnalysisDecal & Sql.toField
+    , player & Analysis.playerAnalysisWheels & Sql.toField
+    , player & Analysis.playerAnalysisRocketTrail & Sql.toField
+    , player & Analysis.playerAnalysisAntenna & Sql.toField
+    , player & Analysis.playerAnalysisTopper & Sql.toField
+    , player & Analysis.playerAnalysisWheelsPaint & Sql.toField
+    , player & Analysis.playerAnalysisTopperPaint & Sql.toField
+    , player & Analysis.playerAnalysisPrimaryColor & Sql.toField
+    , player & Analysis.playerAnalysisAccentColor & Sql.toField
+    , player & Analysis.playerAnalysisPrimaryFinish & Sql.toField
+    , player & Analysis.playerAnalysisAccentFinish & Sql.toField
+    , player & Analysis.playerAnalysisFov & Sql.toField
+    , player & Analysis.playerAnalysisHeight & Sql.toField
+    , player & Analysis.playerAnalysisAngle & Sql.toField
+    , player & Analysis.playerAnalysisDistance & Sql.toField
+    , player & Analysis.playerAnalysisStiffness & Sql.toField
+    , player & Analysis.playerAnalysisSwivelSpeed & Sql.toField
+    ]
+
+insertRequiredAuxiliary
+  :: Sql.Connection
+  -> Analysis.PlayerAnalysis
+  -> (Sql.Query, Analysis.PlayerAnalysis -> Int)
+  -> IO ()
+insertRequiredAuxiliary connection player (table, getValue) =
+  Database.execute
+    connection
+    (mconcat ["INSERT INTO ", table, " (id) VALUES (?) ON CONFLICT DO NOTHING"])
+    [getValue player]
+
+insertOptionalAuxiliary
+  :: Sql.Connection
+  -> Analysis.PlayerAnalysis
+  -> (Sql.Query, Analysis.PlayerAnalysis -> Maybe Int)
+  -> IO ()
+insertOptionalAuxiliary connection player (table, getValue) =
+  case getValue player of
+    Nothing -> pure ()
+    Just value ->
+      insertRequiredAuxiliary connection player (table, const value)
 
 getPlayerId :: Analysis.PlayerAnalysis -> (Text.Text, Text.Text, Int)
 getPlayerId player =
