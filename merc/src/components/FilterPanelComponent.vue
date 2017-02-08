@@ -1,26 +1,9 @@
-<style scoped lang="scss">
-.panel-heading {
-  padding-top: 5px;
-  padding-bottom: 5px;
-
-  .heading {
-    margin: 0;
-    font-size: 13px;
-    color: #000;
-  }
-}
-.panel-block {
-  padding-top: 3px;
-  padding-bottom: 3px;
-}
-</style>
-
 <template>
   <div class="panel">
-    <p class="panel-heading">
+    <p class="panel-heading panel-squish">
       <span class="heading">{{ title }}</span>
     </p>
-    <a class="panel-block" v-for="(value, key) in options" @click="updateValue(key)" :class="{ 'is-active': isSelected(key) }">
+    <a class="panel-block panel-squish" v-for="(value, key) in options" @click="updateValue(key)" :class="{ 'is-active': isSelected(key) }">
       <span class="panel-icon">
         <i class="fa" :class="{ 'fa-circle-thin': !isSelected(key), 'fa-check-circle-o': isSelected(key) }"></i>
       </span>

@@ -7,7 +7,7 @@
   background-size: contain;
   position: relative;
 }
-#gizmo-bits {
+#gizmo-snippets {
   h2 {
     margin-bottom: 5px;
   }
@@ -53,7 +53,7 @@
 
     <section class="section">
       <div class="container">
-        <div class="columns has-text-centered" id="gizmo-bits">
+        <div class="columns has-text-centered" id="gizmo-snippets">
 
           <div class="column">
             <span class="icon is-large">

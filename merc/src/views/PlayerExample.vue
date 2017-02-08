@@ -21,7 +21,7 @@
 }
 .is-offwhite,
 .hero-main li.is-active a {
-  background-color: $white-ter!important;
+  background-color: $white-ish!important;
 }
 </style>
 

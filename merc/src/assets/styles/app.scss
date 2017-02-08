@@ -26,6 +26,22 @@
 .text-right { text-align: right!important; }
 .text-left { text-align: left!important; }
 
+/* Panels */
+.panel-heading.panel-squish {
+  padding-top: 5px;
+  padding-bottom: 5px;
+
+  .heading {
+    margin: 0;
+    font-size: 13px;
+    color: #000;
+  }
+}
+.panel-block.panel-squish {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
 /* Levels */
 
 .level-chained {
