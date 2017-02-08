@@ -5,6 +5,7 @@ module Paladin.Handler.Stats where
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Fixed as Fixed
+import qualified Data.Maybe as Maybe
 import qualified Data.Ratio as Ratio
 import qualified Data.Text as Text
 import qualified Data.Time as Time
@@ -12,6 +13,21 @@ import qualified Network.HTTP.Types as Http
 import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
+import qualified Text.Read as Read
+
+getStatsPlayersHandler :: Common.Text -> Common.Handler
+getStatsPlayersHandler rawPlayerId _config connection _request = do
+  let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
+  maybePlayerId <-
+    Database.query
+      connection
+      [Common.sql| SELECT id FROM players WHERE id = ? |]
+      [playerId :: Int]
+  case maybePlayerId :: [[Int]] of
+    [[_]] -> do
+      let body = Aeson.object []
+      pure (Common.jsonResponse Http.status200 [] body)
+    _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
