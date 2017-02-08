@@ -5,6 +5,7 @@ module Paladin.Handler.Common
   , module Paladin.Handler.Common
   ) where
 
+import Database.PostgreSQL.Simple as Export (In(In))
 import Database.PostgreSQL.Simple.SqlQQ as Export (sql)
 import Paladin.Entity as Export
 

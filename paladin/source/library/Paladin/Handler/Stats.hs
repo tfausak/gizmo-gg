@@ -27,6 +27,17 @@ getStatsSummaryHandler _config connection request = do
               "week" -> Time.addDays (-7) today
               _ -> startOfSeason
           _ -> startOfSeason
+  let allRanked = [10, 11, 12, 13] :: [Int]
+  let playlists =
+        case lookup (ByteString.pack "playlist") query of
+          Just (Just x) ->
+            case ByteString.unpack x of
+              "ranked1v1" -> [10]
+              "ranked2v2" -> [11]
+              "ranked3v3solo" -> [12]
+              "ranked3v3" -> [13]
+              _ -> allRanked
+          _ -> allRanked
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -39,9 +50,10 @@ getStatsSummaryHandler _config connection request = do
         INNER JOIN games
           ON games.id = replays.game_id
         WHERE
-          replays.recorded_at >= ?
+          replays.recorded_at >= ? AND
+          games.playlist_id IN ?
       |]
-      [time]
+      (time, Common.In playlists)
   let blueWinPercentage = makeRatio numBlueWins numGames
   let orangeWinPercentage = makeRatio numOrangeWins numGames
   arenaFrequencies <-
@@ -57,10 +69,11 @@ getStatsSummaryHandler _config connection request = do
         INNER JOIN arenas
           ON arenas.id = games.arena_id
         WHERE
-          replays.recorded_at >= ?
+          replays.recorded_at >= ? AND
+          games.playlist_id IN ?
         GROUP BY arenas.name
       |]
-      [time]
+      (time, Common.In playlists)
   let arenaPercents =
         map
           (\(arena, frequency) -> (arena, makeRatio frequency numGames))
@@ -80,10 +93,11 @@ getStatsSummaryHandler _config connection request = do
         INNER JOIN bodies
           ON bodies.id = games_players.body_id
         WHERE
-          replays.recorded_at >= ?
+          replays.recorded_at >= ? AND
+          games.playlist_id IN ?
         GROUP BY body
       |]
-      [time]
+      (time, Common.In playlists)
   let numBodies = sum (map snd bodyFrequencies)
   let bodyPercents =
         map
