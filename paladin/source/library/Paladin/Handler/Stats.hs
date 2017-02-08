@@ -65,11 +65,38 @@ getStatsSummaryHandler _config connection request = do
         map
           (\(arena, frequency) -> (arena, makeRatio frequency numGames))
           arenaFrequencies
+  bodyFrequencies <-
+    Database.query
+      connection
+      [Common.sql|
+        SELECT
+          coalesce(bodies.name, to_char(games_players.body_id, 'FM9999')) AS body,
+          count(*)
+        FROM games_players
+        INNER JOIN games
+          ON games.id = games_players.game_id
+        INNER JOIN replays
+          ON replays.game_id = games.id
+        INNER JOIN bodies
+          ON bodies.id = games_players.body_id
+        WHERE
+          replays.recorded_at >= ?
+        GROUP BY body
+      |]
+      [time]
+  let numBodies = sum (map snd bodyFrequencies)
+  let bodyPercents =
+        map
+          (\(k, frequency) -> (k, makeRatio frequency numBodies))
+          bodyFrequencies
   let status = Http.status200
   let headers = []
   let body =
         Aeson.object
-          [ ( Text.pack "map_freq_pct"
+          [ ( Text.pack "body_freq_pct"
+            , Aeson.object
+                (map (\(k, percent) -> (k, Aeson.toJSON percent)) bodyPercents))
+          , ( Text.pack "map_freq_pct"
             , Aeson.object
                 (map
                    (\(arena, percent) -> (arena, Aeson.toJSON percent))
