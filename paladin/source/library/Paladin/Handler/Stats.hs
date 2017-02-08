@@ -74,7 +74,7 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
               , (Text.pack "total_assists", Aeson.toJSON totalAssists)
               , (Text.pack "total_saves", Aeson.toJSON totalSaves)
               , (Text.pack "total_shots", Aeson.toJSON totalShots)
-              , (Text.pack "secondsPlayed", Aeson.toJSON secondsPlayed)
+              , (Text.pack "seconds_played", Aeson.toJSON secondsPlayed)
               , ( Text.pack "score_per_second"
                 , Aeson.toJSON (makeRatio totalScore secondsPlayed))
               , ( Text.pack "goals_per_second"
