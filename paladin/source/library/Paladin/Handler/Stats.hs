@@ -37,7 +37,7 @@ getStatsSummaryHandler _config connection request = do
           count(CASE WHEN games.blue_score < games.orange_score THEN 1 END)
         FROM replays
         INNER JOIN games
-        ON games.id = replays.game_id
+          ON games.id = replays.game_id
         WHERE
           replays.recorded_at >= ?
       |]
@@ -50,12 +50,14 @@ getStatsSummaryHandler _config connection request = do
       [Common.sql|
         SELECT
           arenas.name,
-          count(games.id)
-        FROM games
+          count(*)
+        FROM replays
+        INNER JOIN games
+          ON games.id = replays.game_id
         INNER JOIN arenas
           ON arenas.id = games.arena_id
         WHERE
-          games.created_at >= ?
+          replays.recorded_at >= ?
         GROUP BY arenas.name
       |]
       [time]
