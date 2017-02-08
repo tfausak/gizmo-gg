@@ -4,7 +4,6 @@ module Paladin.Handler.Stats where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as ByteString
-import qualified Data.Fixed as Fixed
 import qualified Data.Maybe as Maybe
 import qualified Data.Ratio as Ratio
 import qualified Data.Text as Text
@@ -25,7 +24,7 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
-      [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins]] <-
+      [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
           [Common.sql|
@@ -33,12 +32,21 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
               count(CASE WHEN games_players.is_blue THEN 1 END),
               count(CASE WHEN NOT games_players.is_blue THEN 1 END),
               count(CASE WHEN games_players.is_blue AND games.blue_score > games.orange_score THEN 1 END),
-              count(CASE WHEN NOT games_players.is_blue and games.orange_score > games.blue_score THEN 1 END)
+              count(CASE WHEN NOT games_players.is_blue and games.orange_score > games.blue_score THEN 1 END),
+              sum(games_players.score),
+              sum(games_players.goals),
+              sum(games_players.assists),
+              sum(games_players.saves),
+              sum(games_players.shots),
+              sum(replays.duration)
             FROM games
             INNER JOIN games_players
               ON games_players.game_id = games.id
+            INNER JOIN replays
+              ON replays.game_id = games.id
             WHERE
-              games_players.player_id = ?
+              games_players.player_id = ? AND
+              games_players.is_present_at_end = true
           |]
           [playerId]
       let numGames = numBlueGames + numOrangeGames
@@ -61,6 +69,22 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
                 , Aeson.toJSON (numOrangeGames - numOrangeWins))
               , ( Text.pack "orange_win_pct"
                 , Aeson.toJSON (makeRatio numOrangeWins numOrangeGames))
+              , (Text.pack "total_score", Aeson.toJSON totalScore)
+              , (Text.pack "total_goals", Aeson.toJSON totalGoals)
+              , (Text.pack "total_assists", Aeson.toJSON totalAssists)
+              , (Text.pack "total_saves", Aeson.toJSON totalSaves)
+              , (Text.pack "total_shots", Aeson.toJSON totalShots)
+              , (Text.pack "secondsPlayed", Aeson.toJSON secondsPlayed)
+              , ( Text.pack "score_per_second"
+                , Aeson.toJSON (makeRatio totalScore secondsPlayed))
+              , ( Text.pack "goals_per_second"
+                , Aeson.toJSON (makeRatio totalGoals secondsPlayed))
+              , ( Text.pack "assists_per_second"
+                , Aeson.toJSON (makeRatio totalAssists secondsPlayed))
+              , ( Text.pack "saves_per_second"
+                , Aeson.toJSON (makeRatio totalSaves secondsPlayed))
+              , ( Text.pack "shots_per_second"
+                , Aeson.toJSON (makeRatio totalShots secondsPlayed))
               ]
       pure (Common.jsonResponse Http.status200 [] body)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
@@ -176,7 +200,7 @@ getStatsSummaryHandler _config connection request = do
   let response = Common.jsonResponse status headers body
   pure response
 
-makeRatio :: Integer -> Integer -> Fixed.Centi
+makeRatio :: Integer -> Integer -> Float
 makeRatio numerator denominator =
   if denominator == 0
     then 0
