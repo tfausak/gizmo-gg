@@ -48,6 +48,7 @@ export default {
         vm.chartOptions = {
           series: [
             {
+              animation: false,
               type: 'pie',
               radius: ['45%', '75%'],
               data: chartData,
