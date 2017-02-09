@@ -25,6 +25,7 @@ export function scrub (data, tolerance) {
       value: fixed[i].value
     })
   }
+  if (total < 1) {
     chartData.push({
       name: 'Other',
       value: 1 - total
