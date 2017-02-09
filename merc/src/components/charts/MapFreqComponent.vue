@@ -23,6 +23,7 @@
 
 <script>
 import LoadingComponent from './LoadingComponent.vue'
+import { scrub } from '../../lib/basic-chart-data-scrubber.js'
 
 export default {
   components: {
@@ -43,13 +44,7 @@ export default {
     updateChartOptions: function () {
       var vm = this
       this.source.then(function (result) {
-        let chartData = []
-        for (let key in result.map_freq_pct) {
-          chartData.push({
-            name: key,
-            value: result.map_freq_pct[key]
-          })
-        }
+        let chartData = scrub(result.map_freq_pct, 0.05)
         vm.chartOptions = {
           series: [
             {
