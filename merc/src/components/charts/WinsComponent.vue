@@ -2,14 +2,20 @@
   <article class="message">
     <div class="message-body">
       <p class="heading is-1">Win Pct by Team</p>
-      <echart :options="chartOptions" v-if="chartOptions"></echart>
+      <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
+      <loading-component :loading="loading"></loading-component>
     </div>
   </article>
 </template>
 
 <script>
+import LoadingComponent from './LoadingComponent.vue'
+
 export default {
-  props: [ 'source' ],
+  components: {
+    LoadingComponent: LoadingComponent
+  },
+  props: [ 'source', 'loading' ],
   data: function () {
     return {
       chartOptions: null

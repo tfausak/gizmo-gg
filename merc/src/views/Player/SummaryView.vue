@@ -41,10 +41,10 @@
   }
 }
 .panel-win {
-  background-color: #A3CFEC;
+  background-color: lighten($solarized_blue, 30%);
 }
 .panel-loss {
-  background-color: #E2B6B3;
+  background-color: lighten($solarized_red, 40%);
 }
 </style>
 
