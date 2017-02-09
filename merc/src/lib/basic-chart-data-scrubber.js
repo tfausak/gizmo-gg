@@ -25,9 +25,10 @@ export function scrub (data, tolerance) {
       value: fixed[i].value
     })
   }
-  chartData.push({
-    name: 'Other',
-    value: 1 - total
-  })
+    chartData.push({
+      name: 'Other',
+      value: 1 - total
+    })
+  }
   return chartData
 }
