@@ -4,6 +4,7 @@ module Paladin.Handler.Uploads where
 
 import Data.Function ((&))
 
+import qualified Control.Monad as Monad
 import qualified Crypto.Hash as Hash
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as ByteString
@@ -58,19 +59,16 @@ postUploadHandler config connection request = do
           let digest = Hash.hashlazy contents
           let hash = Utility.Tagged (show digest)
           fileExists <- Storage.doesUploadFileExist config hash
-          if fileExists
-            then pure (Common.jsonResponse Http.status409 [] Aeson.Null)
-            else do
-              saveUpload config digest contents
-              uploadId <- insertUpload connection name digest contents
-              let url = "/uploads/" ++ show uploadId
-              pure
-                (Common.jsonResponse
-                   Http.status303
-                   [ ( Http.hLocation
-                     , ByteString.pack (Common.makeUrl config url))
-                   ]
-                   ())
+          Monad.unless fileExists (saveUpload config digest contents)
+          uploadId <- insertUpload connection name digest contents
+          let url = "/uploads/" ++ show uploadId
+          pure
+            (Common.jsonResponse
+               Http.status303
+               [ ( Http.hLocation
+                 , ByteString.pack (Common.makeUrl config url))
+               ]
+               ())
         _ -> pure (Common.jsonResponse Http.status415 [] Aeson.Null)
     _ -> do
       let code = 422
@@ -104,6 +102,7 @@ insertUpload connection name digest contents = do
       [Common.sql|
         INSERT INTO uploads (hash, name, size)
         VALUES (?, ?, ?)
+        ON CONFLICT (hash) DO UPDATE SET hash = excluded.hash
         RETURNING id
       |]
       (hash, name, size)
