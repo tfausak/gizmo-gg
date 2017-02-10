@@ -168,17 +168,7 @@ getStatsSummaryHandler _config connection request = do
               "week" -> Time.addDays (-7) today
               _ -> startOfSeason
           _ -> startOfSeason
-  let allRanked = [10, 11, 12, 13] :: [Int]
-  let playlists =
-        case lookup (ByteString.pack "playlist") query of
-          Just (Just x) ->
-            case ByteString.unpack x of
-              "ranked1v1" -> [10]
-              "ranked2v2" -> [11]
-              "ranked3v3solo" -> [12]
-              "ranked3v3" -> [13]
-              _ -> allRanked
-          _ -> allRanked
+  let playlists = getPlaylists query
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -270,3 +260,35 @@ makeRatio numerator denominator =
   if denominator == 0
     then 0
     else fromRational (numerator Ratio.% denominator)
+
+getPlaylists :: Common.Query -> [Int]
+getPlaylists query =
+  case lookup (ByteString.pack "playlist") query of
+    Just (Just x) ->
+      case ByteString.unpack x of
+        "ranked1v1" -> [competitiveSoloDuel]
+        "ranked2v2" -> [competitiveDoubles]
+        "ranked3v3solo" -> [competitiveSoloStandard]
+        "ranked3v3" -> [competitiveStandard]
+        _ -> competitivePlaylists
+    _ -> competitivePlaylists
+
+competitivePlaylists :: [Int]
+competitivePlaylists =
+  [ competitiveSoloDuel
+  , competitiveDoubles
+  , competitiveSoloStandard
+  , competitiveStandard
+  ]
+
+competitiveSoloDuel :: Int
+competitiveSoloDuel = 10
+
+competitiveDoubles :: Int
+competitiveDoubles = 11
+
+competitiveSoloStandard :: Int
+competitiveSoloStandard = 12
+
+competitiveStandard :: Int
+competitiveStandard = 13
