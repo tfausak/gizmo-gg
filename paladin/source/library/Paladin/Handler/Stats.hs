@@ -248,6 +248,7 @@ getStatsSummaryHandler _config connection request = do
                 [ (Text.pack "blue", Aeson.toJSON blueWinPercentage)
                 , (Text.pack "orange", Aeson.toJSON orangeWinPercentage)
                 ])
+          , (Text.pack "numGames", Aeson.toJSON numGames)
           ]
   let response = Common.jsonResponse status headers body
   pure response
