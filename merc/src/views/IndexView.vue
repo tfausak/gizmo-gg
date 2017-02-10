@@ -92,7 +92,7 @@
             <div>
               <h2 class="subtitle">Test</h2>
               <ul>
-                <li><router-link to="/player-example">player example</router-link></li>
+                <li><router-link to="/dev">dev</router-link></li>
               </ul>
             </div>
           </div>

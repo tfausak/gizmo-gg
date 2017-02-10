@@ -36,24 +36,34 @@ export default new Router({
       ]
     },
     {
-      path: '/player/:platform/:id',
+      path: '/player/:id',
       component: require('../views/PlayerView'),
       props: true,
       children: [
         {
           path: '',
           name: 'player',
-          component: require('../views/Player/HomeView')
+          component: require('../views/Player/SummaryView.vue')
+        },
+        {
+          path: 'battle-cars',
+          name: 'battle-cars',
+          component: require('../views/Player/BattleCarsView.vue')
+        },
+        {
+          path: 'maps',
+          name: 'maps',
+          component: require('../views/Player/MapsView.vue')
         }
       ]
     },
     {
-      path: '/player-example',
-      component: require('../views/PlayerExample.vue'),
+      path: '/dev',
+      component: require('../views/Dev/DevView.vue'),
       children: [
         {
-          path: '',
-          component: require('../views/Player/SummaryView.vue')
+          path: 'players',
+          component: require('../views/Dev/PlayersView.vue')
         }
       ]
     },
