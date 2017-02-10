@@ -256,12 +256,9 @@ getDay query = do
   now <- Time.getCurrentTime
   let today = Time.utctDay now
   let day =
-        case lookup (ByteString.pack "time") query of
-          Just (Just x) ->
-            case ByteString.unpack x of
-              "month" -> Time.addDays (-28) today
-              "week" -> Time.addDays (-7) today
-              _ -> startOfSeason3
+        case getParam "time" query of
+          Just "month" -> Time.addDays (-28) today
+          Just "week" -> Time.addDays (-7) today
           _ -> startOfSeason3
   pure day
 
@@ -270,14 +267,11 @@ startOfSeason3 = Time.fromGregorian 2016 6 20
 
 getPlaylists :: Common.Query -> [Int]
 getPlaylists query =
-  case lookup (ByteString.pack "playlist") query of
-    Just (Just x) ->
-      case ByteString.unpack x of
-        "ranked1v1" -> [competitiveSoloDuel]
-        "ranked2v2" -> [competitiveDoubles]
-        "ranked3v3solo" -> [competitiveSoloStandard]
-        "ranked3v3" -> [competitiveStandard]
-        _ -> competitivePlaylists
+  case getParam "playlist" query of
+    Just "ranked1v1" -> [competitiveSoloDuel]
+    Just "ranked2v2" -> [competitiveDoubles]
+    Just "ranked3v3solo" -> [competitiveSoloStandard]
+    Just "ranked3v3" -> [competitiveStandard]
     _ -> competitivePlaylists
 
 competitivePlaylists :: [Int]
@@ -299,3 +293,9 @@ competitiveSoloStandard = 12
 
 competitiveStandard :: Int
 competitiveStandard = 13
+
+getParam :: String -> Common.Query -> Maybe String
+getParam name query =
+  case lookup (ByteString.pack name) query of
+    Just (Just value) -> Just (ByteString.unpack value)
+    _ -> Nothing
