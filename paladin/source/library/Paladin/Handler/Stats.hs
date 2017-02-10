@@ -16,7 +16,7 @@ import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
 getStatsPlayersHandler :: Common.Text -> Common.Handler
-getStatsPlayersHandler rawPlayerId _config connection _request = do
+getStatsPlayersHandler rawPlayerId _config connection request = do
   let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
   maybePlayerId <-
     Database.query
@@ -25,6 +25,9 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
+      let query = Wai.queryString request
+      day <- getDay query
+      let playlists = getPlaylists query
       [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
@@ -47,9 +50,11 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
               ON replays.game_id = games.id
             WHERE
               games_players.player_id = ? AND
-              games_players.is_present_at_end = true
+              games_players.is_present_at_end = true AND
+              replays.recorded_at >= ? AND
+              games.playlist_id IN ?
           |]
-          [playerId]
+          (playerId, day, Common.In playlists)
       games <-
         Database.query
           connection
@@ -84,12 +89,14 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
               arenas.id = games.arena_id
             WHERE
               games_players.player_id = ? AND
-              games_players.is_present_at_end = true
+              games_players.is_present_at_end = true AND
+              replays.recorded_at >= ? AND
+              games.playlist_id IN ?
             ORDER BY
               replays.recorded_at DESC
             LIMIT 20
           |]
-          [playerId]
+          (playerId, day, Common.In playlists)
       let numGames = numBlueGames + numOrangeGames
       let numWins = numBlueWins + numOrangeWins
       let body =
