@@ -235,15 +235,15 @@ getStatsSummaryHandler _config connection request = do
   let headers = []
   let body =
         Aeson.object
-          [ ( Text.pack "body_freq_pct"
+          [ ( Text.pack "bodyFreqPct"
             , Aeson.object
                 (map (\(k, percent) -> (k, Aeson.toJSON percent)) bodyPercents))
-          , ( Text.pack "map_freq_pct"
+          , ( Text.pack "mapFreqPct"
             , Aeson.object
                 (map
                    (\(arena, percent) -> (arena, Aeson.toJSON percent))
                    arenaPercents))
-          , ( Text.pack "win_pct"
+          , ( Text.pack "winPct"
             , Aeson.object
                 [ (Text.pack "blue", Aeson.toJSON blueWinPercentage)
                 , (Text.pack "orange", Aeson.toJSON orangeWinPercentage)

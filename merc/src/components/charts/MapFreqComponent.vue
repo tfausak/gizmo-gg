@@ -44,7 +44,7 @@ export default {
     updateChartOptions: function () {
       var vm = this
       this.source.then(function (result) {
-        let chartData = scrub(result.map_freq_pct, 0.05)
+        let chartData = scrub(result.mapFreqPct, 0.05)
         vm.chartOptions = {
           series: [
             {
