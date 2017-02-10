@@ -65,9 +65,7 @@ postUploadHandler config connection request = do
           pure
             (Common.jsonResponse
                Http.status303
-               [ ( Http.hLocation
-                 , ByteString.pack (Common.makeUrl config url))
-               ]
+               [(Http.hLocation, ByteString.pack (Common.makeUrl config url))]
                ())
         _ -> pure (Common.jsonResponse Http.status415 [] Aeson.Null)
     _ -> do
