@@ -85,7 +85,9 @@ export default {
     if (this.game.shots > 0) {
       accuracy = _.min([100, _.round(this.game.goals / this.game.shots * 100)])
     }
-    let fBody = _.replace(_.lowerCase(this.game.bodyName), ' ', '-')
+    let fBody = _.lowerCase(this.game.bodyName)
+    fBody = _.replace(fBody, '-', '')
+    fBody = _.replace(fBody, ' ', '-')
     return {
       playedAt: moment(this.game.playedAt).fromNow(),
       fDuration: min + 'm ' + sec + 's',
