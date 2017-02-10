@@ -157,17 +157,7 @@ instance Common.ToJSON GameRow where
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
   let query = Wai.queryString request
-  let startOfSeason = Time.fromGregorian 2016 6 20
-  now <- Time.getCurrentTime
-  let today = Time.utctDay now
-  let time =
-        case lookup (ByteString.pack "time") query of
-          Just (Just x) ->
-            case ByteString.unpack x of
-              "month" -> Time.addDays (-28) today
-              "week" -> Time.addDays (-7) today
-              _ -> startOfSeason
-          _ -> startOfSeason
+  time <- getDay query
   let playlists = getPlaylists query
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
@@ -260,6 +250,23 @@ makeRatio numerator denominator =
   if denominator == 0
     then 0
     else fromRational (numerator Ratio.% denominator)
+
+getDay :: Common.Query -> IO Time.Day
+getDay query = do
+  now <- Time.getCurrentTime
+  let today = Time.utctDay now
+  let day =
+        case lookup (ByteString.pack "time") query of
+          Just (Just x) ->
+            case ByteString.unpack x of
+              "month" -> Time.addDays (-28) today
+              "week" -> Time.addDays (-7) today
+              _ -> startOfSeason3
+          _ -> startOfSeason3
+  pure day
+
+startOfSeason3 :: Time.Day
+startOfSeason3 = Time.fromGregorian 2016 6 20
 
 getPlaylists :: Common.Query -> [Int]
 getPlaylists query =
