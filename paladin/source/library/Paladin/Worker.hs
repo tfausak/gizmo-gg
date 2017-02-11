@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -16,6 +17,7 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Data.Time as Time
 import qualified Data.Version as Version
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Database.PostgreSQL.Simple.SqlQQ as Sql
@@ -23,6 +25,7 @@ import qualified Database.PostgreSQL.Simple.ToField as Sql
 import qualified Paladin.Analysis as Analysis
 import qualified Paladin.Config as Config
 import qualified Paladin.Database as Database
+import qualified Paladin.Entity as Entity
 import qualified Paladin.Storage as Storage
 import qualified Paladin.Utility as Utility
 import qualified Rattletrap
@@ -158,6 +161,23 @@ insertReplay connection uploadId replay = do
           blueScore
           orangeScore
           players
+  let recordedAt = Analysis.replayAnalysisRecordedAt replay
+  let duration = round (Analysis.replayAnalysisDuration replay)
+  let insertGameRow =
+        InsertGameRow
+        { insertGameRowHash = show hash
+        , insertGameRowGameType = gameType
+        , insertGameRowPlaylist = playlist
+        , insertGameRowMaybeServerId = maybeServerId
+        , insertGameRowMaybeGameMode = maybeGameMode
+        , insertGameRowTeamSize = teamSize
+        , insertGameRowIsFair = isFair
+        , insertGameRowArena = arena
+        , insertGameRowBlueScore = blueScore
+        , insertGameRowOrangeScore = orangeScore
+        , insertGameRowRecordedAt = recordedAt
+        , insertGameRowDuration = duration
+        }
   Database.execute
     connection
     [Sql.sql|
@@ -171,7 +191,9 @@ insertReplay connection uploadId replay = do
         is_fair,
         arena_id,
         blue_score,
-        orange_score
+        orange_score,
+        played_at,
+        duration
       )
       VALUES (
         ?,
@@ -183,27 +205,18 @@ insertReplay connection uploadId replay = do
         ?,
         (SELECT id FROM arenas WHERE name = ?),
         ?,
+        ?,
+        ?,
         ?
       )
       ON CONFLICT DO NOTHING
     |]
-    ( show hash
-    , gameType
-    , playlist
-    , maybeServerId
-    , maybeGameMode
-    , teamSize
-    , isFair
-    , arena
-    , blueScore
-    , orangeScore)
+    insertGameRow
   mapM_ (insertGamePlayer connection hash) players
   let uuid = Analysis.replayAnalysisUuid replay
   let majorVersion = Analysis.replayAnalysisMajorVersion replay
   let minorVersion = Analysis.replayAnalysisMinorVersion replay
-  let recordedAt = Analysis.replayAnalysisRecordedAt replay
   let customName = Analysis.replayAnalysisCustomName replay
-  let duration = Analysis.replayAnalysisDuration replay
   Database.execute
     connection
     [Sql.sql|
@@ -223,7 +236,7 @@ insertReplay connection uploadId replay = do
     , minorVersion
     , recordedAt
     , customName
-    , round duration :: Int
+    , duration
     , show hash)
   Database.execute
     connection
@@ -235,6 +248,23 @@ insertReplay connection uploadId replay = do
       WHERE id = ?
     |]
     (uuid, uploadId)
+
+data InsertGameRow = InsertGameRow
+  { insertGameRowHash :: String
+  , insertGameRowGameType :: Text.Text
+  , insertGameRowPlaylist :: Int
+  , insertGameRowMaybeServerId :: Maybe Int
+  , insertGameRowMaybeGameMode :: Maybe Int
+  , insertGameRowTeamSize :: Int
+  , insertGameRowIsFair :: Bool
+  , insertGameRowArena :: Text.Text
+  , insertGameRowBlueScore :: Int
+  , insertGameRowOrangeScore :: Int
+  , insertGameRowRecordedAt :: Time.LocalTime
+  , insertGameRowDuration :: Int
+  } deriving (Eq, Entity.Generic, Show)
+
+instance Sql.ToRow InsertGameRow
 
 makeGameHash
   :: Text.Text

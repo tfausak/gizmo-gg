@@ -21,7 +21,9 @@ getGamesHandler =
         is_fair,
         arena_id,
         blue_score,
-        orange_score
+        orange_score,
+        played_at,
+        duration
       FROM games
       ORDER BY created_at DESC
    |]

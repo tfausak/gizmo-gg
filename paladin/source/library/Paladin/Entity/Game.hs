@@ -22,6 +22,8 @@ data Game = Game
   , gameArenaId :: Common.Tagged Arena.Arena Int
   , gameBlueScore :: Int
   , gameOrangeScore :: Int
+  , gamePlayedAt :: Common.LocalTime
+  , gameDuration :: Int
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow Game

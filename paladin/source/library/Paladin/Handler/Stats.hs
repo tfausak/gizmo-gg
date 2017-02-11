@@ -42,16 +42,14 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               sum(games_players.assists),
               sum(games_players.saves),
               sum(games_players.shots),
-              sum(replays.duration)
+              sum(games.duration)
             FROM games
             INNER JOIN games_players
               ON games_players.game_id = games.id
-            INNER JOIN replays
-              ON replays.game_id = games.id
             WHERE
               games_players.player_id = ? AND
               games_players.is_present_at_end = true AND
-              replays.recorded_at >= ? AND
+              games.played_at >= ? AND
               games.playlist_id IN ?
           |]
           (playerId, day, Common.In playlists)
@@ -62,11 +60,11 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
             SELECT
               games.playlist_id,
               playlists.name,
-              replays.recorded_at,
+              games.played_at,
               games_players.is_blue AND games.blue_score > games.orange_score,
               CASE WHEN games_players.is_blue THEN games.blue_score ELSE games.orange_score END,
               CASE WHEN games_players.is_blue THEN games.orange_score ELSE games.blue_score END,
-              replays.duration,
+              games.duration,
               games_players.body_id,
               bodies.name,
               games_players.score,
@@ -81,8 +79,6 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               games_players.game_id = games.id
             INNER JOIN playlists ON
               playlists.id = games.playlist_id
-            INNER JOIN replays ON
-              replays.game_id = games.id
             INNER JOIN bodies ON
               bodies.id = games_players.body_id
             INNER JOIN arenas ON
@@ -90,10 +86,10 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
             WHERE
               games_players.player_id = ? AND
               games_players.is_present_at_end = true AND
-              replays.recorded_at >= ? AND
+              games.played_at >= ? AND
               games.playlist_id IN ?
             ORDER BY
-              replays.recorded_at DESC
+              games.played_at DESC
             LIMIT 20
           |]
           (playerId, day, Common.In playlists)
@@ -172,14 +168,12 @@ getStatsSummaryHandler _config connection request = do
       [Common.sql|
         SELECT
           count(*),
-          count(CASE WHEN games.blue_score > games.orange_score THEN 1 END),
-          count(CASE WHEN games.blue_score < games.orange_score THEN 1 END)
-        FROM replays
-        INNER JOIN games
-          ON games.id = replays.game_id
+          count(CASE WHEN blue_score > orange_score THEN 1 END),
+          count(CASE WHEN blue_score < orange_score THEN 1 END)
+        FROM games
         WHERE
-          replays.recorded_at >= ? AND
-          games.playlist_id IN ?
+          played_at >= ? AND
+          playlist_id IN ?
       |]
       (time, Common.In playlists)
   let blueWinPercentage = makeRatio numBlueWins numGames
@@ -191,13 +185,11 @@ getStatsSummaryHandler _config connection request = do
         SELECT
           arenas.name,
           count(*)
-        FROM replays
-        INNER JOIN games
-          ON games.id = replays.game_id
+        FROM games
         INNER JOIN arenas
           ON arenas.id = games.arena_id
         WHERE
-          replays.recorded_at >= ? AND
+          games.played_at >= ? AND
           games.playlist_id IN ?
         GROUP BY arenas.name
       |]
@@ -216,12 +208,10 @@ getStatsSummaryHandler _config connection request = do
         FROM games_players
         INNER JOIN games
           ON games.id = games_players.game_id
-        INNER JOIN replays
-          ON replays.game_id = games.id
         INNER JOIN bodies
           ON bodies.id = games_players.body_id
         WHERE
-          replays.recorded_at >= ? AND
+          games.played_at >= ? AND
           games.playlist_id IN ?
         GROUP BY body
       |]
