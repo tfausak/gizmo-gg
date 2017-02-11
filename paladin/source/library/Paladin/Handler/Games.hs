@@ -20,8 +20,8 @@ getGamesHandler =
         team_size,
         is_fair,
         arena_id,
-        blue_score,
-        orange_score,
+        blue_goals,
+        orange_goals,
         played_at,
         duration
       FROM games

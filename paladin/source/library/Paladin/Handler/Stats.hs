@@ -35,8 +35,8 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
             SELECT
               count(CASE WHEN games_players.is_blue THEN 1 END),
               count(CASE WHEN NOT games_players.is_blue THEN 1 END),
-              count(CASE WHEN games_players.is_blue AND games.blue_score > games.orange_score THEN 1 END),
-              count(CASE WHEN NOT games_players.is_blue and games.orange_score > games.blue_score THEN 1 END),
+              count(CASE WHEN games_players.is_blue AND games.blue_goals > games.orange_goals THEN 1 END),
+              count(CASE WHEN NOT games_players.is_blue and games.orange_goals > games.blue_goals THEN 1 END),
               sum(games_players.score),
               sum(games_players.goals),
               sum(games_players.assists),
@@ -61,9 +61,9 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               games.playlist_id,
               playlists.name,
               games.played_at,
-              games_players.is_blue AND games.blue_score > games.orange_score,
-              CASE WHEN games_players.is_blue THEN games.blue_score ELSE games.orange_score END,
-              CASE WHEN games_players.is_blue THEN games.orange_score ELSE games.blue_score END,
+              games_players.is_blue AND games.blue_goals > games.orange_goals,
+              CASE WHEN games_players.is_blue THEN games.blue_goals ELSE games.orange_goals END,
+              CASE WHEN games_players.is_blue THEN games.orange_goals ELSE games.blue_goals END,
               games.duration,
               games_players.body_id,
               bodies.name,
@@ -168,8 +168,8 @@ getStatsSummaryHandler _config connection request = do
       [Common.sql|
         SELECT
           count(*),
-          count(CASE WHEN blue_score > orange_score THEN 1 END),
-          count(CASE WHEN blue_score < orange_score THEN 1 END)
+          count(CASE WHEN blue_goals > orange_goals THEN 1 END),
+          count(CASE WHEN blue_goals < orange_goals THEN 1 END)
         FROM games
         WHERE
           played_at >= ? AND
