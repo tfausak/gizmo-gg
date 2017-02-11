@@ -25,3 +25,11 @@ genericToEncoding name =
   let size = length name
       options = Casing.aesonDrop size Casing.camelCase
   in Aeson.genericToEncoding options
+
+genericToJSON
+  :: (Generic a, Aeson.GToJSON (Generics.Rep a))
+  => String -> a -> Aeson.Value
+genericToJSON name =
+  let size = length name
+      options = Casing.aesonDrop size Casing.camelCase
+  in Aeson.genericToJSON options

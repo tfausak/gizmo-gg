@@ -30,22 +30,6 @@
   width: 100%;
   align-items: center;
 }
-.tag.stat {
-  font-weight: bold!important;
-}
-.panel-win .panel-block,
-.panel-loss .panel-block {
-  min-height: 100px;
-  hr {
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-}
-.panel-win {
-  background-color: #A3CFEC;
-}
-.panel-loss {
-  background-color: #E2B6B3;
-}
 </style>
 
 <template>
@@ -135,165 +119,31 @@
                 <echart :options="chartOptions" v-if="chartOptions"></echart>
               </div>
               <div class="column is-2">
-                12W 8L
+                {{ source.numWins }}W {{ source.numLosses }}L
               </div>
-              <div class="column is-2 has-text-centered">
+              <div class="column is-3 has-text-centered">
                 <div class="title is-5">655 Pts/min</div>
-                <div class="subtitle is-6">2.21:1 (46.5%)</div>
-              </div>
-              <div class="column is-3">
-                <div class="level">
-                  <div class="level-item">
-                    <figure class="image is-48x48">
-                      <img :src="'/static/img/maps/wasteland.jpg'">
-                    </figure>
-                  </div>
-                  <div class="level-item">
-                    <div>
-                      <div class="heading">Wasteland</div>
-                      <div>50% 3W 3L</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="column is-3">
-                <div class="level">
-                  <div class="level-item">
-                    <figure class="image is-48x48">
-                      <img :src="'/static/img/maps/standard.jpg'">
-                    </figure>
-                  </div>
-                  <div class="level-item">
-                    <div>
-                      <div class="heading">Standard</div>
-                      <div>33% 1W 2L</div>
-                    </div>
-                  </div>
-                </div>
+                <div class="subtitle is-6">{{ source.totalGoals }}/{{ source.totalAssists }}/{{ source.totalSaves }}/{{ source.totalShots }} (..%)</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="panel panel-win">
-          <div class="panel-block">
-            <div class="columns">
-              <div class="column is-2 has-text-centered text-small">
-                <strong>Ranked 1v1</strong>
-                <br>38 minutes ago
-                <hr style="margin: 4px 0;">
-                <strong>Victory</strong><br>
-                5m 0s
-              </div>
-              <div class="column is-2">
-                <figure class="image is-48x48 is-circle-dark-128x128">
-                  <img :src="'/static/img/bodies/octane.png'">
-                </figure>
-                Octane
-              </div>
-              <div class="column is-2 has-text-centered">
-                <div class="title is-5">1080 Points</div>
-                <div class="subtitle is-6">1/0/3/4 (25%)</div>
-              </div>
-              <div class="column is-3">
-                <div class="level">
-                  <div class="level-item">
-                    <figure class="image is-48x48">
-                      <img :src="'/static/img/maps/standard.jpg'">
-                    </figure>
-                  </div>
-                  <div class="level-item">
-                    <div>
-                      <div class="heading">Standard</div>
-                      <div>Utopia Colesium</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="column is-3">
-                <div class="level">
-                  <div class="level-item">
-                    <figure class="image is-24x24">
-                      <img :src="'/static/img/bodies/octane.png'">
-                    </figure>
-                    rustixote
-                  </div>
-                  <div class="level-item">
-                    <figure class="image is-24x24">
-                      <img :src="'/static/img/bodies/takumi-rxt.png'">
-                    </figure>
-                    Nadir
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel panel-loss">
-          <div class="panel-block">
-            <div class="columns">
-              <div class="column is-2 has-text-centered text-small">
-                <strong>Ranked 1v1</strong>
-                <br>45 minutes ago
-                <hr style="margin: 4px 0;">
-                <strong>Defeat</strong><br>
-                4m 22s
-              </div>
-              <div class="column is-2">
-                <figure class="image is-48x48 is-circle-dark-128x128">
-                  <img :src="'/static/img/bodies/octane.png'">
-                </figure>
-                Octane
-              </div>
-              <div class="column is-2 has-text-centered">
-                <div class="title is-5">433 Points</div>
-                <div class="subtitle is-6">1/0/1/2 (50%)</div>
-              </div>
-              <div class="column is-3">
-                <div class="level">
-                  <div class="level-item">
-                    <figure class="image is-48x48">
-                      <img :src="'/static/img/maps/wasteland.jpg'">
-                    </figure>
-                  </div>
-                  <div class="level-item">
-                    <div>
-                      <div class="heading">Wasteland</div>
-                      <div>Wasteland-night</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="column is-3">
-                <div class="level">
-                  <div class="level-item">
-                    <figure class="image is-24x24">
-                      <img :src="'/static/img/bodies/octane.png'">
-                    </figure>
-                    rustixote
-                  </div>
-                  <div class="level-item">
-                    <figure class="image is-24x24">
-                      <img :src="'/static/img/bodies/takumi-rxt.png'">
-                    </figure>
-                    Nadir
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <game-component v-for="game in source.games" :game="game"></game-component>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import GameComponent from '../../components/player/GameComponent.vue'
 var _ = require('lodash')
 
 export default {
+  components: {
+    GameComponent
+  },
+  props: [ 'source' ],
   data: function () {
     return {
       ranks: [
@@ -318,7 +168,7 @@ export default {
               top: 'middle',
               style:
               {
-                'text': '55%',
+                'text': _.round(this.source.winPct * 100) + '%',
                 fill: '#777'
               }
             }
@@ -332,12 +182,12 @@ export default {
             radius: ['55%', '80%'],
             data: [
               {
-                name: 'orange',
-                value: 45
+                name: 'losses',
+                value: this.source.numLosses
               },
               {
-                name: 'blue',
-                value: 55
+                name: 'wins',
+                value: this.source.numWins
               }
             ],
             label: { normal: { show: false } }

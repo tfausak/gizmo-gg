@@ -100,11 +100,19 @@ table.is-transparent td {
 
 /* Charts */
 
-// default echarts size. it ships with something huge like 600x400
+.echart-loading,
 .echarts {
   width: 300px!important;
   height: 150px!important;
   margin: 0 auto!important;
+}
+.echart-loading {
+  text-align: center;
+  padding-top: 45px;
+  color: $grey-light;
+  .fa {
+    font-size: 65px;
+  }
 }
 
 /* Images */

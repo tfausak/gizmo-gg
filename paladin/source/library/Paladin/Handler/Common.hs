@@ -7,6 +7,7 @@ module Paladin.Handler.Common
 
 import Database.PostgreSQL.Simple as Export (In(In))
 import Database.PostgreSQL.Simple.SqlQQ as Export (sql)
+import Network.HTTP.Types as Export (Query)
 import Paladin.Entity as Export
 
 import qualified Data.Aeson as Aeson

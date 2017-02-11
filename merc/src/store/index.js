@@ -37,8 +37,13 @@ const store = new Vuex.Store({
       return dispatch('FETCH', { endpoint })
     },
 
-    FIND_PLAYER: function ({ dispatch }, params) {
-      let endpoint = 'players/find' + getQueryString(params)
+    GET_PLAYERS: function ({ dispatch }) {
+      let endpoint = 'players'
+      return dispatch('FETCH', { endpoint })
+    },
+
+    GET_PLAYER: function ({ dispatch }, params) {
+      let endpoint = 'stats/players/' + params.id
       return dispatch('FETCH', { endpoint })
     },
 

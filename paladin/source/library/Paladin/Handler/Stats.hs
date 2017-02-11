@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Paladin.Handler.Stats where
@@ -15,7 +16,7 @@ import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
 getStatsPlayersHandler :: Common.Text -> Common.Handler
-getStatsPlayersHandler rawPlayerId _config connection _request = do
+getStatsPlayersHandler rawPlayerId _config connection request = do
   let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
   maybePlayerId <-
     Database.query
@@ -24,6 +25,9 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
+      let query = Wai.queryString request
+      day <- getDay query
+      let playlists = getPlaylists query
       [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
@@ -46,74 +50,122 @@ getStatsPlayersHandler rawPlayerId _config connection _request = do
               ON replays.game_id = games.id
             WHERE
               games_players.player_id = ? AND
-              games_players.is_present_at_end = true
+              games_players.is_present_at_end = true AND
+              replays.recorded_at >= ? AND
+              games.playlist_id IN ?
           |]
-          [playerId]
+          (playerId, day, Common.In playlists)
+      games <-
+        Database.query
+          connection
+          [Common.sql|
+            SELECT
+              games.playlist_id,
+              playlists.name,
+              replays.recorded_at,
+              games_players.is_blue AND games.blue_score > games.orange_score,
+              CASE WHEN games_players.is_blue THEN games.blue_score ELSE games.orange_score END,
+              CASE WHEN games_players.is_blue THEN games.orange_score ELSE games.blue_score END,
+              replays.duration,
+              games_players.body_id,
+              bodies.name,
+              games_players.score,
+              games_players.goals,
+              games_players.assists,
+              games_players.saves,
+              games_players.shots,
+              games.arena_id,
+              arenas.name
+            FROM games
+            INNER JOIN games_players ON
+              games_players.game_id = games.id
+            INNER JOIN playlists ON
+              playlists.id = games.playlist_id
+            INNER JOIN replays ON
+              replays.game_id = games.id
+            INNER JOIN bodies ON
+              bodies.id = games_players.body_id
+            INNER JOIN arenas ON
+              arenas.id = games.arena_id
+            WHERE
+              games_players.player_id = ? AND
+              games_players.is_present_at_end = true AND
+              replays.recorded_at >= ? AND
+              games.playlist_id IN ?
+            ORDER BY
+              replays.recorded_at DESC
+            LIMIT 20
+          |]
+          (playerId, day, Common.In playlists)
       let numGames = numBlueGames + numOrangeGames
       let numWins = numBlueWins + numOrangeWins
       let body =
             Aeson.object
-              [ (Text.pack "num_games", Aeson.toJSON numGames)
-              , (Text.pack "num_wins", Aeson.toJSON numWins)
-              , (Text.pack "num_losses", Aeson.toJSON (numGames - numWins))
-              , ( Text.pack "win_pct"
-                , Aeson.toJSON (makeRatio numWins numGames))
-              , (Text.pack "num_blue_games", Aeson.toJSON numBlueGames)
-              , (Text.pack "num_blue_wins", Aeson.toJSON numBlueWins)
-              , ( Text.pack "num_blue_losses"
+              [ (Text.pack "numGames", Aeson.toJSON numGames)
+              , (Text.pack "numWins", Aeson.toJSON numWins)
+              , (Text.pack "numLosses", Aeson.toJSON (numGames - numWins))
+              , (Text.pack "winPct", Aeson.toJSON (makeRatio numWins numGames))
+              , (Text.pack "numBlueGames", Aeson.toJSON numBlueGames)
+              , (Text.pack "numBlueWins", Aeson.toJSON numBlueWins)
+              , ( Text.pack "numBlueLosses"
                 , Aeson.toJSON (numBlueGames - numBlueWins))
-              , ( Text.pack "blue_win_pct"
+              , ( Text.pack "blueWinPct"
                 , Aeson.toJSON (makeRatio numBlueWins numBlueGames))
-              , (Text.pack "num_orange_wins", Aeson.toJSON numOrangeWins)
-              , ( Text.pack "num_orange_losses"
+              , (Text.pack "numOrangeWins", Aeson.toJSON numOrangeWins)
+              , ( Text.pack "numOrangeLosses"
                 , Aeson.toJSON (numOrangeGames - numOrangeWins))
-              , ( Text.pack "orange_win_pct"
+              , ( Text.pack "orangeWinPct"
                 , Aeson.toJSON (makeRatio numOrangeWins numOrangeGames))
-              , (Text.pack "total_score", Aeson.toJSON totalScore)
-              , (Text.pack "total_goals", Aeson.toJSON totalGoals)
-              , (Text.pack "total_assists", Aeson.toJSON totalAssists)
-              , (Text.pack "total_saves", Aeson.toJSON totalSaves)
-              , (Text.pack "total_shots", Aeson.toJSON totalShots)
-              , (Text.pack "seconds_played", Aeson.toJSON secondsPlayed)
-              , ( Text.pack "score_per_second"
+              , (Text.pack "totalScore", Aeson.toJSON totalScore)
+              , (Text.pack "totalGoals", Aeson.toJSON totalGoals)
+              , (Text.pack "totalAssists", Aeson.toJSON totalAssists)
+              , (Text.pack "totalSaves", Aeson.toJSON totalSaves)
+              , (Text.pack "totalShots", Aeson.toJSON totalShots)
+              , (Text.pack "secondsPlayed", Aeson.toJSON secondsPlayed)
+              , ( Text.pack "scorePerSecond"
                 , Aeson.toJSON (makeRatio totalScore secondsPlayed))
-              , ( Text.pack "goals_per_second"
+              , ( Text.pack "goalsPerSecond"
                 , Aeson.toJSON (makeRatio totalGoals secondsPlayed))
-              , ( Text.pack "assists_per_second"
+              , ( Text.pack "assistsPerSecond"
                 , Aeson.toJSON (makeRatio totalAssists secondsPlayed))
-              , ( Text.pack "saves_per_second"
+              , ( Text.pack "savesPerSecond"
                 , Aeson.toJSON (makeRatio totalSaves secondsPlayed))
-              , ( Text.pack "shots_per_second"
+              , ( Text.pack "shotsPerSecond"
                 , Aeson.toJSON (makeRatio totalShots secondsPlayed))
+              , (Text.pack "games", Aeson.toJSON (games :: [GameRow]))
               ]
       pure (Common.jsonResponse Http.status200 [] body)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
+data GameRow = GameRow
+  { gameRowPlaylistId :: Integer
+  , gameRowPlaylistName :: Maybe Common.Text
+  , gameRowPlayedAt :: Common.LocalTime
+  , gameRowDidWin :: Bool
+  , gameRowYourScore :: Integer
+  , gameRowTheirScore :: Integer
+  , gameRowDuration :: Integer
+  , gameRowBodyId :: Integer
+  , gameRowBodyName :: Maybe Common.Text
+  , gameRowScore :: Integer
+  , gameRowGoals :: Integer
+  , gameRowAssists :: Integer
+  , gameRowSaves :: Integer
+  , gameRowShots :: Integer
+  , gameRowArenaId :: Integer
+  , gameRowArenaName :: Maybe Common.Text
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow GameRow
+
+instance Common.ToJSON GameRow where
+  toJSON = Common.genericToJSON "GameRow"
+
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
   let query = Wai.queryString request
-  let startOfSeason = Time.fromGregorian 2016 6 20
-  now <- Time.getCurrentTime
-  let today = Time.utctDay now
-  let time =
-        case lookup (ByteString.pack "time") query of
-          Just (Just x) ->
-            case ByteString.unpack x of
-              "month" -> Time.addDays (-28) today
-              "week" -> Time.addDays (-7) today
-              _ -> startOfSeason
-          _ -> startOfSeason
-  let allRanked = [10, 11, 12, 13] :: [Int]
-  let playlists =
-        case lookup (ByteString.pack "playlist") query of
-          Just (Just x) ->
-            case ByteString.unpack x of
-              "ranked1v1" -> [10]
-              "ranked2v2" -> [11]
-              "ranked3v3solo" -> [12]
-              "ranked3v3" -> [13]
-              _ -> allRanked
-          _ -> allRanked
+  time <- getDay query
+  let playlists = getPlaylists query
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -183,19 +235,20 @@ getStatsSummaryHandler _config connection request = do
   let headers = []
   let body =
         Aeson.object
-          [ ( Text.pack "body_freq_pct"
+          [ ( Text.pack "bodyFreqPct"
             , Aeson.object
                 (map (\(k, percent) -> (k, Aeson.toJSON percent)) bodyPercents))
-          , ( Text.pack "map_freq_pct"
+          , ( Text.pack "mapFreqPct"
             , Aeson.object
                 (map
                    (\(arena, percent) -> (arena, Aeson.toJSON percent))
                    arenaPercents))
-          , ( Text.pack "win_pct"
+          , ( Text.pack "winPct"
             , Aeson.object
                 [ (Text.pack "blue", Aeson.toJSON blueWinPercentage)
                 , (Text.pack "orange", Aeson.toJSON orangeWinPercentage)
                 ])
+          , (Text.pack "numGames", Aeson.toJSON numGames)
           ]
   let response = Common.jsonResponse status headers body
   pure response
@@ -205,3 +258,52 @@ makeRatio numerator denominator =
   if denominator == 0
     then 0
     else fromRational (numerator Ratio.% denominator)
+
+getDay :: Common.Query -> IO Time.Day
+getDay query = do
+  now <- Time.getCurrentTime
+  let today = Time.utctDay now
+  let day =
+        case getParam "time" query of
+          Just "month" -> Time.addDays (-28) today
+          Just "week" -> Time.addDays (-7) today
+          _ -> startOfSeason3
+  pure day
+
+startOfSeason3 :: Time.Day
+startOfSeason3 = Time.fromGregorian 2016 6 20
+
+getPlaylists :: Common.Query -> [Int]
+getPlaylists query =
+  case getParam "playlist" query of
+    Just "ranked1v1" -> [competitiveSoloDuel]
+    Just "ranked2v2" -> [competitiveDoubles]
+    Just "ranked3v3solo" -> [competitiveSoloStandard]
+    Just "ranked3v3" -> [competitiveStandard]
+    _ -> competitivePlaylists
+
+competitivePlaylists :: [Int]
+competitivePlaylists =
+  [ competitiveSoloDuel
+  , competitiveDoubles
+  , competitiveSoloStandard
+  , competitiveStandard
+  ]
+
+competitiveSoloDuel :: Int
+competitiveSoloDuel = 10
+
+competitiveDoubles :: Int
+competitiveDoubles = 11
+
+competitiveSoloStandard :: Int
+competitiveSoloStandard = 12
+
+competitiveStandard :: Int
+competitiveStandard = 13
+
+getParam :: String -> Common.Query -> Maybe String
+getParam name query =
+  case lookup (ByteString.pack name) query of
+    Just (Just value) -> Just (ByteString.unpack value)
+    _ -> Nothing

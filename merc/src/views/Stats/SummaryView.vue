@@ -12,13 +12,13 @@
 
       <div class="columns">
         <div class="column">
-          <wins-component :source="source"></wins-component>
+          <wins-component :source="source" :loading="loading"></wins-component>
         </div>
         <div class="column">
-          <body-component :source="source"></body-component>
+          <body-component :source="source" :loading="loading"></body-component>
         </div>
       </div>
-      <map-freq-component :source="source"></map-freq-component>
+      <map-freq-component :source="source" :loading="loading"></map-freq-component>
     </div>
   </section>
 </template>
@@ -43,6 +43,7 @@ export default {
   },
   data: function () {
     return {
+      loading: true,
       timeOptions: timeOptions,
       time: _.head(_.keys(timeOptions)),
       playlistOptions: playlistOptions,
@@ -51,9 +52,14 @@ export default {
   },
   computed: {
     source: function () {
+      let vm = this
+      this.loading = true
       return this.$store.dispatch('GET_STATS_SUMMARY', {
         time: this.time,
         playlist: this.playlist
+      }).then(function (data) {
+        vm.loading = false
+        return data
       })
     }
   }

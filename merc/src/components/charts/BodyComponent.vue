@@ -5,40 +5,52 @@
         Battle-Car Usage
         - <router-link to="/stats/battle-cars">more</router-link>
       </p>
-      <echart :options="chart"></echart>
+      <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
+      <loading-component :loading="loading"></loading-component>
     </div>
   </article>
 </template>
 
 <script>
+import LoadingComponent from './LoadingComponent.vue'
+import { scrub } from '../../lib/basic-chart-data-scrubber.js'
+
 export default {
+  components: {
+    LoadingComponent: LoadingComponent
+  },
+  props: [ 'source', 'loading' ],
   data: function () {
-    let source = {
-      'Octane': 65.4,
-      'Dominus': 11.2,
-      'Breakout-S': 7.8,
-      'Batmobile': 5.5,
-      'Other': 10.1
+    return {
+      chartOptions: null
     }
-    let data = []
-    for (let key in source) {
-      data.push({
-        value: source[key],
-        name: key
+  },
+  watch: {
+    source: function (val) {
+      this.updateChartOptions()
+    }
+  },
+  methods: {
+    updateChartOptions: function () {
+      var vm = this
+      this.source.then(function (result) {
+        let chartData = scrub(result.bodyFreqPct)
+        vm.chartOptions = {
+          series: [
+            {
+              animation: false,
+              type: 'pie',
+              radius: ['45%', '75%'],
+              data: chartData,
+              label: { normal: { formatter: `{b}\n{d}%` } }
+            }
+          ]
+        }
       })
     }
-    return {
-      chart: {
-        series: [
-          {
-            type: 'pie',
-            radius: ['45%', '75%'],
-            data: data,
-            label: { normal: { formatter: `{b}\n{d}%` } }
-          }
-        ]
-      }
-    }
+  },
+  beforeMount () {
+    this.updateChartOptions()
   }
 }
 </script>
