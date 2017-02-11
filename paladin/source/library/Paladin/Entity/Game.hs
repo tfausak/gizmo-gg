@@ -20,8 +20,8 @@ data Game = Game
   , gameTeamSize :: Int
   , gameIsFair :: Bool
   , gameArenaId :: Common.Tagged Arena.Arena Int
-  , gameBlueScore :: Int
-  , gameOrangeScore :: Int
+  , gameBlueGoals :: Int
+  , gameOrangeGoals :: Int
   , gamePlayedAt :: Common.LocalTime
   , gameDuration :: Int
   } deriving (Eq, Common.Generic, Show)

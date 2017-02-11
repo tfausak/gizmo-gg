@@ -47,7 +47,7 @@
           <div>{{ game.goals }}/{{ game.assists }}/{{ game.saves }}/{{ game.shots }} ({{ accuracy }}%)</div>
         </div>
         <div class="column is-2 has-text-centered">
-          <div class="title is-4">{{ game.yourScore }} - {{ game.theirScore }}</div>
+          <div class="title is-4">{{ game.yourGoals }} - {{ game.theirGoals }}</div>
         </div>
         <div class="column is-3">
           <div class="level">
@@ -92,7 +92,7 @@ export default {
       fDuration: min + 'm ' + sec + 's',
       accuracy: parseInt(accuracy),
       fBody: fBody,
-      isWin: this.game.yourScore > this.game.theirScore
+      isWin: this.game.yourGoals > this.game.theirGoals
     }
   }
 }

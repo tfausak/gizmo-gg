@@ -147,8 +147,8 @@ insertReplay connection uploadId replay = do
   mapM_ (insertPlayer connection) players
   let teamSize = Analysis.replayAnalysisTeamSize replay
   let isFair = Analysis.replayAnalysisIsFair replay
-  let blueScore = Analysis.replayAnalysisBlueScore replay
-  let orangeScore = Analysis.replayAnalysisOrangeScore replay
+  let blueGoals = Analysis.replayAnalysisBlueGoals replay
+  let orangeGoals = Analysis.replayAnalysisOrangeGoals replay
   let hash =
         makeGameHash
           gameType
@@ -158,8 +158,8 @@ insertReplay connection uploadId replay = do
           teamSize
           isFair
           arena
-          blueScore
-          orangeScore
+          blueGoals
+          orangeGoals
           players
   let recordedAt = Analysis.replayAnalysisRecordedAt replay
   let duration = round (Analysis.replayAnalysisDuration replay)
@@ -173,8 +173,8 @@ insertReplay connection uploadId replay = do
         , insertGameRowTeamSize = teamSize
         , insertGameRowIsFair = isFair
         , insertGameRowArena = arena
-        , insertGameRowBlueScore = blueScore
-        , insertGameRowOrangeScore = orangeScore
+        , insertGameRowBlueGoals = blueGoals
+        , insertGameRowOrangeGoals = orangeGoals
         , insertGameRowRecordedAt = recordedAt
         , insertGameRowDuration = duration
         }
@@ -258,8 +258,8 @@ data InsertGameRow = InsertGameRow
   , insertGameRowTeamSize :: Int
   , insertGameRowIsFair :: Bool
   , insertGameRowArena :: Text.Text
-  , insertGameRowBlueScore :: Int
-  , insertGameRowOrangeScore :: Int
+  , insertGameRowBlueGoals :: Int
+  , insertGameRowOrangeGoals :: Int
   , insertGameRowRecordedAt :: Time.LocalTime
   , insertGameRowDuration :: Int
   } deriving (Eq, Entity.Generic, Show)

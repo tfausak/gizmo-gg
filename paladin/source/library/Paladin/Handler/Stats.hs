@@ -138,8 +138,8 @@ data GameRow = GameRow
   , gameRowPlaylistName :: Maybe Common.Text
   , gameRowPlayedAt :: Common.LocalTime
   , gameRowDidWin :: Bool
-  , gameRowYourScore :: Integer
-  , gameRowTheirScore :: Integer
+  , gameRowYourGoals :: Integer
+  , gameRowTheirGoals :: Integer
   , gameRowDuration :: Integer
   , gameRowBodyId :: Integer
   , gameRowBodyName :: Maybe Common.Text

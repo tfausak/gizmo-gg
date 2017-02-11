@@ -31,8 +31,8 @@ data ReplayAnalysis = ReplayAnalysis
   , replayAnalysisIsFair :: Bool
   , replayAnalysisPlayers :: Set.Set PlayerAnalysis
   , replayAnalysisDuration :: Time.DiffTime
-  , replayAnalysisBlueScore :: Int
-  , replayAnalysisOrangeScore :: Int
+  , replayAnalysisBlueGoals :: Int
+  , replayAnalysisOrangeGoals :: Int
   } deriving (Eq, Show)
 
 data PlayerAnalysis = PlayerAnalysis
@@ -86,8 +86,8 @@ makeReplayAnalysis replay = do
   isFair <- getIsFair replay
   players <- getPlayers replay
   duration <- getDuration replay
-  blueScore <- getBlueScore replay
-  orangeScore <- getOrangeScore replay
+  blueGoals <- getBlueGoals replay
+  orangeGoals <- getOrangeGoals replay
   pure
     ReplayAnalysis
     { replayAnalysisMajorVersion = majorVersion
@@ -105,8 +105,8 @@ makeReplayAnalysis replay = do
     , replayAnalysisIsFair = isFair
     , replayAnalysisPlayers = players
     , replayAnalysisDuration = duration
-    , replayAnalysisBlueScore = blueScore
-    , replayAnalysisOrangeScore = orangeScore
+    , replayAnalysisBlueGoals = blueGoals
+    , replayAnalysisOrangeGoals = orangeGoals
     }
 
 -- High-level helpers
@@ -334,32 +334,32 @@ getDuration replay = do
   let rate = rateValue & Rattletrap.float32Value
   frames / rate & realToFrac & pure
 
-getBlueScore
+getBlueGoals
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m Int
-getBlueScore replay = do
+getBlueGoals replay = do
   let maybeProperty =
         replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
         Rattletrap.headerProperties &
         Rattletrap.dictionaryValue &
         lookupThrow "Team0Score"
   case maybeProperty of
-    Nothing -> pure defaultScore
+    Nothing -> pure defaultGoals
     Just property -> do
       value <- property & Rattletrap.propertyValue & fromIntProperty
       value & Rattletrap.int32Value & fromIntegral & pure
 
-getOrangeScore
+getOrangeGoals
   :: Catch.MonadThrow m
   => Rattletrap.Replay -> m Int
-getOrangeScore replay = do
+getOrangeGoals replay = do
   let maybeProperty =
         replay & Rattletrap.replayHeader & Rattletrap.sectionBody &
         Rattletrap.headerProperties &
         Rattletrap.dictionaryValue &
         lookupThrow "Team1Score"
   case maybeProperty of
-    Nothing -> pure defaultScore
+    Nothing -> pure defaultGoals
     Just property -> do
       value <- property & Rattletrap.propertyValue & fromIntProperty
       value & Rattletrap.int32Value & fromIntegral & pure
@@ -368,8 +368,8 @@ getOrangeScore replay = do
 defaultIsFair :: Bool
 defaultIsFair = True
 
-defaultScore :: Int
-defaultScore = 0
+defaultGoals :: Int
+defaultGoals = 0
 
 defaultFov :: Float
 defaultFov = 90.0
