@@ -15,6 +15,62 @@ import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
+getStatsBodiesHandler :: Common.Handler
+getStatsBodiesHandler _config connection request = do
+  (day, playlists) <- getDayAndPlaylists request
+  bodies <-
+    Database.query
+      connection
+      [Common.sql|
+        SELECT
+          bodies.id,
+          bodies.name,
+          sum(games_players.score),
+          sum(games_players.goals),
+          sum(games_players.assists),
+          sum(games_players.saves),
+          sum(games_players.shots),
+          count(*),
+          count(CASE WHEN games_players.is_blue
+            THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
+            ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
+            END),
+          count( CASE WHEN games_players.is_blue
+            THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
+            ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
+            END)
+        FROM bodies
+        INNER JOIN games_players ON games_players.body_id = bodies.id
+        INNER JOIN games ON games.id = games_players.game_id
+        WHERE
+          games_players.is_present_at_end = true AND
+          games.played_at >= ? AND
+          games.playlist_id IN ?
+        GROUP BY bodies.id
+        ORDER BY bodies.id ASC
+      |]
+      (day, Common.In playlists)
+  let json = Aeson.toJSON (bodies :: [BodyStats])
+  pure (Common.jsonResponse Http.status200 [] json)
+
+data BodyStats = BodyStats
+  { bodyStatsBodyId :: Int
+  , bodyStatsBodyName :: Maybe Common.Text
+  , bodyStatsTotalScore :: Int
+  , bodyStatsTotalGoals :: Int
+  , bodyStatsTotalAssists :: Int
+  , bodyStatsTotalSaves :: Int
+  , bodyStatsTotalShots :: Int
+  , bodyStatsNumGames :: Int
+  , bodyStatsNumWins :: Int
+  , bodyStatsNumLosses :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow BodyStats
+
+instance Common.ToJSON BodyStats where
+  toJSON = Common.genericToJSON "BodyStats"
+
 getStatsPlayersHandler :: Common.Text -> Common.Handler
 getStatsPlayersHandler rawPlayerId _config connection request = do
   let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
@@ -25,9 +81,7 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
-      let query = Wai.queryString request
-      day <- getDay query
-      let playlists = getPlaylists query
+      (day, playlists) <- getDayAndPlaylists request
       [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
@@ -147,9 +201,7 @@ instance Common.ToJSON GameRow where
 
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
-  let query = Wai.queryString request
-  time <- getDay query
-  let playlists = getPlaylists query
+  (day, playlists) <- getDayAndPlaylists request
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -163,7 +215,7 @@ getStatsSummaryHandler _config connection request = do
           played_at >= ? AND
           playlist_id IN ?
       |]
-      (time, Common.In playlists)
+      (day, Common.In playlists)
   let blueWinPercentage = makeRatio numBlueWins numGames
   let orangeWinPercentage = makeRatio numOrangeWins numGames
   arenaFrequencies <-
@@ -181,7 +233,7 @@ getStatsSummaryHandler _config connection request = do
           games.playlist_id IN ?
         GROUP BY arenas.name
       |]
-      (time, Common.In playlists)
+      (day, Common.In playlists)
   let arenaPercents =
         map
           (\(arena, frequency) -> (arena, makeRatio frequency numGames))
@@ -203,7 +255,7 @@ getStatsSummaryHandler _config connection request = do
           games.playlist_id IN ?
         GROUP BY body
       |]
-      (time, Common.In playlists)
+      (day, Common.In playlists)
   let numBodies = sum (map snd bodyFrequencies)
   let bodyPercents =
         map
@@ -236,6 +288,13 @@ makeRatio numerator denominator =
   if denominator == 0
     then 0
     else fromRational (numerator Ratio.% denominator)
+
+getDayAndPlaylists :: Wai.Request -> IO (Time.Day, [Int])
+getDayAndPlaylists request = do
+  let query = Wai.queryString request
+  day <- getDay query
+  let playlists = getPlaylists query
+  pure (day, playlists)
 
 getDay :: Common.Query -> IO Time.Day
 getDay query = do
