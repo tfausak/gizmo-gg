@@ -304,6 +304,7 @@ getDay query = do
         case getParam "time" query of
           Just "month" -> Time.addDays (-28) today
           Just "week" -> Time.addDays (-7) today
+          Just "day" -> Time.addDays (-1) today
           _ -> startOfSeason3
   pure day
 
