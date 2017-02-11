@@ -1,6 +1,24 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
+import DefaultPage from '../pages/templates/Default'
+
+import AboutPage from '../pages/About'
+import DesktopAppPage from '../pages/DesktopApp'
+import DevPage from '../pages/Dev'
+import DevPlayersPage from '../pages/dev/Players'
+import IndexPage from '../pages/Index'
+import PlayerPage from '../pages/Player'
+import PlayerSummaryPage from '../pages/player/Summary'
+import PlayerBattleCarsPage from '../pages/player/BattleCars'
+import PlayerMapsPage from '../pages/player/Maps'
+import SearchPage from '../pages/Search'
+import StatsPage from '../pages/Stats'
+import StatsSummaryPage from '../pages/stats/Summary'
+import StatsBattleCarsPage from '../pages/stats/BattleCars'
+import StatsMapsPage from '../pages/stats/Maps'
+import UploadPage from '../pages/Upload'
+
 Vue.use(Router)
 
 export default new Router({
@@ -8,66 +26,92 @@ export default new Router({
   scrollBehavior: () => ({ y: 0 }),
   linkActiveClass: 'is-active',
   routes: [
-    { path: '/upload', component: require('../views/UploadView.vue') },
-    { path: '/desktop-app', component: require('../views/DesktopView.vue') },
-    { path: '/about', component: require('../views/AboutView.vue') },
     {
-      name: 'search',
-      path: '/search',
-      component: require('../views/SearchView.vue'),
-      props: true
-    },
-    {
-      path: '/stats',
-      component: require('../views/StatsView.vue'),
+      path: '/',
+      component: DefaultPage,
       children: [
         {
           path: '',
-          component: require('../views/Stats/SummaryView')
+          name: 'index',
+          component: IndexPage
         },
         {
-          path: 'battle-cars',
-          component: require('../views/Stats/BodiesView')
+          path: 'about',
+          name: 'about',
+          component: AboutPage
         },
         {
-          path: 'maps',
-          component: require('../views/Stats/MapsView')
+          path: 'desktop-app',
+          name: 'desktop-app',
+          component: DesktopAppPage
+        },
+        {
+          path: 'dev',
+          component: DevPage,
+          children: [
+            {
+              path: '',
+              name: 'dev.players',
+              component: DevPlayersPage
+            }
+          ]
+        },
+        {
+          path: '/player/:id',
+          component: PlayerPage,
+          props: true,
+          children: [
+            {
+              path: '',
+              name: 'player.summary',
+              component: PlayerSummaryPage
+            },
+            {
+              path: 'battle-cars',
+              name: 'player.battle-cars',
+              component: PlayerBattleCarsPage
+            },
+            {
+              path: 'maps',
+              name: 'player.maps',
+              component: PlayerMapsPage
+            }
+          ]
+        },
+        {
+          path: 'search',
+          name: 'search',
+          component: SearchPage,
+          props: true
+        },
+        {
+          path: 'stats',
+          component: StatsPage,
+          children: [
+            {
+              path: '',
+              name: 'stats',
+              component: StatsSummaryPage
+            },
+            {
+              path: 'battle-cars',
+              name: 'stats.battle-cars',
+              component: StatsBattleCarsPage
+            },
+            {
+              path: 'maps',
+              name: 'stats.maps',
+              component: StatsMapsPage
+            }
+          ]
+        },
+        {
+          path: 'upload',
+          name: 'upload',
+          component: UploadPage
         }
       ]
     },
-    {
-      path: '/player/:id',
-      component: require('../views/PlayerView'),
-      props: true,
-      children: [
-        {
-          path: '',
-          name: 'player',
-          component: require('../views/Player/SummaryView.vue')
-        },
-        {
-          path: 'battle-cars',
-          name: 'battle-cars',
-          component: require('../views/Player/BattleCarsView.vue')
-        },
-        {
-          path: 'maps',
-          name: 'maps',
-          component: require('../views/Player/MapsView.vue')
-        }
-      ]
-    },
-    {
-      path: '/dev',
-      component: require('../views/Dev/DevView.vue'),
-      children: [
-        {
-          path: 'players',
-          component: require('../views/Dev/PlayersView.vue')
-        }
-      ]
-    },
-    { path: '/', component: require('../views/IndexView.vue') },
     { path: '*', redirect: '/' }
   ]
 })

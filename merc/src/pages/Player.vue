@@ -13,14 +13,15 @@
 .normal {
   display: block;
 }
-.hero-main .hero-body {
-  padding-bottom: 0;
+.hero-player,
+.hero-player .hero-body {
+  padding: 0;
 }
-.hero-main .hero-foot {
+.hero-player .hero-foot {
   margin-top: 10px;
 }
 .is-offwhite,
-.hero-main li.is-active a {
+.hero-player li.is-active a {
   background-color: $white-ish!important;
 }
 </style>
@@ -64,12 +65,12 @@
     </div>
     <div v-else>
       <div>
-        <section class="hero hero-main is-primary">
+        <section class="hero hero-player">
           <div class="hero-body">
             <div class="container">
               <div class="level level-player">
                 <div class="level-item">
-                  <figure class="image is-128x128 is-circle-light-128x128">
+                  <figure class="image is-96x96 is-circle-light-128x128">
                     <img :src="'/static/img/bodies/octane.png'">
                   </figure>
                 </div>

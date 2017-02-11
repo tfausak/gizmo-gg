@@ -9,11 +9,11 @@
 </template>
 
 <script>
-import LoadingComponent from './LoadingComponent.vue'
+import LoadingComponent from '../../components/Loading.vue'
 
 export default {
   components: {
-    LoadingComponent: LoadingComponent
+    LoadingComponent
   },
   props: [ 'source', 'loading' ],
   data: function () {
@@ -31,7 +31,7 @@ export default {
       var vm = this
       this.source.then(function (result) {
         let chartData = []
-        for (let key in result.winPct) {
+        for (let key in result.win_pct) {
           let color = '#000000'
           if (key === 'orange') {
             color = '#CB4B16'
@@ -40,7 +40,7 @@ export default {
           }
           chartData.push({
             name: key,
-            value: result.winPct[key],
+            value: result.win_pct[key],
             itemStyle: { normal: { color: color } }
           })
         }

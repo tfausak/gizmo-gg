@@ -12,12 +12,12 @@
 </template>
 
 <script>
-import LoadingComponent from './LoadingComponent.vue'
-import { scrub } from '../../lib/basic-chart-data-scrubber.js'
+import LoadingComponent from '../../components/Loading.vue'
+import { scrub } from '../../../lib/basic-chart-data-scrubber.js'
 
 export default {
   components: {
-    LoadingComponent: LoadingComponent
+    LoadingComponent
   },
   props: [ 'source', 'loading' ],
   data: function () {
@@ -34,7 +34,7 @@ export default {
     updateChartOptions: function () {
       var vm = this
       this.source.then(function (result) {
-        let chartData = scrub(result.bodyFreqPct)
+        let chartData = scrub(result.body_freq_pct)
         vm.chartOptions = {
           series: [
             {

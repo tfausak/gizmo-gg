@@ -3,20 +3,20 @@
     <div class="container">
       <div class="columns">
         <div class="column is-one-quarter">
-          <filter-panel v-model="tier" title="Tier" :options="tierOptions"></filter-panel>
+          <filter-panel-component v-model="tier" title="Tier" :options="tierOptions"></filter-panel-component>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel v-model="time" title="Time" :options="timeOptions"></filter-panel>
+          <filter-panel-component v-model="time" title="Time" :options="timeOptions"></filter-panel-component>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel>
+          <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel-component>
         </div>
       </div>
 
       <table class="table is-striped table-outerborder table-stats">
         <thead>
           <tr>
-            <th-sortable v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</th-sortable>
+            <sortable-th-component v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</sortable-th-component>
           </tr>
         </thead>
         <tbody>
@@ -54,8 +54,8 @@
 <script>
 import mock from '../../mock/index.js'
 import bodies from '../../assets/bodies.js'
-import SortableThComponent from '../../components/SortableThComponent.vue'
-import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
+import SortableThComponent from '../components/SortableTh'
+import FilterPanelComponent from '../components/FilterPanel'
 
 import playlistOptions from '../../store/options/playlist.js'
 import timeOptions from '../../store/options/time.js'
@@ -65,8 +65,8 @@ var _ = require('lodash')
 
 export default {
   components: {
-    ThSortable: SortableThComponent,
-    FilterPanel: FilterPanelComponent
+    SortableThComponent,
+    FilterPanelComponent
   },
   computed: {
     sortedRows: function () {

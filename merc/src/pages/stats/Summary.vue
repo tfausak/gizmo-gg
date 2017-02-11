@@ -3,22 +3,22 @@
     <div class="container">
       <div class="columns">
         <div class="column is-one-quarter">
-          <filter-panel v-model="time" title="Time" :options="timeOptions"></filter-panel>
+          <filter-panel-component v-model="time" title="Time" :options="timeOptions"></filter-panel-component>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel>
+          <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel-component>
         </div>
       </div>
 
       <div class="columns">
         <div class="column">
-          <wins-component :source="source" :loading="loading"></wins-component>
+          <chart-team-wins-component :source="source" :loading="loading"></chart-team-wins-component>
         </div>
         <div class="column">
-          <body-component :source="source" :loading="loading"></body-component>
+          <chart-battle-cars-component :source="source" :loading="loading"></chart-battle-cars-component>
         </div>
       </div>
-      <map-freq-component :source="source" :loading="loading"></map-freq-component>
+      <chart-maps-component :source="source" :loading="loading"></chart-maps-component>
     </div>
   </section>
 </template>
@@ -26,20 +26,20 @@
 <script>
 var _ = require('lodash')
 
-import WinsComponent from '../../components/charts/WinsComponent.vue'
-import BodyComponent from '../../components/charts/BodyComponent.vue'
-import MapFreqComponent from '../../components/charts/MapFreqComponent.vue'
-import FilterPanelComponent from '../../components/FilterPanelComponent.vue'
+import ChartTeamWinsComponent from './components/ChartTeamWins'
+import ChartBattleCarsComponent from './components/ChartBattleCars'
+import ChartMapsComponent from './components/ChartMaps'
+import FilterPanelComponent from '../components/FilterPanel'
 
 import playlistOptions from '../../store/options/playlist.js'
 import timeOptions from '../../store/options/time.js'
 
 export default {
   components: {
-    WinsComponent: WinsComponent,
-    BodyComponent: BodyComponent,
-    MapFreqComponent: MapFreqComponent,
-    FilterPanel: FilterPanelComponent
+    ChartTeamWinsComponent,
+    ChartBattleCarsComponent,
+    ChartMapsComponent,
+    FilterPanelComponent
   },
   data: function () {
     return {

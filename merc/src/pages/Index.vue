@@ -105,7 +105,7 @@
 </template>
 
 <script>
-import PlayerSearchComponent from '../components/PlayerSearchComponent.vue'
+import PlayerSearchComponent from './components/PlayerSearch'
 
 export default {
   components: {

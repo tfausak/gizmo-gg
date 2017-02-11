@@ -152,7 +152,7 @@ $upload_width: 300px;
 </template>
 
 <script>
-import {getEndpointUrl} from '../store/api'
+import { getEndpointUrl } from '../store/api'
 
 export default {
   data: function () {

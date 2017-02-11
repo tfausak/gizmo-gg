@@ -136,7 +136,7 @@
 </template>
 
 <script>
-import GameComponent from '../../components/player/GameComponent.vue'
+import GameComponent from './components/Game'
 var _ = require('lodash')
 
 export default {

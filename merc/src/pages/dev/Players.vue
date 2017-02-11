@@ -27,11 +27,11 @@
 </template>
 
 <script>
-import LoadingComponent from '../../components/charts/LoadingComponent.vue'
+import LoadingComponent from '../components/Loading'
 
 export default {
   components: {
-    LoadingComponent: LoadingComponent
+    LoadingComponent
   },
   data: function () {
     return {
