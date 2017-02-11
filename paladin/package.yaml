@@ -45,11 +45,9 @@ tests:
     source-dirs: source/test
     main: Main.hs
     dependencies:
-      - aeson
       - base
       - bytestring
       - paladin
-      - wai
       - wai-extra
     ghc-options:
       - -threaded
