@@ -17,6 +17,9 @@
 .hero-player .hero-body {
   padding: 0;
 }
+.hero-player .hero-body {
+  padding: 20px;
+}
 .hero-player .hero-foot {
   margin-top: 10px;
 }
