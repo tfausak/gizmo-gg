@@ -1,7 +1,5 @@
 -- Undo accidental inserts from last migration.
 DELETE FROM game_modes WHERE id IN (
-  1,
-  2,
   3,
   4,
   15,
