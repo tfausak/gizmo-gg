@@ -61,7 +61,6 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               games.playlist_id,
               playlists.name,
               games.played_at,
-              games_players.is_blue AND games.blue_goals > games.orange_goals,
               CASE WHEN games_players.is_blue THEN games.blue_goals ELSE games.orange_goals END,
               CASE WHEN games_players.is_blue THEN games.orange_goals ELSE games.blue_goals END,
               games.duration,
@@ -118,16 +117,6 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               , (Text.pack "totalSaves", Aeson.toJSON totalSaves)
               , (Text.pack "totalShots", Aeson.toJSON totalShots)
               , (Text.pack "secondsPlayed", Aeson.toJSON secondsPlayed)
-              , ( Text.pack "scorePerSecond"
-                , Aeson.toJSON (makeRatio totalScore secondsPlayed))
-              , ( Text.pack "goalsPerSecond"
-                , Aeson.toJSON (makeRatio totalGoals secondsPlayed))
-              , ( Text.pack "assistsPerSecond"
-                , Aeson.toJSON (makeRatio totalAssists secondsPlayed))
-              , ( Text.pack "savesPerSecond"
-                , Aeson.toJSON (makeRatio totalSaves secondsPlayed))
-              , ( Text.pack "shotsPerSecond"
-                , Aeson.toJSON (makeRatio totalShots secondsPlayed))
               , (Text.pack "games", Aeson.toJSON (games :: [GameRow]))
               ]
       pure (Common.jsonResponse Http.status200 [] body)
@@ -137,7 +126,6 @@ data GameRow = GameRow
   { gameRowPlaylistId :: Integer
   , gameRowPlaylistName :: Maybe Common.Text
   , gameRowPlayedAt :: Common.LocalTime
-  , gameRowDidWin :: Bool
   , gameRowYourGoals :: Integer
   , gameRowTheirGoals :: Integer
   , gameRowDuration :: Integer
