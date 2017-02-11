@@ -12,7 +12,7 @@
         <nav class="tabs is-boxed">
           <div class="container">
             <ul>
-              <router-link to="/dev/players" tag="li" exact><a>Players</a></router-link>
+              <router-link :to="{ name: 'dev.players' }" tag="li" exact><a>Players</a></router-link>
             </ul>
           </div>
         </nav>
