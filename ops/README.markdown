@@ -27,11 +27,11 @@ This directory contains script for managing DigitalOcean droplets.
   ```
 
 - [`notify.sh`](./notify.sh): Notifies our development Discord channel that the
-  site has been deployed. This script requires two arguments: a Discord web
-  hook ID and a Discord web hook token. For example:
+  site has been deployed. This script requires three arguments: a Discord web
+  hook ID, a Discord web hook token, and the message to send. For example:
 
   ``` sh
-  sh notify.sh '277...' 'wme...'
+  sh notify.sh '277...' 'wme...' 'Deployed the site!'
   ```
 
 - [`cron.sh`](./cron.sh): A script to be run *by* `cron`. This will check for
