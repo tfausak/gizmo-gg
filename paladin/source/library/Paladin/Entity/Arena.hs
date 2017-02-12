@@ -7,6 +7,9 @@ import qualified Paladin.Entity.Common as Common
 data Arena = Arena
   { arenaId :: Common.Tagged Arena Int
   , arenaName :: Common.Text
+  , arenaTemplateId :: Maybe Int
+  , arenaModelId :: Maybe Int
+  , arenaSkinId :: Maybe Int
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow Arena

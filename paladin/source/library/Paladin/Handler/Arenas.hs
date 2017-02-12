@@ -10,8 +10,11 @@ getArenasHandler =
     Common.arenaProxy
     [Common.sql|
       SELECT
-        id,
-        name
+        arenas.id,
+        arenas.name,
+        arenas.template_id,
+        arenas.model_id,
+        arenas.skin_id
       FROM arenas
-      ORDER BY name ASC
+      ORDER BY arenas.name ASC
     |]
