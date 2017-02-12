@@ -12,9 +12,15 @@ getArenasHandler =
       SELECT
         arenas.id,
         arenas.name,
-        arenas.template_id,
-        arenas.model_id,
-        arenas.skin_id
+        arena_templates.id,
+        arena_templates.name,
+        arena_models.id,
+        arena_models.name,
+        arena_skins.id,
+        arena_skins.name
       FROM arenas
+      LEFT OUTER JOIN arena_templates ON arena_templates.id = arenas.template_id
+      LEFT OUTER JOIN arena_models ON arena_models.id = arenas.model_id
+      LEFT OUTER JOIN arena_skins ON arena_skins.id = arenas.skin_id
       ORDER BY arenas.name ASC
     |]

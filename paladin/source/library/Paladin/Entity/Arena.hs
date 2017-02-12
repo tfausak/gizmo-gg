@@ -8,8 +8,11 @@ data Arena = Arena
   { arenaId :: Common.Tagged Arena Int
   , arenaName :: Common.Text
   , arenaTemplateId :: Maybe Int
+  , arenaTemplateName :: Maybe Common.Text
   , arenaModelId :: Maybe Int
+  , arenaModelName :: Maybe Common.Text
   , arenaSkinId :: Maybe Int
+  , arenaSkinName :: Maybe Common.Text
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow Arena
