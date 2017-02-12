@@ -46,7 +46,7 @@ getStatsArenasHandler _config connection request = do
 
 data ArenaStats = ArenaStats
   { arenaStatsArenaId :: Int
-  , arenaStatsArenaName :: Maybe Common.Text
+  , arenaStatsArenaName :: Common.Text
   , arenaStatsTotalScore :: Int
   , arenaStatsTotalGoals :: Int
   , arenaStatsTotalAssists :: Int
