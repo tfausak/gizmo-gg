@@ -31,6 +31,7 @@ session = do
   assertStatus 200 "/playlists"
   assertStatus 200 "/replays"
   assertStatus 200 "/servers"
+  assertStatus 200 "/stats/arenas"
   assertStatus 200 "/stats/bodies"
   assertStatus 200 "/stats/summary"
   assertStatus 200 "/uploads"

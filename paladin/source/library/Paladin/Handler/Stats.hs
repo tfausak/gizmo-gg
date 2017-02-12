@@ -15,6 +15,51 @@ import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
+getStatsArenasHandler :: Common.Handler
+getStatsArenasHandler _config connection request = do
+  (day, playlists) <- getDayAndPlaylists request
+  arenas <-
+    Database.query
+      connection
+      [Common.sql|
+        SELECT
+          arenas.id,
+          arenas.name,
+          sum(games_players.score),
+          sum(games_players.goals),
+          sum(games_players.assists),
+          sum(games_players.saves),
+          sum(games_players.shots),
+          count(*)
+        FROM arenas
+        INNER JOIN games ON games.arena_id = arenas.id
+        INNER JOIN games_players ON games_players.game_id = games.id
+        WHERE
+          games.played_at >= ? AND
+          games.playlist_id IN ?
+        GROUP BY arenas.id
+        ORDER BY arenas.id
+      |]
+      (day, Common.In playlists)
+  let json = Aeson.toJSON (arenas :: [ArenaStats])
+  pure (Common.jsonResponse Http.status200 [] json)
+
+data ArenaStats = ArenaStats
+  { arenaStatsArenaId :: Int
+  , arenaStatsArenaName :: Maybe Common.Text
+  , arenaStatsTotalScore :: Int
+  , arenaStatsTotalGoals :: Int
+  , arenaStatsTotalAssists :: Int
+  , arenaStatsTotalSaves :: Int
+  , arenaStatsTotalShots :: Int
+  , arenaStatsNumGames :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow ArenaStats
+
+instance Common.ToJSON ArenaStats where
+  toJSON = Common.genericToJSON "ArenaStats"
+
 getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
   (day, playlists) <- getDayAndPlaylists request
