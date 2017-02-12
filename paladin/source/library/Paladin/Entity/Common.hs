@@ -19,7 +19,7 @@ import qualified Data.Aeson.Casing as Casing
 import qualified GHC.Generics as Generics
 
 genericToEncoding
-  :: (Generic a, Aeson.GToEncoding (Generics.Rep a))
+  :: (Generic a, Aeson.GToEncoding Aeson.Zero (Generics.Rep a))
   => String -> a -> Aeson.Encoding
 genericToEncoding name =
   let size = length name
@@ -27,7 +27,7 @@ genericToEncoding name =
   in Aeson.genericToEncoding options
 
 genericToJSON
-  :: (Generic a, Aeson.GToJSON (Generics.Rep a))
+  :: (Generic a, Aeson.GToJSON Aeson.Zero (Generics.Rep a))
   => String -> a -> Aeson.Value
 genericToJSON name =
   let size = length name
