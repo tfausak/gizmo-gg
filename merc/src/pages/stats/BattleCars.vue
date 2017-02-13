@@ -16,7 +16,9 @@
         </div>
       </div>
 
-      <table class="table is-striped table-outerborder table-stats">
+      <loading-component :loading="loading"></loading-component>
+
+      <table class="table is-striped table-outerborder table-stats" v-if="!loading">
         <thead>
           <tr>
             <sortable-th-component v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</sortable-th-component>
@@ -28,11 +30,11 @@
               <div class="level level-chained">
                 <div class="level-item">
                   <figure class="image is-32x32 is-circle-32x32">
-                    <img :src="'/static/img/bodies/' + slug(row.body) + '.png'">
+                    <img :src="'/static/img/bodies/' + row.bodySlug + '.png'">
                   </figure>
                 </div>
                 <div class="level-item">
-                  <strong>{{ row.body }}</strong>
+                  <strong>{{ row.bodyName }}</strong>
                 </div>
               </div>
             </td>
@@ -46,18 +48,18 @@
                 </div>
               </div>
             </td>
-            <td class="has-text-right">{{ row.games }}</td>
+            <td class="has-text-right">{{ row.numGames }}</td>
             <td>
               <div class="level">
                 <div class="level-item">
-                  <progress class="progress is-small is-success" :value="row.pts" :max="maxPts"></progress>
+                  <progress class="progress is-small is-success" :value="row.avgScore" :max="maxScore"></progress>
                 </div>
                 <div class="level-item">
-                  {{ row.pts }}
+                  {{ row.avgScore }}
                 </div>
               </div>
             </td>
-            <td>{{ row.acc }}%</td>
+            <td>{{ row.accuracy }}%</td>
           </tr>
         </tbody>
       </table>
@@ -66,8 +68,7 @@
 </template>
 
 <script>
-import mock from '../../mock/index.js'
-import bodies from '../../assets/bodies.js'
+import LoadingComponent from '../components/Loading'
 import SortableThComponent from '../components/SortableTh'
 import FilterPanelComponent from '../components/FilterPanel'
 
@@ -75,32 +76,17 @@ import playlistOptions from '../../store/options/playlist.js'
 import timeOptions from '../../store/options/time.js'
 import mapOptions from '../../store/options/map.js'
 import tierOptions from '../../store/options/tier.js'
+import slugger from '../../store/slugger.js'
 
 var _ = require('lodash')
 
 export default {
   components: {
     SortableThComponent,
-    FilterPanelComponent
-  },
-  computed: {
-    sortedRows: function () {
-      var sorted = _.sortBy(this.rows, [this.sort])
-      if (!this.dir) {
-        _.reverse(sorted)
-      }
-      return sorted
-    }
+    FilterPanelComponent,
+    LoadingComponent
   },
   data: function () {
-    let rows = mock.getStatBodies()
-    let maxWinPct = 0
-    let maxPts = 0
-    for (let i in rows) {
-      let row = rows[i]
-      maxWinPct = Math.max(maxWinPct, row.winPct)
-      maxPts = Math.max(maxPts, row.pts)
-    }
     return {
       tierOptions: tierOptions,
       tier: _.head(_.keys(tierOptions)),
@@ -110,26 +96,77 @@ export default {
       time: _.head(_.keys(timeOptions)),
       mapOptions: mapOptions,
       map: _.head(_.keys(mapOptions)),
-      rows: rows,
-      maxWinPct: maxWinPct,
-      maxPts: maxPts,
       sort: null,
       dir: 1,
       cols: [
-        { key: 'body', name: 'Battle-Car' },
+        { key: 'bodyName', name: 'Battle-Car' },
         { key: 'winPct', name: 'Win Pct' },
-        { key: 'games', name: 'Games Played' },
-        { key: 'pts', name: 'Avg Pts' },
-        { key: 'acc', name: 'Accuracy' }
-      ]
+        { key: 'numGames', name: 'Games Played' },
+        { key: 'avgScore', name: 'Avg Score' },
+        { key: 'accuracy', name: 'Accuracy' }
+      ],
+      GET_STATS_BODIES: null,
+      maxWinPct: 0,
+      maxScore: 0
+    }
+  },
+  watch: {
+    tier: function (val) { this.fetchData() },
+    map: function (val) { this.fetchData() },
+    time: function (val) { this.fetchData() },
+    playlist: function (val) { this.fetchData() }
+  },
+  computed: {
+    sortedRows: function () {
+      if (!this.GET_STATS_BODIES) {
+        return []
+      }
+      var sorted = _.sortBy(this.GET_STATS_BODIES, [this.sort])
+      if (!this.dir) {
+        _.reverse(sorted)
+      }
+      return sorted
+    },
+    loading: function () {
+      return this.GET_STATS_BODIES === null
     }
   },
   methods: {
-    slug: bodies.slug,
     orderByCol: function (col, dir) {
       this.sort = col
       this.dir = dir
+    },
+    fetchData: function () {
+      this.GET_STATS_BODIES = null
+      let vm = this
+      this.$store.dispatch('GET_STATS_BODIES', {
+        time: this.time,
+        playlist: this.playlist,
+        tier: this.tier,
+        map: this.map
+      }).then(function (data) {
+        vm.maxWinPct = 0
+        vm.maxScore = 0
+        vm.GET_STATS_BODIES = _.map(data, function (value, key) {
+          value.winPct = _.round(value.numWins / value.numGames * 100, 2)
+          value.accuracy = 0
+          if (value.totalGoals > 0) {
+            value.accuracy = 100
+          }
+          if (value.totalShots > 0) {
+            value.accuracy = _.round(value.totalGoals / value.totalShots * 100, 2)
+          }
+          value.avgScore = _.round(value.totalScore / value.numGames, 2)
+          value.bodySlug = slugger.slugBody(value.bodyName)
+          vm.maxWinPct = _.max([value.winPct, vm.maxWinPct])
+          vm.maxScore = _.max([value.avgScore, vm.maxScore])
+          return value
+        })
+      })
     }
+  },
+  beforeMount: function () {
+    this.fetchData()
   }
 }
 </script>

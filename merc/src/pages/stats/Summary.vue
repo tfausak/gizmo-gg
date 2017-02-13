@@ -24,8 +24,6 @@
 </template>
 
 <script>
-var _ = require('lodash')
-
 import ChartTeamWinsComponent from './components/ChartTeamWins'
 import ChartBattleCarsComponent from './components/ChartBattleCars'
 import ChartMapsComponent from './components/ChartMaps'
@@ -33,6 +31,8 @@ import FilterPanelComponent from '../components/FilterPanel'
 
 import playlistOptions from '../../store/options/playlist.js'
 import timeOptions from '../../store/options/time.js'
+
+var _ = require('lodash')
 
 export default {
   components: {

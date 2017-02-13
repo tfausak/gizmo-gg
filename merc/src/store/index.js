@@ -32,6 +32,11 @@ const store = new Vuex.Store({
       return dispatch('FETCH', { endpoint })
     },
 
+    GET_STATS_BODIES: function ({ dispatch }, params) {
+      let endpoint = 'stats/bodies' + getQueryString(params)
+      return dispatch('FETCH', { endpoint })
+    },
+
     GET_PLATFORMS: function ({ dispatch }) {
       let endpoint = 'platforms'
       return dispatch('FETCH', { endpoint })
