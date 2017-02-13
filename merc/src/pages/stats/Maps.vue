@@ -120,9 +120,9 @@ export default {
       this.GET_STATS_ARENAS = null
       let vm = this
       this.$store.dispatch('GET_STATS_ARENAS', {
-        time: this.time,
         playlist: this.playlist,
-        tier: this.tier
+        tier: this.tier,
+        time: this.time
       }).then(function (data) {
         vm.maxFreqPct = 0
         vm.maxScore = 0

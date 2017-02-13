@@ -1,65 +1,50 @@
 <template>
-  <article class="message">
-    <div class="message-body">
-      <p class="heading is-1">Win Pct by Team</p>
-      <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
-      <loading-component :loading="loading"></loading-component>
-    </div>
-  </article>
+  <div>
+    <echart :options="chartOptions" v-if="chartOptions"></echart>
+  </div>
 </template>
 
 <script>
-import LoadingComponent from '../../components/Loading.vue'
-
 export default {
-  components: {
-    LoadingComponent
+  beforeMount () {
+    this.updateChartOptions()
   },
-  props: [ 'source', 'loading' ],
   data: function () {
     return {
       chartOptions: null
     }
   },
+  methods: {
+    updateChartOptions: function () {
+      this.chartOptions = {
+        series: [
+          {
+            animation: false,
+            type: 'pie',
+            radius: ['45%', '75%'],
+            label: { normal: { formatter: `{b}\n{d}%` } },
+            data: [
+              {
+                name: 'Orange',
+                value: this.source.orange,
+                itemStyle: { normal: { color: '#CB4B16' } }
+              },
+              {
+                name: 'Blue',
+                value: this.source.blue,
+                itemStyle: { normal: { color: '#268BD2' } }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  props: [ 'source' ],
   watch: {
     source: function (val) {
       this.updateChartOptions()
     }
-  },
-  methods: {
-    updateChartOptions: function () {
-      var vm = this
-      this.source.then(function (result) {
-        let chartData = []
-        for (let key in result.winPct) {
-          let color = '#000000'
-          if (key === 'orange') {
-            color = '#CB4B16'
-          } else {
-            color = '#268BD2'
-          }
-          chartData.push({
-            name: key,
-            value: result.winPct[key],
-            itemStyle: { normal: { color: color } }
-          })
-        }
-        vm.chartOptions = {
-          series: [
-            {
-              animation: false,
-              type: 'pie',
-              radius: ['45%', '75%'],
-              data: chartData,
-              label: { normal: { formatter: `{b}\n{d}%` } }
-            }
-          ]
-        }
-      })
-    }
-  },
-  beforeMount () {
-    this.updateChartOptions()
   }
 }
 </script>

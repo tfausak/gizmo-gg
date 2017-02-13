@@ -138,10 +138,10 @@ export default {
       this.GET_STATS_BODIES = null
       let vm = this
       this.$store.dispatch('GET_STATS_BODIES', {
-        time: this.time,
         playlist: this.playlist,
+        map: this.map,
         tier: this.tier,
-        map: this.map
+        time: this.time
       }).then(function (data) {
         vm.maxWinPct = 0
         vm.maxScore = 0

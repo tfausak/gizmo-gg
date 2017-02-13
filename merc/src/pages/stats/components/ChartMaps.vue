@@ -1,66 +1,65 @@
 <style scoped lang="scss">
 .echart-loading,
 .echarts {
-  width: 450px!important;
+  width: 650px!important;
   height: 250px!important;
   margin: 0 auto!important;
 }
 </style>
 
 <template>
-  <article class="message">
-    <div class="message-body">
-      <p class="heading has-text-centered">
-        Map Frequency
-        - <router-link to="/stats/maps">more</router-link>
-      </p>
-      <div style="margin-top: 20px;"></div>
-      <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
-      <loading-component :loading="loading"></loading-component>
-    </div>
-  </article>
+  <div>
+    <echart :options="chartOptions" v-if="chartOptions"></echart>
+  </div>
 </template>
 
 <script>
-import LoadingComponent from '../../components/Loading.vue'
 import { scrub } from '../../../lib/basic-chart-data-scrubber.js'
 
+var _ = require('lodash')
+
 export default {
-  components: {
-    LoadingComponent
+  beforeMount () {
+    this.updateChartOptions()
   },
-  props: [ 'source', 'loading' ],
   data: function () {
     return {
       chartOptions: null
     }
   },
+  methods: {
+    updateChartOptions: function () {
+      let byTemplate = {}
+      let vm = this
+      _.each(this.source, function (value, key) {
+        _.each(vm.arenas, function (arena) {
+          if (arena.name === key) {
+            if (!_.has(byTemplate, arena.templateName)) {
+              byTemplate[arena.templateName] = 0
+            }
+            byTemplate[arena.templateName] += value
+          }
+        })
+      })
+      this.chartOptions = {
+        series: [
+          {
+            animation: false,
+            startAngle: 0,
+            type: 'pie',
+            radius: ['45%', '75%'],
+            label: { normal: { formatter: `{d}% {b}` } },
+            data: scrub(byTemplate, 0.01)
+          }
+        ]
+      }
+    }
+  },
+  props: [ 'arenas', 'source' ],
   watch: {
     source: function (val) {
       this.updateChartOptions()
     }
-  },
-  methods: {
-    updateChartOptions: function () {
-      var vm = this
-      this.source.then(function (result) {
-        let chartData = scrub(result.mapFreqPct, 0.05)
-        vm.chartOptions = {
-          series: [
-            {
-              animation: false,
-              type: 'pie',
-              radius: ['45%', '75%'],
-              data: chartData,
-              label: { normal: { formatter: `{b}\n{d}%` } }
-            }
-          ]
-        }
-      })
-    }
-  },
-  beforeMount () {
-    this.updateChartOptions()
   }
 }
 </script>

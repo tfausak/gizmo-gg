@@ -86,7 +86,7 @@ aside > ul {
 </template>
 
 <script>
-import platforms from '../../store/options/platforms.js'
+import platforms from '../../store/platforms.js'
 import { focus } from 'vue-focus'
 var _ = require('lodash')
 

@@ -1,56 +1,55 @@
+<style scoped lang="scss">
+.echart-loading,
+.echarts {
+  width: 450px!important;
+  height: 150px!important;
+  margin: 0 auto!important;
+}
+</style>
+
 <template>
-  <article class="message">
-    <div class="message-body">
-      <p class="heading">
-        Battle-Car Usage
-        - <router-link to="/stats/battle-cars">more</router-link>
-      </p>
-      <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
-      <loading-component :loading="loading"></loading-component>
-    </div>
-  </article>
+  <div>
+    <echart :options="chartOptions" v-if="chartOptions"></echart>
+  </div>
 </template>
 
 <script>
-import LoadingComponent from '../../components/Loading.vue'
 import { scrub } from '../../../lib/basic-chart-data-scrubber.js'
 
+var _ = require('lodash')
+
 export default {
-  components: {
-    LoadingComponent
+  beforeMount () {
+    this.updateChartOptions()
   },
-  props: [ 'source', 'loading' ],
   data: function () {
     return {
       chartOptions: null
     }
   },
+  methods: {
+    updateChartOptions: function () {
+      this.chartOptions = {
+        series: [
+          {
+            animation: false,
+            startAngle: 0,
+            type: 'pie',
+            radius: ['45%', '75%'],
+            label: { normal: { formatter: function (params) {
+              return _.round(params.value * 100) + '% ' + params.name
+            } } },
+            data: scrub(this.source, 0.05)
+          }
+        ]
+      }
+    }
+  },
+  props: [ 'source' ],
   watch: {
     source: function (val) {
       this.updateChartOptions()
     }
-  },
-  methods: {
-    updateChartOptions: function () {
-      var vm = this
-      this.source.then(function (result) {
-        let chartData = scrub(result.bodyFreqPct)
-        vm.chartOptions = {
-          series: [
-            {
-              animation: false,
-              type: 'pie',
-              radius: ['45%', '75%'],
-              data: chartData,
-              label: { normal: { formatter: `{b}\n{d}%` } }
-            }
-          ]
-        }
-      })
-    }
-  },
-  beforeMount () {
-    this.updateChartOptions()
   }
 }
 </script>

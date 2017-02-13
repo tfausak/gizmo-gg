@@ -27,6 +27,26 @@ const store = new Vuex.Store({
     cache: {}
   },
   actions: {
+    GET_ARENAS: function ({ dispatch }, params) {
+      let endpoint = 'arenas'
+      return dispatch('FETCH', { endpoint })
+    },
+
+    GET_PLATFORMS: function ({ dispatch }) {
+      let endpoint = 'platforms'
+      return dispatch('FETCH', { endpoint })
+    },
+
+    GET_PLAYER: function ({ dispatch }, params) {
+      let endpoint = 'stats/players/' + params.id
+      return dispatch('FETCH', { endpoint })
+    },
+
+    GET_PLAYERS: function ({ dispatch }) {
+      let endpoint = 'players'
+      return dispatch('FETCH', { endpoint })
+    },
+
     GET_STATS_SUMMARY: function ({ dispatch }, params) {
       let endpoint = 'stats/summary' + getQueryString(params)
       return dispatch('FETCH', { endpoint })
@@ -39,21 +59,6 @@ const store = new Vuex.Store({
 
     GET_STATS_ARENAS: function ({ dispatch }, params) {
       let endpoint = 'stats/arenas' + getQueryString(params)
-      return dispatch('FETCH', { endpoint })
-    },
-
-    GET_PLATFORMS: function ({ dispatch }) {
-      let endpoint = 'platforms'
-      return dispatch('FETCH', { endpoint })
-    },
-
-    GET_PLAYERS: function ({ dispatch }) {
-      let endpoint = 'players'
-      return dispatch('FETCH', { endpoint })
-    },
-
-    GET_PLAYER: function ({ dispatch }, params) {
-      let endpoint = 'stats/players/' + params.id
       return dispatch('FETCH', { endpoint })
     },
 
