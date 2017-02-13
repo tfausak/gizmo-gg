@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { scrub } from '../../../lib/basic-chart-data-scrubber.js'
+import { scrub } from '../../../store/scrubber.js'
 
 var _ = require('lodash')
 
