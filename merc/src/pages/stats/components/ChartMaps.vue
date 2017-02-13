@@ -31,7 +31,7 @@ export default {
     updateChartOptions: function () {
       let byTemplate = {}
       let vm = this
-      _.each(this.source, function (value, key) {
+      _.each(vm.source, function (value, key) {
         _.each(vm.arenas, function (arena) {
           if (arena.name === key) {
             if (!_.has(byTemplate, arena.templateName)) {
@@ -41,7 +41,7 @@ export default {
           }
         })
       })
-      this.chartOptions = {
+      vm.chartOptions = {
         series: [
           {
             animation: false,

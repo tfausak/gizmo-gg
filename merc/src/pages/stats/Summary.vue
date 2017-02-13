@@ -61,7 +61,7 @@ export default {
   beforeMount: function () {
     this.fetchData()
     let vm = this
-    this.$store.dispatch('GET_ARENAS').then(function (data) {
+    vm.$store.dispatch('GET_ARENAS').then(function (data) {
       vm.GET_ARENAS = data
     })
   },
@@ -91,11 +91,11 @@ export default {
   },
   methods: {
     fetchData: function () {
-      this.GET_STATS_SUMMARY = null
       let vm = this
-      this.$store.dispatch('GET_STATS_SUMMARY', {
-        playlist: this.playlist,
-        time: this.time
+      vm.GET_STATS_SUMMARY = null
+      vm.$store.dispatch('GET_STATS_SUMMARY', {
+        playlist: vm.playlist,
+        time: vm.time
       }).then(function (data) {
         vm.GET_STATS_SUMMARY = data
       })

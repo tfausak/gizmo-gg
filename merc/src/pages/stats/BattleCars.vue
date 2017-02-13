@@ -68,9 +68,9 @@
 </template>
 
 <script>
+import FilterPanelComponent from '../components/FilterPanel'
 import LoadingComponent from '../components/Loading'
 import SortableThComponent from '../components/SortableTh'
-import FilterPanelComponent from '../components/FilterPanel'
 
 import slugger from '../../store/slugger.js'
 import options from '../../store/options.js'
@@ -82,11 +82,14 @@ export default {
     this.fetchData()
   },
   components: {
-    SortableThComponent,
     FilterPanelComponent,
-    LoadingComponent
+    LoadingComponent,
+    SortableThComponent
   },
   computed: {
+    loading: function () {
+      return this.GET_STATS_BODIES === null
+    },
     sortedRows: function () {
       if (!this.GET_STATS_BODIES) {
         return []
@@ -96,9 +99,6 @@ export default {
         _.reverse(sorted)
       }
       return sorted
-    },
-    loading: function () {
-      return this.GET_STATS_BODIES === null
     }
   },
   data: function () {
@@ -130,18 +130,14 @@ export default {
     }
   },
   methods: {
-    orderByCol: function (col, dir) {
-      this.sort = col
-      this.dir = dir
-    },
     fetchData: function () {
-      this.GET_STATS_BODIES = null
       let vm = this
-      this.$store.dispatch('GET_STATS_BODIES', {
-        playlist: this.playlist,
-        map: this.map,
-        tier: this.tier,
-        time: this.time
+      vm.GET_STATS_BODIES = null
+      vm.$store.dispatch('GET_STATS_BODIES', {
+        playlist: vm.playlist,
+        map: vm.map,
+        tier: vm.tier,
+        time: vm.time
       }).then(function (data) {
         vm.maxWinPct = 0
         vm.maxScore = 0
@@ -161,6 +157,10 @@ export default {
           return value
         })
       })
+    },
+    orderByCol: function (col, dir) {
+      this.sort = col
+      this.dir = dir
     }
   },
   watch: {

@@ -41,7 +41,7 @@ export default {
   },
   beforeMount: function () {
     let vm = this
-    this.$store.dispatch('GET_PLAYERS').then(function (data) {
+    vm.$store.dispatch('GET_PLAYERS').then(function (data) {
       vm.loading = false
       vm.source = data
     })
