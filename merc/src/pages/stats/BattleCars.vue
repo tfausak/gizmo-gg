@@ -72,49 +72,19 @@ import LoadingComponent from '../components/Loading'
 import SortableThComponent from '../components/SortableTh'
 import FilterPanelComponent from '../components/FilterPanel'
 
-import playlistOptions from '../../store/options/playlist.js'
-import timeOptions from '../../store/options/time.js'
-import mapOptions from '../../store/options/map.js'
-import tierOptions from '../../store/options/tier.js'
 import slugger from '../../store/slugger.js'
+import options from '../../store/options.js'
 
 var _ = require('lodash')
 
 export default {
+  beforeMount: function () {
+    this.fetchData()
+  },
   components: {
     SortableThComponent,
     FilterPanelComponent,
     LoadingComponent
-  },
-  data: function () {
-    return {
-      tierOptions: tierOptions,
-      tier: _.head(_.keys(tierOptions)),
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
-      timeOptions: timeOptions,
-      time: _.head(_.keys(timeOptions)),
-      mapOptions: mapOptions,
-      map: _.head(_.keys(mapOptions)),
-      sort: null,
-      dir: 1,
-      cols: [
-        { key: 'bodyName', name: 'Battle-Car' },
-        { key: 'winPct', name: 'Win Pct' },
-        { key: 'numGames', name: 'Games Played' },
-        { key: 'avgScore', name: 'Avg Score' },
-        { key: 'accuracy', name: 'Accuracy' }
-      ],
-      GET_STATS_BODIES: null,
-      maxWinPct: 0,
-      maxScore: 0
-    }
-  },
-  watch: {
-    tier: function (val) { this.fetchData() },
-    map: function (val) { this.fetchData() },
-    time: function (val) { this.fetchData() },
-    playlist: function (val) { this.fetchData() }
   },
   computed: {
     sortedRows: function () {
@@ -129,6 +99,34 @@ export default {
     },
     loading: function () {
       return this.GET_STATS_BODIES === null
+    }
+  },
+  data: function () {
+    let playlistOptions = options.playlists()
+    let mapOptions = options.mapTemplates()
+    let tierOptions = options.tiers()
+    let timeOptions = options.times()
+    return {
+      playlistOptions: playlistOptions,
+      playlist: _.head(_.keys(playlistOptions)),
+      mapOptions: mapOptions,
+      map: _.head(_.keys(mapOptions)),
+      tierOptions: tierOptions,
+      tier: _.head(_.keys(tierOptions)),
+      timeOptions: timeOptions,
+      time: _.head(_.keys(timeOptions)),
+      sort: null,
+      dir: 1,
+      cols: [
+        { key: 'bodyName', name: 'Battle-Car' },
+        { key: 'winPct', name: 'Win Pct' },
+        { key: 'numGames', name: 'Games Played' },
+        { key: 'avgScore', name: 'Avg Score' },
+        { key: 'accuracy', name: 'Accuracy' }
+      ],
+      GET_STATS_BODIES: null,
+      maxWinPct: 0,
+      maxScore: 0
     }
   },
   methods: {
@@ -165,8 +163,11 @@ export default {
       })
     }
   },
-  beforeMount: function () {
-    this.fetchData()
+  watch: {
+    playlist: function (val) { this.fetchData() },
+    tier: function (val) { this.fetchData() },
+    map: function (val) { this.fetchData() },
+    time: function (val) { this.fetchData() }
   }
 }
 </script>
