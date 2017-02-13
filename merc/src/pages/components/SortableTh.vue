@@ -33,7 +33,6 @@ th {
 
 <script>
 export default {
-  props: [ 'sort', 'col' ],
   computed: {
     isActive: function () {
       return this.sort === this.col
@@ -52,6 +51,7 @@ export default {
       this.$emit('orderByCol', String(this.col), Number(this.dir))
       this.dir = !this.dir
     }
-  }
+  },
+  props: [ 'sort', 'col' ]
 }
 </script>

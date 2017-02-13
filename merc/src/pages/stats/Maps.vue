@@ -15,14 +15,16 @@
 
       <loading-component :loading="loading"></loading-component>
 
-      <h2 class="title">Map</h2>
-      <map-table-component v-if="!loading" :source="source['byTemplate']"></map-table-component>
+      <div v-if="!loading">
+        <h2 class="title">Map</h2>
+        <map-table-component :source="source['byTemplate']"></map-table-component>
 
-      <h2 class="title">Arena</h2>
-      <map-table-component v-if="!loading" :source="source['byModel']"></map-table-component>
+        <h2 class="title">Field</h2>
+        <map-table-component :source="source['byModel']"></map-table-component>
 
-      <h2 class="title">Variant</h2>
-      <map-table-component v-if="!loading" :source="source['bySkin']"></map-table-component>
+        <h2 class="title">Variant</h2>
+        <map-table-component :source="source['bySkin']"></map-table-component>
+      </div>
     </div>
   </section>
 </template>

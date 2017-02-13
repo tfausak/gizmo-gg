@@ -23,7 +23,10 @@
         <div class="column">
           <article class="message">
             <div class="message-body">
-              <p class="heading is-1">Win Pct by Team</p>
+              <p class="heading is-1">
+                Battle-Car Use
+                - <router-link to="/stats/battle-cars">more</router-link>
+              </p>
               <loading-component :loading="loading"></loading-component>
               <chart-battle-cars-component :source="GET_STATS_SUMMARY.bodyFreqPct" v-if="!loading"></chart-battle-cars-component>
             </div>
