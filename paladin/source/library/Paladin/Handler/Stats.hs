@@ -290,7 +290,7 @@ instance Common.ToJSON GameRow where
   toJSON = Common.genericToJSON "GameRow"
 
 getNewStatsPlayersHandler :: Common.Text -> Common.Handler
-getNewStatsPlayersHandler rawPlayerId _config connection _request = do
+getNewStatsPlayersHandler rawPlayerId _config connection request = do
   maybePlayerId <- getPlayerId connection rawPlayerId
   case maybePlayerId of
     Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
@@ -300,13 +300,67 @@ getNewStatsPlayersHandler rawPlayerId _config connection _request = do
             case namesAndTimes of
               (n, t):nts -> (n, map fst nts, t)
               _ -> error "impossible"
+      (day, playlists, templates) <- getFilters request
+      games <- getGames connection day playlists templates playerId
       let body =
             Aeson.object
               [ (Text.pack "name", Aeson.toJSON name)
               , (Text.pack "aliases", Aeson.toJSON aliases)
               , (Text.pack "lastPlayedAt", Aeson.toJSON lastPlayedAt)
+              , (Text.pack "games", Aeson.toJSON games) -- TODO
               ]
       pure (Common.jsonResponse Http.status200 [] body)
+
+getGames :: Sql.Connection
+         -> Time.Day
+         -> [Int]
+         -> [String]
+         -> Int
+         -> IO [PlayerGameRow]
+getGames connection day playlists templates player =
+  Database.query
+    connection
+    [Common.sql|
+      SELECT
+        games.id,
+        playlists.id,
+        playlists.name,
+        arenas.id,
+        arenas.name,
+        games.played_at,
+        games.duration,
+        games.blue_goals,
+        games.orange_goals
+      FROM games
+      INNER JOIN arenas ON arenas.id = games.arena_id
+      INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
+      INNER JOIN games_players ON games_players.game_id = games.id
+      INNER JOIN playlists ON playlists.id = games.playlist_id
+      WHERE
+        games.played_at >= ? AND
+        playlists.id IN ? AND
+        arena_templates.name IN ? AND
+        games_players.player_id = ?
+      ORDER BY games.played_at DESC
+    |]
+    (day, Common.In playlists, Common.In templates, player)
+
+data PlayerGameRow = PlayerGameRow
+  { playerGameRowGameId :: Int
+  , playerGameRowPlaylistId :: Int
+  , playerGameRowPlaylistName :: Maybe Common.Text
+  , playerGameRowArenaId :: Int
+  , playerGameRowArenaName :: Maybe Common.Text
+  , playerGameRowPlayedAt :: Time.LocalTime
+  , playerGameRowDuration :: Int
+  , playerGameRowBlueGoals :: Int
+  , playerGameRowOrangeGoals :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow PlayerGameRow
+
+instance Common.ToJSON PlayerGameRow where
+  toJSON = Common.genericToJSON "PlayerGameRow"
 
 getNamesAndTimes :: Sql.Connection
                  -> Int
