@@ -3,7 +3,7 @@
 
 $upload_width: 300px;
 
-.selectButton {
+.uploadBox {
   margin: 0 auto;
   border: 3px solid $primary;
   color: $primary;
@@ -19,30 +19,23 @@ $upload_width: 300px;
   margin-bottom: 0!important;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-
   .numSelected {
     font-size: 14px;
     color: $grey;
   }
-
   .level-item {
     flex-grow: 0!important;
   }
-
   .fa {
     font-size: 40px;
   }
-}
-.selectButton.is-disabled {
-  color: $grey;
-}
-.submitButton {
-  width: $upload_width;
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
+  &.is-disabled {
+    color: $grey;
+    border-color: $grey;
+  }
 }
 
-.panel-block {
+#uploadResultsPanel .panel-block {
   border-left-width: 3px;
 }
 .response-fail {
@@ -57,9 +50,11 @@ $upload_width: 300px;
     color: $success;
   }
 }
-.level-columns {
-  flex-direction: column;
-  align-items: flex-start;
+#startUploadButton {
+  margin-top: 1em;
+  width: $upload_width;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
 }
 </style>
 
@@ -82,7 +77,8 @@ $upload_width: 300px;
 
           <div class="column">
             <form @submit.prevent="submit" role="form" enctype="multipart/form-data">
-              <div class="level selectButton" @click="selectFiles" v-if="!isUploading()">
+
+              <div class="level uploadBox" @click="selectFiles" v-if="!isUploading()">
                 <div class="level-item">
                   <i class="fa fa-cloud-upload"></i>
                 </div>
@@ -93,7 +89,8 @@ $upload_width: 300px;
                   <span v-if="anySelected()">{{ this.files.length }} selected</span>
                 </div>
               </div>
-              <div class="level selectButton is-disabled" v-if="isUploading()">
+
+              <div class="level uploadBox is-disabled" v-if="isUploading()">
                 <div class="level-item">
                   <i class="fa fa-circle-o-notch fa-spin"></i>
                 </div>
@@ -101,15 +98,19 @@ $upload_width: 300px;
                   Uploading..
                 </div>
               </div>
+
               <div class="has-text-centered">
-                <button type="submit" class="button submitButton" :class="{ 'is-success': !isUploading() && anySelected() }" :disabled="isUploading() || !anySelected()">Start Upload</button>
+                <button type="submit" class="button is-medium" id="startUploadButton" :class="{ 'is-success': !isUploading() && anySelected() }" :disabled="isUploading() || !anySelected()">
+                  Start Upload
+                </button>
               </div>
+
               <input type="file" name="files[]" id="files" @change="onFileChange" multiple class="is-hidden">
             </form>
           </div>
 
           <div class="column">
-            <div class="panel">
+            <div class="panel" id="uploadResultsPanel">
               <p class="panel-heading">
                 Uploads
               </p>
@@ -126,7 +127,7 @@ $upload_width: 300px;
                 <span class="panel-icon">
                   <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
                 </span>
-                <div class="level level-columns">
+                <div class="level level-stacked">
                   <div class="level-item">{{ uploading.name }}</div>
                   <div class="level-item">Uploading..</div>
                 </div>
@@ -136,7 +137,7 @@ $upload_width: 300px;
                   <i class="is-success fa fa-check-circle-o" v-if="upload.response.ok"></i>
                   <i class="is-danger fa fa-times-circle-o" v-if="!upload.response.ok"></i>
                 </span>
-                <div class="level level-columns">
+                <div class="level level-stacked">
                   <div class="level-item">{{ upload.file.name }}</div>
                   <div class="level-item">{{ upload.response.statusText }}</div>
                 </div>
