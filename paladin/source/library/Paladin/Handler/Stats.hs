@@ -17,7 +17,7 @@ import qualified Text.Read as Read
 
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
-  (day, playlists, _) <- getFilters request
+  (day, playlists, templates) <- getFilters request
   arenas <-
     Database.query
       connection
@@ -34,13 +34,15 @@ getStatsArenasHandler _config connection request = do
         FROM arenas
         INNER JOIN games ON games.arena_id = arenas.id
         INNER JOIN games_players ON games_players.game_id = games.id
+        INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
         WHERE
           games.played_at >= ? AND
-          games.playlist_id IN ?
+          games.playlist_id IN ? AND
+          arena_templates.name IN ?
         GROUP BY arenas.id
         ORDER BY arenas.id
       |]
-      (day, Common.In playlists)
+      (day, Common.In playlists, Common.In templates)
   let json = Aeson.toJSON (arenas :: [ArenaStats])
   pure (Common.jsonResponse Http.status200 [] json)
 
@@ -62,7 +64,7 @@ instance Common.ToJSON ArenaStats where
 
 getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
-  (day, playlists, _) <- getFilters request
+  (day, playlists, templates) <- getFilters request
   bodies <-
     Database.query
       connection
@@ -87,14 +89,17 @@ getStatsBodiesHandler _config connection request = do
         FROM bodies
         INNER JOIN games_players ON games_players.body_id = bodies.id
         INNER JOIN games ON games.id = games_players.game_id
+        INNER JOIN arenas ON arenas.id = games.arena_id
+        INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
         WHERE
           games_players.is_present_at_end = true AND
           games.played_at >= ? AND
-          games.playlist_id IN ?
+          games.playlist_id IN ? AND
+          arena_templates.name IN ?
         GROUP BY bodies.id
         ORDER BY bodies.id ASC
       |]
-      (day, Common.In playlists)
+      (day, Common.In playlists, Common.In templates)
   let json = Aeson.toJSON (bodies :: [BodyStats])
   pure (Common.jsonResponse Http.status200 [] json)
 
@@ -126,7 +131,7 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
-      (day, playlists, _) <- getFilters request
+      (day, playlists, templates) <- getFilters request
       [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
@@ -143,15 +148,17 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               sum(games_players.shots),
               sum(games.duration)
             FROM games
-            INNER JOIN games_players
-              ON games_players.game_id = games.id
+            INNER JOIN games_players ON games_players.game_id = games.id
+            INNER JOIN arenas ON arenas.id = games.arena_id
+            INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
             WHERE
               games_players.player_id = ? AND
               games_players.is_present_at_end = true AND
               games.played_at >= ? AND
-              games.playlist_id IN ?
+              games.playlist_id IN ? AND
+              arena_templates.name IN ?
           |]
-          (playerId, day, Common.In playlists)
+          (playerId, day, Common.In playlists, Common.In templates)
       games <-
         Database.query
           connection
@@ -173,14 +180,10 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               games.arena_id,
               arenas.name
             FROM games
-            INNER JOIN games_players ON
-              games_players.game_id = games.id
-            INNER JOIN playlists ON
-              playlists.id = games.playlist_id
-            INNER JOIN bodies ON
-              bodies.id = games_players.body_id
-            INNER JOIN arenas ON
-              arenas.id = games.arena_id
+            INNER JOIN games_players ON games_players.game_id = games.id
+            INNER JOIN playlists ON playlists.id = games.playlist_id
+            INNER JOIN bodies ON bodies.id = games_players.body_id
+            INNER JOIN arenas ON arenas.id = games.arena_id
             WHERE
               games_players.player_id = ? AND
               games_players.is_present_at_end = true AND
@@ -246,7 +249,7 @@ instance Common.ToJSON GameRow where
 
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
-  (day, playlists, _) <- getFilters request
+  (day, playlists, templates) <- getFilters request
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -256,11 +259,14 @@ getStatsSummaryHandler _config connection request = do
           count(CASE WHEN blue_goals > orange_goals THEN 1 END),
           count(CASE WHEN blue_goals < orange_goals THEN 1 END)
         FROM games
+        INNER JOIN arenas ON arenas.id = games.arena_id
+        INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
         WHERE
           played_at >= ? AND
-          playlist_id IN ?
+          playlist_id IN ? AND
+          arena_templates.name IN ?
       |]
-      (day, Common.In playlists)
+      (day, Common.In playlists, Common.In templates)
   let blueWinPercentage = makeRatio numBlueWins numGames
   let orangeWinPercentage = makeRatio numOrangeWins numGames
   arenaFrequencies <-
@@ -271,14 +277,15 @@ getStatsSummaryHandler _config connection request = do
           arenas.name,
           count(*)
         FROM games
-        INNER JOIN arenas
-          ON arenas.id = games.arena_id
+        INNER JOIN arenas ON arenas.id = games.arena_id
+        INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
         WHERE
           games.played_at >= ? AND
-          games.playlist_id IN ?
+          games.playlist_id IN ? AND
+          arena_templates.name IN ?
         GROUP BY arenas.name
       |]
-      (day, Common.In playlists)
+      (day, Common.In playlists, Common.In templates)
   let arenaPercents =
         map
           (\(arena, frequency) -> (arena, makeRatio frequency numGames))
@@ -291,10 +298,8 @@ getStatsSummaryHandler _config connection request = do
           coalesce(bodies.name, to_char(games_players.body_id, 'FM9999')) AS body,
           count(*)
         FROM games_players
-        INNER JOIN games
-          ON games.id = games_players.game_id
-        INNER JOIN bodies
-          ON bodies.id = games_players.body_id
+        INNER JOIN games ON games.id = games_players.game_id
+        INNER JOIN bodies ON bodies.id = games_players.body_id
         WHERE
           games.played_at >= ? AND
           games.playlist_id IN ?
