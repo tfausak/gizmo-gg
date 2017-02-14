@@ -1,34 +1,8 @@
-<style scoped lang="scss">
+<style lang="scss">
 @import "~styles/vars.scss";
 
-.text-spacer {
-  padding: 0 5px;
-  text-align: center;
-}
 .panel {
   background-color: $white;
-}
-.playlist {
-  width: 32px;
-  text-align: center;
-}
-.heading.is-medium {
-  font-size :12px;
-}
-.panel-tabs {
-  padding: 0 1em;
-  .tabs {
-    margin-bottom: -1px;
-  }
-}
-.echarts {
-  width: 100px!important;
-  height: 80px!important;
-  margin: 0 auto!important;
-}
-.panel-block .columns {
-  width: 100%;
-  align-items: center;
 }
 </style>
 

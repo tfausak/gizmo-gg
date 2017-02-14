@@ -1,3 +1,33 @@
+<style scoped lang="scss">
+@import "~styles/vars.scss";
+
+.text-spacer {
+  padding: 0 5px;
+  text-align: center;
+}
+.panel {
+  background-color: $white;
+}
+.playlist {
+  width: 32px;
+  text-align: center;
+}
+.heading.is-medium {
+  font-size :12px;
+}
+.panel-tabs {
+  padding: 0 1em;
+  .tabs {
+    margin-bottom: -1px;
+  }
+}
+
+.panel-block .columns {
+  width: 100%;
+  align-items: center;
+}
+</style>
+
 <template>
   <div>
     <div v-if="loading">

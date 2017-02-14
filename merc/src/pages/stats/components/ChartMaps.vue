@@ -1,5 +1,4 @@
 <style scoped lang="scss">
-.echart-loading,
 .echarts {
   width: 650px!important;
   height: 250px!important;

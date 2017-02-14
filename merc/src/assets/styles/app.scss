@@ -6,14 +6,13 @@
 /* Helpers */
 
 .is-bold,
-.text-bold { font-weight: bold; }
 .is-normal,
-.text-normal { font-weight: normal; }
 .is-muted { color: $grey-light; }
 .is-relative { position: relative; }
-
+.is-block { display: block; }
 .no-margin { margin: 0!important; }
-
+.text-normal { font-weight: normal; }
+.text-bold { font-weight: bold; }
 .text-primary { color: $primary; }
 .text-success { color: $success; }
 .text-warning { color: $warning; }
@@ -22,15 +21,15 @@
 .text-dark { color: $dark; }
 .text-small { font-size: 12px; }
 .text-muted { color: $grey; }
-
 .text-right { text-align: right!important; }
 .text-left { text-align: left!important; }
+.bg-offwhite { background-color: $white-ish!important; }
 
 /* Panels */
+
 .panel-heading.panel-squish {
   padding-top: 5px;
   padding-bottom: 5px;
-
   .heading {
     margin: 0;
     font-size: 13px;
@@ -52,7 +51,6 @@
     margin-right: 5px;
   }
 }
-
 .level-stacked {
   flex-direction: column;
   justify-content: flex-start;
@@ -78,11 +76,9 @@ table.is-transparent th,
 table.is-transparent td {
   background-color: transparent;
 }
-
 .table-outerborder {
   border: 1px solid $border;
 }
-
 .table-stats {
   td {
     vertical-align: middle;
@@ -100,27 +96,14 @@ table.is-transparent td {
 
 /* Charts */
 
-.echart-loading,
 .echarts {
   width: 300px!important;
   height: 150px!important;
   margin: 0 auto!important;
 }
-.echart-loading {
-  text-align: center;
-  padding-top: 45px;
-  color: $grey-light;
-  .fa {
-    font-size: 65px;
-  }
-}
 
 /* Images */
 
-.is-circle-32x32 {
-  background-color: $grey-lighter;
-  border-radius: 16px;
-}
 .is-circle-dark {
   border-radius: 64px;
   background-color: rgba(0, 0, 0, 0.1);

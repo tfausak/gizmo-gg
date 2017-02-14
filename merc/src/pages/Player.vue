@@ -1,32 +1,15 @@
 <style scoped lang="scss">
 @import "~styles/vars.scss";
 
-.level-player {
-  justify-content: flex-start;
+#playerHero {
+  li.is-active a {
+    background-color: $white-ish!important;
+  }
+  #playerBody {
+    margin-right: 1.5em;
+  }
 }
-.level-player > .level-item {
-  flex-grow: 0!important;
-}
-.level-spacer {
-  width: 20px;
-}
-.normal {
-  display: block;
-}
-.hero-player,
-.hero-player .hero-body {
-  padding: 0;
-}
-.hero-player .hero-body {
-  padding: 20px;
-}
-.hero-player .hero-foot {
-  margin-top: 10px;
-}
-.is-offwhite,
-.hero-player li.is-active a {
-  background-color: $white-ish!important;
-}
+
 </style>
 
 <template>
@@ -71,19 +54,17 @@
     </div>
     <div v-else>
       <div>
-        <section class="hero hero-player">
+        <section class="hero" id="playerHero">
           <div class="hero-body">
             <div class="container">
-              <div class="level level-player">
-                <div class="level-item">
+              <div class="level level-chained">
+                <div class="level-item" id="playerBody">
                   <figure class="image is-96x96 is-circle-dark">
                     <img :src="'/static/img/bodies/octane.png'">
                   </figure>
                 </div>
-                <div class="level-item level-spacer">
-                </div>
                 <div class="level-item">
-                  <div class="normal">
+                  <div class="is-block">
                     <h1 class="title">
                       <span class="icon" style="margin-top: 8px;">
                         <i class="fa fa-steam"></i>
@@ -112,7 +93,7 @@
               </div>
             </div>
         </section>
-        <section class="section is-offwhite">
+        <section class="section bg-offwhite">
           <router-view :playerId="id"></router-view>
         </section>
       </div>

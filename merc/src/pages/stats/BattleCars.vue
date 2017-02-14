@@ -18,7 +18,7 @@
 
       <loading-component :loading="loading"></loading-component>
 
-      <table class="table is-striped table-outerborder table-stats" v-if="!loading">
+      <table class="table is-striped is-narrow table-outerborder table-stats" v-if="!loading">
         <thead>
           <tr>
             <sortable-th-component v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</sortable-th-component>
@@ -29,7 +29,7 @@
             <td>
               <div class="level level-chained">
                 <div class="level-item">
-                  <figure class="image is-32x32 is-circle-32x32">
+                  <figure class="image is-32x32 is-circle-dark">
                     <img :src="'/static/img/bodies/' + row.bodySlug + '.png'">
                   </figure>
                 </div>

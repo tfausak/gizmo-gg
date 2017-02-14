@@ -1,3 +1,11 @@
+<style scoped lang="scss">
+.echarts {
+  width: 100px!important;
+  height: 80px!important;
+  margin: 0 auto!important;
+}
+</style>
+
 <template>
   <echart :options="chartOptions" v-if="chartOptions"></echart>
 </template>
