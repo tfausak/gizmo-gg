@@ -9,6 +9,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Ratio as Ratio
 import qualified Data.Text as Text
 import qualified Data.Time as Time
+import qualified Database.PostgreSQL.Simple as Sql
 import qualified Network.HTTP.Types as Http
 import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
@@ -287,6 +288,53 @@ instance Common.FromRow GameRow
 
 instance Common.ToJSON GameRow where
   toJSON = Common.genericToJSON "GameRow"
+
+getNewStatsPlayersHandler :: Common.Text -> Common.Handler
+getNewStatsPlayersHandler rawPlayerId _config connection _request = do
+  maybePlayerId <- getPlayerId connection rawPlayerId
+  case maybePlayerId of
+    Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+    Just playerId -> do
+      namesAndTimes <- getNamesAndTimes connection playerId
+      let (name, aliases, lastPlayedAt) =
+            case namesAndTimes of
+              (n, t):nts -> (n, map fst nts, t)
+              _ -> error "impossible"
+      let body =
+            Aeson.object
+              [ (Text.pack "name", Aeson.toJSON name)
+              , (Text.pack "aliases", Aeson.toJSON aliases)
+              , (Text.pack "lastPlayedAt", Aeson.toJSON lastPlayedAt)
+              ]
+      pure (Common.jsonResponse Http.status200 [] body)
+
+getNamesAndTimes :: Sql.Connection
+                 -> Int
+                 -> IO [(Common.Text, Common.LocalTime)]
+getNamesAndTimes connection playerId =
+  Database.query
+    connection
+    [Common.sql|
+      SELECT games_players.name, max(games.played_at) AS last_played_at
+      FROM games_players
+      INNER JOIN games ON games.id = games_players.game_id
+      WHERE games_players.player_id = ?
+      GROUP BY games_players.name
+      ORDER BY last_played_at DESC
+    |]
+    [playerId]
+
+getPlayerId :: Sql.Connection -> Common.Text -> IO (Maybe Int)
+getPlayerId connection rawPlayerId = do
+  let maybePlayerId = Read.readMaybe (Text.unpack rawPlayerId)
+  rows <-
+    Database.query
+      connection
+      [Common.sql| SELECT id FROM players WHERE id = ? |]
+      [maybePlayerId :: Maybe Int]
+  case rows of
+    [[playerId]] -> pure (Just playerId)
+    _ -> pure Nothing
 
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
