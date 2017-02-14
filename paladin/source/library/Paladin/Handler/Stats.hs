@@ -39,7 +39,7 @@ getStatsArenasHandler _config connection request = do
           games.played_at >= ? AND
           games.playlist_id IN ? AND
           arena_templates.name IN ?
-        GROUP BY arenas.id
+        GROUP BY games.id, arenas.id
         ORDER BY arenas.id
       |]
       (day, Common.In playlists, Common.In templates)
