@@ -24,6 +24,15 @@ export default {
       ranked3v3solo: 'Ranked 3v3 Solo'
     }
   },
+  shortPlaylists: function () {
+    return {
+      all: 'All',
+      ranked1v1: '1v1',
+      ranked2v2: '2v2',
+      ranked3v3: '3v3',
+      ranked3v3solo: '3v3 Solo'
+    }
+  },
   mapTemplates: function () {
     return {
       all: 'All',

@@ -55,15 +55,14 @@ import ChartMapsComponent from './components/ChartMaps'
 import ChartTeamWinsComponent from './components/ChartTeamWins'
 import FilterPanelComponent from '../components/FilterPanel'
 import LoadingComponent from '../components/Loading'
-
 import options from '../../store/options.js'
 
 var _ = require('lodash')
 
 export default {
   beforeMount: function () {
-    this.fetchData()
     let vm = this
+    vm.fetchData()
     vm.$store.dispatch('GET_ARENAS').then(function (data) {
       vm.GET_ARENAS = data
     })

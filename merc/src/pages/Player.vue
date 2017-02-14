@@ -31,9 +31,10 @@
 
 <template>
   <div>
-    <div v-if="loading || !source">
+    <div v-if="loading || missing">
       <section class="hero is-medium">
         <div class="hero-body">
+
           <div class="container has-text-centered" v-if="!missing">
             <h1 class="title">
               <div>
@@ -47,6 +48,7 @@
               for player ID#{{ id }}
             </h2>
           </div>
+
           <div class="container has-text-centered" v-else>
             <h1 class="title">
               <div>
@@ -63,6 +65,7 @@
               Or you can <router-link to="/">search for another player</router-link>.
             </h2>
           </div>
+
         </div>
       </section>
     </div>
@@ -73,7 +76,7 @@
             <div class="container">
               <div class="level level-player">
                 <div class="level-item">
-                  <figure class="image is-96x96 is-circle-light-128x128">
+                  <figure class="image is-96x96 is-circle-dark">
                     <img :src="'/static/img/bodies/octane.png'">
                   </figure>
                 </div>
@@ -110,7 +113,7 @@
             </div>
         </section>
         <section class="section is-offwhite">
-          <router-view :source="source"></router-view>
+          <router-view :playerId="id"></router-view>
         </section>
       </div>
     </div>
@@ -119,25 +122,27 @@
 
 <script>
 export default {
-  props: [ 'id' ],
+  beforeMount: function () {
+    var vm = this
+    vm.$store.dispatch('GET_PLAYER', {
+      id: vm.id
+    }).then(function (data) {
+      vm.GET_PLAYER = data
+    }).catch(function () {
+      vm.missing = true
+    })
+  },
+  computed: {
+    loading: function () {
+      return this.GET_PLAYER === null
+    }
+  },
   data: function () {
     return {
-      loading: true,
-      source: null,
+      GET_PLAYER: null,
       missing: false
     }
   },
-  beforeMount: function () {
-    var vm = this
-    this.$store.dispatch('GET_PLAYER', { id: this.id })
-    .then(function (result) {
-      vm.loading = false
-      vm.source = result
-    })
-    .catch(function () {
-      vm.loading = false
-      vm.missing = true
-    })
-  }
+  props: [ 'id' ]
 }
 </script>

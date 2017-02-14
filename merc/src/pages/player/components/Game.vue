@@ -37,7 +37,7 @@
           {{ fDuration }}
         </div>
         <div class="column is-2">
-          <figure class="image is-48x48 is-circle-dark-128x128">
+          <figure class="image is-48x48 is-circle-dark">
             <img :src="'/static/img/bodies/' + fBody + '.png'">
           </figure>
           {{ game.bodyName }}
