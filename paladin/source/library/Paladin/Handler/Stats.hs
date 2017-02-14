@@ -17,7 +17,7 @@ import qualified Text.Read as Read
 
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
-  (day, playlists) <- getFilters request
+  (day, playlists, _) <- getFilters request
   arenas <-
     Database.query
       connection
@@ -62,7 +62,7 @@ instance Common.ToJSON ArenaStats where
 
 getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
-  (day, playlists) <- getFilters request
+  (day, playlists, _) <- getFilters request
   bodies <-
     Database.query
       connection
@@ -126,7 +126,7 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
-      (day, playlists) <- getFilters request
+      (day, playlists, _) <- getFilters request
       [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
@@ -246,7 +246,7 @@ instance Common.ToJSON GameRow where
 
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
-  (day, playlists) <- getFilters request
+  (day, playlists, _) <- getFilters request
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -334,12 +334,13 @@ makeRatio numerator denominator =
     then 0
     else fromRational (numerator Ratio.% denominator)
 
-getFilters :: Wai.Request -> IO (Time.Day, [Int])
+getFilters :: Wai.Request -> IO (Time.Day, [Int], [String])
 getFilters request = do
   let query = Wai.queryString request
   day <- getDay query
   let playlists = getPlaylists query
-  pure (day, playlists)
+  let templates = getTemplates query
+  pure (day, playlists, templates)
 
 getDay :: Common.Query -> IO Time.Day
 getDay query = do
@@ -384,6 +385,31 @@ competitiveSoloStandard = 12
 
 competitiveStandard :: Int
 competitiveStandard = 13
+
+getTemplates :: Common.Query -> [String]
+getTemplates query =
+  case getParam "map" query of
+    Just "arc" -> [starbaseArcTemplate]
+    Just "standard" -> [standardTemplate]
+    Just "tokyo" -> [neoTokyoTemplate]
+    Just "wasteland" -> [wastelandTemplate]
+    _ -> competitiveTemplates
+
+competitiveTemplates :: [String]
+competitiveTemplates =
+  [neoTokyoTemplate, standardTemplate, starbaseArcTemplate, wastelandTemplate]
+
+neoTokyoTemplate :: String
+neoTokyoTemplate = "Neo Tokyo"
+
+standardTemplate :: String
+standardTemplate = "Standard"
+
+starbaseArcTemplate :: String
+starbaseArcTemplate = "Starbase ARC"
+
+wastelandTemplate :: String
+wastelandTemplate = "Wasteland"
 
 getParam :: String -> Common.Query -> Maybe String
 getParam name query =
