@@ -132,7 +132,7 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
       (day, playlists, templates) <- getFilters request
-      [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
+      players <-
         Database.query
           connection
           [Common.sql|
@@ -141,12 +141,12 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               count(CASE WHEN NOT games_players.is_blue THEN 1 END),
               count(CASE WHEN games_players.is_blue AND games.blue_goals > games.orange_goals THEN 1 END),
               count(CASE WHEN NOT games_players.is_blue and games.orange_goals > games.blue_goals THEN 1 END),
-              sum(games_players.score),
-              sum(games_players.goals),
-              sum(games_players.assists),
-              sum(games_players.saves),
-              sum(games_players.shots),
-              sum(games.duration)
+              coalesce(sum(games_players.score), 0),
+              coalesce(sum(games_players.goals), 0),
+              coalesce(sum(games_players.assists), 0),
+              coalesce(sum(games_players.saves), 0),
+              coalesce(sum(games_players.shots), 0),
+              coalesce(sum(games.duration), 0)
             FROM games
             INNER JOIN games_players ON games_players.game_id = games.id
             INNER JOIN arenas ON arenas.id = games.arena_id
@@ -159,6 +159,17 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               arena_templates.name IN ?
           |]
           (playerId, day, Common.In playlists, Common.In templates)
+      let player = Maybe.fromMaybe defaultPlayerRow (Maybe.listToMaybe players)
+      let numBlueGames = playerRowNumBlueGames player
+      let numOrangeGames = playerRowNumOrangeGames player
+      let numBlueWins = playerRowNumBlueWins player
+      let numOrangeWins = playerRowNumOrangeWins player
+      let totalScore = playerRowTotalScore player
+      let totalGoals = playerRowTotalGoals player
+      let totalAssists = playerRowTotalAssists player
+      let totalSaves = playerRowTotalSaves player
+      let totalShots = playerRowTotalShots player
+      let secondsPlayed = playerRowSecondsPlayed player
       games <-
         Database.query
           connection
@@ -223,6 +234,36 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
               ]
       pure (Common.jsonResponse Http.status200 [] body)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+
+data PlayerRow = PlayerRow
+  { playerRowNumBlueGames :: Integer
+  , playerRowNumOrangeGames :: Integer
+  , playerRowNumBlueWins :: Integer
+  , playerRowNumOrangeWins :: Integer
+  , playerRowTotalScore :: Integer
+  , playerRowTotalGoals :: Integer
+  , playerRowTotalAssists :: Integer
+  , playerRowTotalSaves :: Integer
+  , playerRowTotalShots :: Integer
+  , playerRowSecondsPlayed :: Integer
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow PlayerRow
+
+defaultPlayerRow :: PlayerRow
+defaultPlayerRow =
+  PlayerRow
+  { playerRowNumBlueGames = 0
+  , playerRowNumOrangeGames = 0
+  , playerRowNumBlueWins = 0
+  , playerRowNumOrangeWins = 0
+  , playerRowTotalScore = 0
+  , playerRowTotalGoals = 0
+  , playerRowTotalAssists = 0
+  , playerRowTotalSaves = 0
+  , playerRowTotalShots = 0
+  , playerRowSecondsPlayed = 0
+  }
 
 data GameRow = GameRow
   { gameRowPlaylistId :: Integer
