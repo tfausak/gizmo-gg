@@ -17,7 +17,7 @@ import qualified Text.Read as Read
 
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
-  (day, playlists) <- getDayAndPlaylists request
+  (day, playlists) <- getFilters request
   arenas <-
     Database.query
       connection
@@ -62,7 +62,7 @@ instance Common.ToJSON ArenaStats where
 
 getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
-  (day, playlists) <- getDayAndPlaylists request
+  (day, playlists) <- getFilters request
   bodies <-
     Database.query
       connection
@@ -126,7 +126,7 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       [playerId :: Int]
   case maybePlayerId :: [[Int]] of
     [[_]] -> do
-      (day, playlists) <- getDayAndPlaylists request
+      (day, playlists) <- getFilters request
       [[numBlueGames, numOrangeGames, numBlueWins, numOrangeWins, totalScore, totalGoals, totalAssists, totalSaves, totalShots, secondsPlayed]] <-
         Database.query
           connection
@@ -246,7 +246,7 @@ instance Common.ToJSON GameRow where
 
 getStatsSummaryHandler :: Common.Handler
 getStatsSummaryHandler _config connection request = do
-  (day, playlists) <- getDayAndPlaylists request
+  (day, playlists) <- getFilters request
   [[numGames, numBlueWins, numOrangeWins]] <-
     Database.query
       connection
@@ -334,8 +334,8 @@ makeRatio numerator denominator =
     then 0
     else fromRational (numerator Ratio.% denominator)
 
-getDayAndPlaylists :: Wai.Request -> IO (Time.Day, [Int])
-getDayAndPlaylists request = do
+getFilters :: Wai.Request -> IO (Time.Day, [Int])
+getFilters request = do
   let query = Wai.queryString request
   day <- getDay query
   let playlists = getPlaylists query
