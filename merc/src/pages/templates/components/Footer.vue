@@ -1,8 +1,12 @@
 <style scoped lang="scss">
 @import "~styles/vars.scss";
 
+#footer .footer {
+  background-color: $white-ish;
+}
 #footer {
-  box-shadow: 0px 500px 0px 500px $white-ter;
+  background-color: $white-ish;
+  box-shadow: 0px 500px 0px 500px $white-ish;
 }
 </style>
 

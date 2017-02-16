@@ -11,6 +11,8 @@
 .is-relative { position: relative; }
 .is-block { display: block; }
 .no-margin { margin: 0!important; }
+.no-margin-top { margin-top: 0!important; }
+.margin-top { margin-top: 0.5em; }
 .text-normal { font-weight: normal; }
 .text-bold { font-weight: bold; }
 .text-primary { color: $primary; }
@@ -23,7 +25,7 @@
 .text-muted { color: $grey; }
 .text-right { text-align: right!important; }
 .text-left { text-align: left!important; }
-.bg-offwhite { background-color: $white-ish!important; }
+.bg-offwhite { background-color: $white-like!important; }
 
 /* Panels */
 

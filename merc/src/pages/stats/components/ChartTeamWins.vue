@@ -1,13 +1,24 @@
 <template>
   <div>
-    <echart :options="chartOptions" v-if="chartOptions"></echart>
+    <loading-component :loading="loading"></loading-component>
+    <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
   </div>
 </template>
 
 <script>
+import LoadingComponent from '../../components/Loading'
+
 export default {
   beforeMount () {
     this.updateChartOptions()
+  },
+  components: {
+    LoadingComponent
+  },
+  computed: {
+    loading: function () {
+      return this.GET_STATS_SUMMARY === null
+    }
   },
   data: function () {
     return {
@@ -16,6 +27,9 @@ export default {
   },
   methods: {
     updateChartOptions: function () {
+      if (this.loading) {
+        return {}
+      }
       this.chartOptions = {
         series: [
           {
@@ -26,12 +40,12 @@ export default {
             data: [
               {
                 name: 'Orange',
-                value: this.source.orange,
+                value: this.GET_STATS_SUMMARY.winPct.orange,
                 itemStyle: { normal: { color: '#CB4B16' } }
               },
               {
                 name: 'Blue',
-                value: this.source.blue,
+                value: this.GET_STATS_SUMMARY.winPct.blue,
                 itemStyle: { normal: { color: '#268BD2' } }
               }
             ]
@@ -40,9 +54,9 @@ export default {
       }
     }
   },
-  props: [ 'source' ],
+  props: [ 'GET_STATS_SUMMARY' ],
   watch: {
-    source: function (val) {
+    GET_STATS_SUMMARY: function (val) {
       this.updateChartOptions()
     }
   }

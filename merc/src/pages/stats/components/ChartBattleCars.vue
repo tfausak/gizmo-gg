@@ -8,11 +8,13 @@
 
 <template>
   <div>
-    <echart :options="chartOptions" v-if="chartOptions"></echart>
+    <loading-component :loading="loading"></loading-component>
+    <echart :options="chartOptions" v-if="chartOptions && !loading"></echart>
   </div>
 </template>
 
 <script>
+import LoadingComponent from '../../components/Loading'
 import { scrub } from '../../../store/scrubber.js'
 
 var _ = require('lodash')
@@ -21,6 +23,14 @@ export default {
   beforeMount () {
     this.updateChartOptions()
   },
+  components: {
+    LoadingComponent
+  },
+  computed: {
+    loading: function () {
+      return this.GET_STATS_SUMMARY === null
+    }
+  },
   data: function () {
     return {
       chartOptions: null
@@ -28,6 +38,9 @@ export default {
   },
   methods: {
     updateChartOptions: function () {
+      if (this.loading) {
+        return {}
+      }
       this.chartOptions = {
         series: [
           {
@@ -38,15 +51,15 @@ export default {
             label: { normal: { formatter: function (params) {
               return _.round(params.value * 100) + '% ' + params.name
             } } },
-            data: scrub(this.source, 0.05)
+            data: scrub(this.GET_STATS_SUMMARY.bodyFreqPct, 0.05)
           }
         ]
       }
     }
   },
-  props: [ 'source' ],
+  props: [ 'GET_STATS_SUMMARY' ],
   watch: {
-    source: function (val) {
+    GET_STATS_SUMMARY: function (val) {
       this.updateChartOptions()
     }
   }

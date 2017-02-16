@@ -11,6 +11,8 @@
 </template>
 
 <script>
+import { getPct } from '../../../store/scrubber.js'
+
 export default {
   data: function () {
     return {
@@ -23,7 +25,7 @@ export default {
               top: 'middle',
               style:
               {
-                'text': '50%',
+                'text': getPct(this.wins, this.wins + this.losses, 0) + '%',
                 fill: '#777'
               }
             }
@@ -38,11 +40,12 @@ export default {
             data: [
               {
                 name: 'losses',
-                value: 1
+                value: this.losses
               },
               {
                 name: 'wins',
-                value: 1
+                value: this.wins,
+                itemStyle: { normal: { color: '#268BD2' } }
               }
             ],
             label: { normal: { show: false } }
@@ -50,6 +53,7 @@ export default {
         ]
       }
     }
-  }
+  },
+  props: [ 'wins', 'losses' ]
 }
 </script>

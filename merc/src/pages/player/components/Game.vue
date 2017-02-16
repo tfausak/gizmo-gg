@@ -25,7 +25,7 @@
 </style>
 
 <template>
-  <div class="panel" :class="{ 'panel-win': isWin, 'panel-loss': !isWin }">
+  <div class="panel" :class="{ 'panel-win': isWin, 'panel-loss': !isWin }" v-if="player">
     <div class="panel-block">
       <div class="columns">
         <div class="column is-2 has-text-centered text-small">
@@ -38,30 +38,23 @@
         </div>
         <div class="column is-2">
           <figure class="image is-48x48 is-circle-dark">
-            <img :src="'/static/img/bodies/' + fBody + '.png'">
+            <img :src="'/static/img/bodies/octane.png'">
           </figure>
           {{ game.bodyName }}
         </div>
         <div class="column is-2 has-text-centered">
-          <div class="title is-5" style="margin-bottom: 0; font-weight: normal;">{{ game.score }} Points</div>
-          <div>{{ game.goals }}/{{ game.assists }}/{{ game.saves }}/{{ game.shots }} ({{ accuracy }}%)</div>
+          <div class="title is-5" style="margin-bottom: 0; font-weight: normal;">{{ player.score }} Points</div>
+          <div>{{ player.goals }}/{{ player.assists }}/{{ player.saves }}/{{ player.shots }} ({{ player.accuracy }}%)</div>
         </div>
         <div class="column is-2 has-text-centered">
-          <div class="title is-4">{{ game.yourGoals }} - {{ game.theirGoals }}</div>
+          <div class="title is-4">{{ teamGoals }} - {{ oppGoals }}</div>
         </div>
-        <div class="column is-3">
-          <div class="level">
-            <div class="level-item">
-              <figure class="image is-48x48">
-                <img :src="'/static/img/maps/standard.jpg'">
-              </figure>
-            </div>
-            <div class="level-item">
-              <div>
-                <div class="heading">Standard</div>
-                <div>{{ game.arenaName }}</div>
-              </div>
-            </div>
+        <div class="column is-2">
+          {{ game.arena.templateName }}
+        </div>
+        <div class="column is-2">
+          <div v-for="gplayer in game.players">
+            <span>{{ gplayer.name }}</span>
           </div>
         </div>
       </div>
@@ -70,30 +63,41 @@
 </template>
 
 <script>
+import { getPct } from '../../../store/scrubber.js'
+
 var moment = require('moment')
 var _ = require('lodash')
 
 export default {
-  props: [ 'game' ],
   data: function () {
-    let min = _.floor(this.game.duration / 60)
-    let sec = this.game.duration - (min * 60)
-    let accuracy = 0
-    if (this.game.goals > 0) {
-      accuracy = 100
+    let vm = this
+    let player = null
+    _.each(vm.game.players, function (gplayer) {
+      if (gplayer.playerId === _.parseInt(vm.playerId)) {
+        player = gplayer
+      }
+    })
+    player.accuracy = getPct(player.goals, player.shots)
+    let teamGoals = 0
+    let oppGoals = 0
+    if (player.isOnBlueTeam) {
+      teamGoals = vm.game.blueGoals
+      oppGoals = vm.game.orangeGoals
+    } else {
+      teamGoals = vm.game.orangeGoals
+      oppGoals = vm.game.blueGoals
     }
-    if (this.game.shots > 0) {
-      accuracy = _.min([100, _.round(this.game.goals / this.game.shots * 100)])
-    }
-    let fBody = _.lowerCase(this.game.bodyName)
-    fBody = _.replace(fBody, / /g, '-')
+    let min = _.floor(vm.game.duration / 60)
+    let sec = vm.game.duration - (min * 60)
     return {
-      playedAt: moment(this.game.playedAt).fromNow(),
+      playedAt: moment(vm.game.playedAt).fromNow(),
       fDuration: min + 'm ' + sec + 's',
-      accuracy: parseInt(accuracy),
-      fBody: fBody,
-      isWin: this.game.yourGoals > this.game.theirGoals
+      teamGoals: teamGoals,
+      oppGoals: oppGoals,
+      isWin: teamGoals > oppGoals,
+      player: player
     }
-  }
+  },
+  props: [ 'game', 'playerId' ]
 }
 </script>

@@ -33,3 +33,13 @@ export function scrub (data, tolerance) {
   }
   return chartData
 }
+
+export function getPct (top, bot, precision = 2) {
+  if (top) {
+    if (bot) {
+      return _.round(top / bot * 100, precision)
+    }
+    return 100
+  }
+  return 0
+}

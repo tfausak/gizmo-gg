@@ -38,7 +38,7 @@ const store = new Vuex.Store({
     },
 
     GET_PLAYER: function ({ dispatch }, params) {
-      let endpoint = 'stats/players/' + params.id
+      let endpoint = 'stats/players/' + params.id + '/new'
       delete params.id
       endpoint += getQueryString(params)
       return dispatch('FETCH', { endpoint })

@@ -35,12 +35,7 @@
 export default {
   data: function () {
     return {
-      ranks: [
-        { rating: 882, playlist: '1v1', rank: 'All-Star Div 4', icon: 'all-star', games: 127 },
-        { rating: 956, playlist: '2v2', rank: 'Superstar Div 3', icon: 'superstar', games: 1745 },
-        { rating: 789, playlist: '3v3', rank: 'Shooting Star Div 5', icon: 'shooting-star', games: 160 },
-        { rating: 900, playlist: '3v3 Solo', rank: 'All-Star Div 5', icon: 'all-star', games: 98 }
-      ]
+      ranks: []
     }
   },
   props: [ 'playerId' ]

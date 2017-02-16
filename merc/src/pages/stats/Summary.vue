@@ -15,8 +15,7 @@
           <article class="message">
             <div class="message-body">
               <p class="heading is-1">Win Pct by Team</p>
-              <loading-component :loading="loading"></loading-component>
-              <chart-team-wins-component :source="GET_STATS_SUMMARY.winPct" v-if="!loading"></chart-team-wins-component>
+              <chart-team-wins-component :GET_STATS_SUMMARY="GET_STATS_SUMMARY"></chart-team-wins-component>
             </div>
           </article>
         </div>
@@ -27,8 +26,7 @@
                 Battle-Car Use
                 - <router-link to="/stats/battle-cars">more</router-link>
               </p>
-              <loading-component :loading="loading"></loading-component>
-              <chart-battle-cars-component :source="GET_STATS_SUMMARY.bodyFreqPct" v-if="!loading"></chart-battle-cars-component>
+              <chart-battle-cars-component :GET_STATS_SUMMARY="GET_STATS_SUMMARY"></chart-battle-cars-component>
             </div>
           </article>
         </div>
@@ -41,8 +39,7 @@
             - <router-link to="/stats/maps">more</router-link>
           </p>
           <div style="margin-top: 20px;"></div>
-          <loading-component :loading="loading"></loading-component>
-          <chart-maps-component :source="GET_STATS_SUMMARY.mapFreqPct" :arenas="GET_ARENAS" v-if="!loading"></chart-maps-component>
+          <chart-maps-component :GET_STATS_SUMMARY="GET_STATS_SUMMARY"></chart-maps-component>
         </div>
       </article>
     </div>
@@ -54,29 +51,23 @@ import ChartBattleCarsComponent from './components/ChartBattleCars'
 import ChartMapsComponent from './components/ChartMaps'
 import ChartTeamWinsComponent from './components/ChartTeamWins'
 import FilterPanelComponent from '../components/FilterPanel'
-import LoadingComponent from '../components/Loading'
 import options from '../../store/options.js'
 
 var _ = require('lodash')
 
 export default {
   beforeMount: function () {
-    let vm = this
-    vm.fetchData()
-    vm.$store.dispatch('GET_ARENAS').then(function (data) {
-      vm.GET_ARENAS = data
-    })
+    this.fetchData()
   },
   components: {
     ChartBattleCarsComponent,
     ChartMapsComponent,
     ChartTeamWinsComponent,
-    FilterPanelComponent,
-    LoadingComponent
+    FilterPanelComponent
   },
   computed: {
     loading: function () {
-      return this.GET_STATS_SUMMARY === null || this.GET_ARENAS === null
+      return this.GET_STATS_SUMMARY === null
     }
   },
   data: function () {
@@ -87,8 +78,7 @@ export default {
       playlist: _.head(_.keys(playlistOptions)),
       timeOptions: timeOptions,
       time: _.head(_.keys(timeOptions)),
-      GET_STATS_SUMMARY: null,
-      GET_ARENAS: null
+      GET_STATS_SUMMARY: null
     }
   },
   methods: {

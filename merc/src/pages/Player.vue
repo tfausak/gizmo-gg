@@ -3,7 +3,7 @@
 
 #playerHero {
   li.is-active a {
-    background-color: $white-ish!important;
+    background-color: $white-like!important;
   }
   #playerBody {
     margin-right: 1.5em;
@@ -61,21 +61,25 @@
                 <div class="level-item" id="playerBody">
                   <figure class="image is-96x96 is-circle-dark">
                     <img :src="'/static/img/bodies/octane.png'">
+                    bodyId: {{ bodyId }}
                   </figure>
                 </div>
                 <div class="level-item">
                   <div class="is-block">
-                    <h1 class="title">
-                      <span class="icon" style="margin-top: 8px;">
+                    <h1 class="title no-margin-top">
+                      <span class="icon is-medium">
                         <i class="fa fa-steam"></i>
                       </span>
                       <span>
-                        player #{{ id }}
+                        {{ GET_PLAYER.name }}
                       </span>
                     </h1>
-                    <h2 class="subtitle" style="margin-top: 0;">
-                      last updated 29 minutes ago
+                    <h2 class="subtitle no-margin-top">
+                      last played {{ lastUpdated }}
                     </h2>
+                    <div class="is-muted" v-if="GET_PLAYER.aliases">
+                      Aliases: <span v-for="alias in GET_PLAYER.aliases">{{ alias }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -102,6 +106,9 @@
 </template>
 
 <script>
+var moment = require('moment')
+var _ = require('lodash')
+
 export default {
   beforeMount: function () {
     var vm = this
@@ -114,6 +121,22 @@ export default {
     })
   },
   computed: {
+    bodyId: function () {
+      let vm = this
+      let game = _.head(vm.GET_PLAYER.games)
+      let bodyId = null
+      if (game) {
+        _.each(game.players, function (player) {
+          if (player.playerId === _.parseInt(vm.id)) {
+            bodyId = player.loadout.bodyId
+          }
+        })
+      }
+      return bodyId
+    },
+    lastUpdated: function () {
+      return moment(this.GET_PLAYER.lastPlayedAt).fromNow()
+    },
     loading: function () {
       return this.GET_PLAYER === null
     }
