@@ -551,18 +551,7 @@ data GamePlayerOutput = GamePlayerOutput
   , gamePlayerOutputAssists :: Int
   , gamePlayerOutputSaves :: Int
   , gamePlayerOutputShots :: Int
-  , gamePlayerOutputBodyId :: Int
-  , gamePlayerOutputDecalId :: Int
-  , gamePlayerOutputWheelId :: Int
-  , gamePlayerOutputRocketTrailId :: Int
-  , gamePlayerOutputAntennaId :: Int
-  , gamePlayerOutputTopperId :: Int
-  , gamePlayerOutputWheelPaintId :: Maybe Int
-  , gamePlayerOutputTopperPaintId :: Maybe Int
-  , gamePlayerOutputPrimaryColorId :: Int
-  , gamePlayerOutputAccentColorId :: Int
-  , gamePlayerOutputPrimaryFinishId :: Int
-  , gamePlayerOutputAccentFinishId :: Int
+  , gamePlayerOutputLoadout :: LoadoutOutput
   , gamePlayerOutputCamera :: CameraOutput
   } deriving (Eq, Common.Generic, Show)
 
@@ -582,19 +571,43 @@ makeGamePlayerOutput player =
   , gamePlayerOutputAssists = gamePlayerRowAssists player
   , gamePlayerOutputSaves = gamePlayerRowSaves player
   , gamePlayerOutputShots = gamePlayerRowShots player
-  , gamePlayerOutputBodyId = gamePlayerRowBodyId player
-  , gamePlayerOutputDecalId = gamePlayerRowDecalId player
-  , gamePlayerOutputWheelId = gamePlayerRowWheelId player
-  , gamePlayerOutputRocketTrailId = gamePlayerRowRocketTrailId player
-  , gamePlayerOutputAntennaId = gamePlayerRowAntennaId player
-  , gamePlayerOutputTopperId = gamePlayerRowTopperId player
-  , gamePlayerOutputWheelPaintId = gamePlayerRowWheelPaintId player
-  , gamePlayerOutputTopperPaintId = gamePlayerRowTopperPaintId player
-  , gamePlayerOutputPrimaryColorId = gamePlayerRowPrimaryColorId player
-  , gamePlayerOutputAccentColorId = gamePlayerRowAccentColorId player
-  , gamePlayerOutputPrimaryFinishId = gamePlayerRowPrimaryFinishId player
-  , gamePlayerOutputAccentFinishId = gamePlayerRowAccentFinishId player
+  , gamePlayerOutputLoadout = makeLoadoutOutput player
   , gamePlayerOutputCamera = makeCameraOutput player
+  }
+
+data LoadoutOutput = LoadoutOutput
+  { loadoutOutputBodyId :: Int
+  , loadoutOutputDecalId :: Int
+  , loadoutOutputWheelId :: Int
+  , loadoutOutputRocketTrailId :: Int
+  , loadoutOutputAntennaId :: Int
+  , loadoutOutputTopperId :: Int
+  , loadoutOutputWheelPaintId :: Maybe Int
+  , loadoutOutputTopperPaintId :: Maybe Int
+  , loadoutOutputPrimaryColorId :: Int
+  , loadoutOutputAccentColorId :: Int
+  , loadoutOutputPrimaryFinishId :: Int
+  , loadoutOutputAccentFinishId :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON LoadoutOutput where
+  toJSON = Common.genericToJSON "LoadoutOutput"
+
+makeLoadoutOutput :: GamePlayerRow -> LoadoutOutput
+makeLoadoutOutput player =
+  LoadoutOutput
+  { loadoutOutputBodyId = gamePlayerRowBodyId player
+  , loadoutOutputDecalId = gamePlayerRowDecalId player
+  , loadoutOutputWheelId = gamePlayerRowWheelId player
+  , loadoutOutputRocketTrailId = gamePlayerRowRocketTrailId player
+  , loadoutOutputAntennaId = gamePlayerRowAntennaId player
+  , loadoutOutputTopperId = gamePlayerRowTopperId player
+  , loadoutOutputWheelPaintId = gamePlayerRowWheelPaintId player
+  , loadoutOutputTopperPaintId = gamePlayerRowTopperPaintId player
+  , loadoutOutputPrimaryColorId = gamePlayerRowPrimaryColorId player
+  , loadoutOutputAccentColorId = gamePlayerRowAccentColorId player
+  , loadoutOutputPrimaryFinishId = gamePlayerRowPrimaryFinishId player
+  , loadoutOutputAccentFinishId = gamePlayerRowAccentFinishId player
   }
 
 data CameraOutput = CameraOutput
