@@ -488,14 +488,7 @@ data GameOutput = GameOutput
   { gameOutputId :: Int
   , gameOutputPlaylistId :: Int
   , gameOutputPlaylistName :: Maybe Common.Text
-  , gameOutputArenaId :: Int
-  , gameOutputArenaName :: Maybe Common.Text
-  , gameOutputArenaSkinId :: Int
-  , gameOutputArenaSkinName :: Maybe Common.Text
-  , gameOutputArenaModelId :: Int
-  , gameOutputArenaModelName :: Maybe Common.Text
-  , gameOutputArenaTemplateId :: Int
-  , gameOutputArenaTemplateName :: Maybe Common.Text
+  , gameOutputArena :: ArenaOutput
   , gameOutputPlayedAt :: Time.LocalTime
   , gameOutputDuration :: Int
   , gameOutputBlueGoals :: Int
@@ -512,19 +505,39 @@ makeGameOutput (game, players) =
   { gameOutputId = playerGameRowGameId game
   , gameOutputPlaylistId = playerGameRowPlaylistId game
   , gameOutputPlaylistName = playerGameRowPlaylistName game
-  , gameOutputArenaId = playerGameRowArenaId game
-  , gameOutputArenaName = playerGameRowArenaName game
-  , gameOutputArenaSkinId = playerGameRowArenaSkinId game
-  , gameOutputArenaSkinName = playerGameRowArenaSkinName game
-  , gameOutputArenaModelId = playerGameRowArenaModelId game
-  , gameOutputArenaModelName = playerGameRowArenaModelName game
-  , gameOutputArenaTemplateId = playerGameRowArenaTemplateId game
-  , gameOutputArenaTemplateName = playerGameRowArenaTemplateName game
+  , gameOutputArena = makeArenaOutput game
   , gameOutputPlayedAt = playerGameRowPlayedAt game
   , gameOutputDuration = playerGameRowDuration game
   , gameOutputBlueGoals = playerGameRowBlueGoals game
   , gameOutputOrangeGoals = playerGameRowOrangeGoals game
   , gameOutputPlayers = map makeGamePlayerOutput players
+  }
+
+data ArenaOutput = ArenaOutput
+  { arenaOutputId :: Int
+  , arenaOutputName :: Maybe Common.Text
+  , arenaOutputSkinId :: Int
+  , arenaOutputSkinName :: Maybe Common.Text
+  , arenaOutputModelId :: Int
+  , arenaOutputModelName :: Maybe Common.Text
+  , arenaOutputTemplateId :: Int
+  , arenaOutputTemplateName :: Maybe Common.Text
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON ArenaOutput where
+  toJSON = Common.genericToJSON "ArenaOutput"
+
+makeArenaOutput :: PlayerGameRow -> ArenaOutput
+makeArenaOutput game =
+  ArenaOutput
+  { arenaOutputId = playerGameRowArenaId game
+  , arenaOutputName = playerGameRowArenaName game
+  , arenaOutputSkinId = playerGameRowArenaSkinId game
+  , arenaOutputSkinName = playerGameRowArenaSkinName game
+  , arenaOutputModelId = playerGameRowArenaModelId game
+  , arenaOutputModelName = playerGameRowArenaModelName game
+  , arenaOutputTemplateId = playerGameRowArenaTemplateId game
+  , arenaOutputTemplateName = playerGameRowArenaTemplateName game
   }
 
 data GamePlayerOutput = GamePlayerOutput
