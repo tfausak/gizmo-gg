@@ -563,12 +563,7 @@ data GamePlayerOutput = GamePlayerOutput
   , gamePlayerOutputAccentColorId :: Int
   , gamePlayerOutputPrimaryFinishId :: Int
   , gamePlayerOutputAccentFinishId :: Int
-  , gamePlayerOutputCameraFov :: Float
-  , gamePlayerOutputCameraHeight :: Float
-  , gamePlayerOutputCameraAngle :: Float
-  , gamePlayerOutputCameraDistance :: Float
-  , gamePlayerOutputCameraStiffness :: Float
-  , gamePlayerOutputCameraSwivelSpeed :: Float
+  , gamePlayerOutputCamera :: CameraOutput
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.ToJSON GamePlayerOutput where
@@ -599,12 +594,30 @@ makeGamePlayerOutput player =
   , gamePlayerOutputAccentColorId = gamePlayerRowAccentColorId player
   , gamePlayerOutputPrimaryFinishId = gamePlayerRowPrimaryFinishId player
   , gamePlayerOutputAccentFinishId = gamePlayerRowAccentFinishId player
-  , gamePlayerOutputCameraFov = gamePlayerRowFov player
-  , gamePlayerOutputCameraHeight = gamePlayerRowHeight player
-  , gamePlayerOutputCameraAngle = gamePlayerRowAngle player
-  , gamePlayerOutputCameraDistance = gamePlayerRowDistance player
-  , gamePlayerOutputCameraStiffness = gamePlayerRowStiffness player
-  , gamePlayerOutputCameraSwivelSpeed = gamePlayerRowSwivelSpeed player
+  , gamePlayerOutputCamera = makeCameraOutput player
+  }
+
+data CameraOutput = CameraOutput
+  { cameraOutputFov :: Float
+  , cameraOutputHeight :: Float
+  , cameraOutputAngle :: Float
+  , cameraOutputDistance :: Float
+  , cameraOutputStiffness :: Float
+  , cameraOutputSwivelSpeed :: Float
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON CameraOutput where
+  toJSON = Common.genericToJSON "CameraOutput"
+
+makeCameraOutput :: GamePlayerRow -> CameraOutput
+makeCameraOutput player =
+  CameraOutput
+  { cameraOutputFov = gamePlayerRowFov player
+  , cameraOutputHeight = gamePlayerRowHeight player
+  , cameraOutputAngle = gamePlayerRowAngle player
+  , cameraOutputDistance = gamePlayerRowDistance player
+  , cameraOutputStiffness = gamePlayerRowStiffness player
+  , cameraOutputSwivelSpeed = gamePlayerRowSwivelSpeed player
   }
 
 getNamesAndTimes :: Sql.Connection
