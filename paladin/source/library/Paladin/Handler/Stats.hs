@@ -5,6 +5,7 @@ module Paladin.Handler.Stats where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as ByteString
+import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Ratio as Ratio
 import qualified Data.Text as Text
@@ -296,22 +297,12 @@ getNewStatsPlayersHandler rawPlayerId _config connection request = do
     Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
     Just playerId -> do
       namesAndTimes <- getNamesAndTimes connection playerId
-      let (name, aliases, lastPlayedAt) =
-            case namesAndTimes of
-              (n, t):nts -> (n, map fst nts, t)
-              _ -> error "impossible"
       (day, playlists, templates) <- getFilters request
       games <- getGames connection day playlists templates playerId
       let gameIds = map playerGameRowGameId games
       gamesPlayers <- getGamesPlayers connection gameIds
       let body =
-            Aeson.object
-              [ (Text.pack "name", Aeson.toJSON name)
-              , (Text.pack "aliases", Aeson.toJSON aliases)
-              , (Text.pack "lastPlayedAt", Aeson.toJSON lastPlayedAt)
-              , (Text.pack "games", Aeson.toJSON games) -- TODO
-              , (Text.pack "gamesPlayers", Aeson.toJSON gamesPlayers) -- TODO
-              ]
+            Aeson.toJSON (makePlayerOutput namesAndTimes games gamesPlayers)
       pure (Common.jsonResponse Http.status200 [] body)
 
 getGames :: Sql.Connection
@@ -361,9 +352,6 @@ data PlayerGameRow = PlayerGameRow
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow PlayerGameRow
-
-instance Common.ToJSON PlayerGameRow where
-  toJSON = Common.genericToJSON "PlayerGameRow"
 
 getGamesPlayers :: Sql.Connection -> [Int] -> IO [GamePlayerRow]
 getGamesPlayers connection gameIds =
@@ -442,8 +430,142 @@ data GamePlayerRow = GamePlayerRow
 
 instance Common.FromRow GamePlayerRow
 
-instance Common.ToJSON GamePlayerRow where
-  toJSON = Common.genericToJSON "GamePlayerRow"
+data PlayerOutput = PlayerOutput
+  { playerOutputName :: Common.Text
+  , playerOutputAliases :: [Common.Text]
+  , playerOutputLastPlayedAt :: Common.LocalTime
+  , playerOutputGames :: [GameOutput]
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON PlayerOutput where
+  toJSON = Common.genericToJSON "PlayerOutput"
+
+makePlayerOutput
+  :: [(Common.Text, Common.LocalTime)]
+  -> [PlayerGameRow]
+  -> [GamePlayerRow]
+  -> Maybe PlayerOutput
+makePlayerOutput namesAndTimes games players = do
+  (name, aliases, lastPlayedAt) <-
+    case namesAndTimes of
+      (n, t):nts -> pure (n, map fst nts, t)
+      _ -> Nothing
+  let playersByGame =
+        foldr
+          (\player -> Map.insertWith (++) (gamePlayerRowGameId player) [player])
+          Map.empty
+          players
+  let gamesWithPlayers =
+        map
+          (\game ->
+             ( game
+             , Map.findWithDefault [] (playerGameRowGameId game) playersByGame))
+          games
+  pure
+    PlayerOutput
+    { playerOutputName = name
+    , playerOutputAliases = aliases
+    , playerOutputLastPlayedAt = lastPlayedAt
+    , playerOutputGames = map makeGameOutput gamesWithPlayers
+    }
+
+data GameOutput = GameOutput
+  { gameOutputId :: Int
+  , gameOutputPlaylistId :: Int
+  , gameOutputPlaylistName :: Maybe Common.Text
+  , gameOutputArenaId :: Int
+  , gameOutputArenaName :: Maybe Common.Text
+  , gameOutputPlayedAt :: Time.LocalTime
+  , gameOutputDuration :: Int
+  , gameOutputBlueGoals :: Int
+  , gameOutputOrangeGoals :: Int
+  , gameOutputPlayers :: [GamePlayerOutput]
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON GameOutput where
+  toJSON = Common.genericToJSON "GameOutput"
+
+makeGameOutput :: (PlayerGameRow, [GamePlayerRow]) -> GameOutput
+makeGameOutput (game, players) =
+  GameOutput
+  { gameOutputId = playerGameRowGameId game
+  , gameOutputPlaylistId = playerGameRowPlaylistId game
+  , gameOutputPlaylistName = playerGameRowPlaylistName game
+  , gameOutputArenaId = playerGameRowArenaId game
+  , gameOutputArenaName = playerGameRowArenaName game
+  , gameOutputPlayedAt = playerGameRowPlayedAt game
+  , gameOutputDuration = playerGameRowDuration game
+  , gameOutputBlueGoals = playerGameRowBlueGoals game
+  , gameOutputOrangeGoals = playerGameRowOrangeGoals game
+  , gameOutputPlayers = map makeGamePlayerOutput players
+  }
+
+data GamePlayerOutput = GamePlayerOutput
+  { gamePlayerOutputPlayerId :: Int
+  , gamePlayerOutputName :: Common.Text
+  , gamePlayerOutputXp :: Int
+  , gamePlayerOutputIsOnBlueTeam :: Bool
+  , gamePlayerOutputIsPresentAtEnd :: Bool
+  , gamePlayerOutputScore :: Int
+  , gamePlayerOutputGoals :: Int
+  , gamePlayerOutputAssists :: Int
+  , gamePlayerOutputSaves :: Int
+  , gamePlayerOutputShots :: Int
+  , gamePlayerOutputBodyId :: Int
+  , gamePlayerOutputDecalId :: Int
+  , gamePlayerOutputWheelId :: Int
+  , gamePlayerOutputRocketTrailId :: Int
+  , gamePlayerOutputAntennaId :: Int
+  , gamePlayerOutputTopperId :: Int
+  , gamePlayerOutputWheelPaintId :: Maybe Int
+  , gamePlayerOutputTopperPaintId :: Maybe Int
+  , gamePlayerOutputPrimaryColorId :: Int
+  , gamePlayerOutputAccentColorId :: Int
+  , gamePlayerOutputPrimaryFinishId :: Int
+  , gamePlayerOutputAccentFinishId :: Int
+  , gamePlayerOutputCameraFov :: Float
+  , gamePlayerOutputCameraHeight :: Float
+  , gamePlayerOutputCameraAngle :: Float
+  , gamePlayerOutputCameraDistance :: Float
+  , gamePlayerOutputCameraStiffness :: Float
+  , gamePlayerOutputCameraSwivelSpeed :: Float
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON GamePlayerOutput where
+  toJSON = Common.genericToJSON "GamePlayerOutput"
+
+makeGamePlayerOutput :: GamePlayerRow -> GamePlayerOutput
+makeGamePlayerOutput player =
+  GamePlayerOutput
+  { gamePlayerOutputPlayerId = gamePlayerRowPlayerId player
+  , gamePlayerOutputName = gamePlayerRowName player
+  , gamePlayerOutputXp = gamePlayerRowXp player
+  , gamePlayerOutputIsOnBlueTeam = gamePlayerRowIsBlue player
+  , gamePlayerOutputIsPresentAtEnd = gamePlayerRowIsPresentAtEnd player
+  , gamePlayerOutputScore = gamePlayerRowScore player
+  , gamePlayerOutputGoals = gamePlayerRowGoals player
+  , gamePlayerOutputAssists = gamePlayerRowAssists player
+  , gamePlayerOutputSaves = gamePlayerRowSaves player
+  , gamePlayerOutputShots = gamePlayerRowShots player
+  , gamePlayerOutputBodyId = gamePlayerRowBodyId player
+  , gamePlayerOutputDecalId = gamePlayerRowDecalId player
+  , gamePlayerOutputWheelId = gamePlayerRowWheelId player
+  , gamePlayerOutputRocketTrailId = gamePlayerRowRocketTrailId player
+  , gamePlayerOutputAntennaId = gamePlayerRowAntennaId player
+  , gamePlayerOutputTopperId = gamePlayerRowTopperId player
+  , gamePlayerOutputWheelPaintId = gamePlayerRowWheelPaintId player
+  , gamePlayerOutputTopperPaintId = gamePlayerRowTopperPaintId player
+  , gamePlayerOutputPrimaryColorId = gamePlayerRowPrimaryColorId player
+  , gamePlayerOutputAccentColorId = gamePlayerRowAccentColorId player
+  , gamePlayerOutputPrimaryFinishId = gamePlayerRowPrimaryFinishId player
+  , gamePlayerOutputAccentFinishId = gamePlayerRowAccentFinishId player
+  , gamePlayerOutputCameraFov = gamePlayerRowFov player
+  , gamePlayerOutputCameraHeight = gamePlayerRowHeight player
+  , gamePlayerOutputCameraAngle = gamePlayerRowAngle player
+  , gamePlayerOutputCameraDistance = gamePlayerRowDistance player
+  , gamePlayerOutputCameraStiffness = gamePlayerRowStiffness player
+  , gamePlayerOutputCameraSwivelSpeed = gamePlayerRowSwivelSpeed player
+  }
 
 getNamesAndTimes :: Sql.Connection
                  -> Int
