@@ -302,12 +302,15 @@ getNewStatsPlayersHandler rawPlayerId _config connection request = do
               _ -> error "impossible"
       (day, playlists, templates) <- getFilters request
       games <- getGames connection day playlists templates playerId
+      let gameIds = map playerGameRowGameId games
+      gamesPlayers <- getGamesPlayers connection gameIds
       let body =
             Aeson.object
               [ (Text.pack "name", Aeson.toJSON name)
               , (Text.pack "aliases", Aeson.toJSON aliases)
               , (Text.pack "lastPlayedAt", Aeson.toJSON lastPlayedAt)
               , (Text.pack "games", Aeson.toJSON games) -- TODO
+              , (Text.pack "gamesPlayers", Aeson.toJSON gamesPlayers) -- TODO
               ]
       pure (Common.jsonResponse Http.status200 [] body)
 
@@ -361,6 +364,86 @@ instance Common.FromRow PlayerGameRow
 
 instance Common.ToJSON PlayerGameRow where
   toJSON = Common.genericToJSON "PlayerGameRow"
+
+getGamesPlayers :: Sql.Connection -> [Int] -> IO [GamePlayerRow]
+getGamesPlayers connection gameIds =
+  Database.query
+    connection
+    [Common.sql|
+      SELECT
+        id,
+        game_id,
+        player_id,
+        name,
+        xp,
+        is_blue,
+        is_present_at_end,
+        score,
+        goals,
+        assists,
+        saves,
+        shots,
+        body_id,
+        decal_id,
+        wheel_id,
+        rocket_trail_id,
+        antenna_id,
+        topper_id,
+        wheel_paint_id,
+        topper_paint_id,
+        primary_color_id,
+        accent_color_id,
+        primary_finish_id,
+        accent_finish_id,
+        fov,
+        height,
+        angle,
+        distance,
+        stiffness,
+        swivel_speed
+      FROM games_players
+      WHERE game_id IN ?
+      ORDER BY game_id ASC, player_id ASC
+    |]
+    [Common.In gameIds]
+
+data GamePlayerRow = GamePlayerRow
+  { gamePlayerRowId :: Int
+  , gamePlayerRowGameId :: Int
+  , gamePlayerRowPlayerId :: Int
+  , gamePlayerRowName :: Common.Text
+  , gamePlayerRowXp :: Int
+  , gamePlayerRowIsBlue :: Bool
+  , gamePlayerRowIsPresentAtEnd :: Bool
+  , gamePlayerRowScore :: Int
+  , gamePlayerRowGoals :: Int
+  , gamePlayerRowAssists :: Int
+  , gamePlayerRowSaves :: Int
+  , gamePlayerRowShots :: Int
+  , gamePlayerRowBodyId :: Int
+  , gamePlayerRowDecalId :: Int
+  , gamePlayerRowWheelId :: Int
+  , gamePlayerRowRocketTrailId :: Int
+  , gamePlayerRowAntennaId :: Int
+  , gamePlayerRowTopperId :: Int
+  , gamePlayerRowWheelPaintId :: Maybe Int
+  , gamePlayerRowTopperPaintId :: Maybe Int
+  , gamePlayerRowPrimaryColorId :: Int
+  , gamePlayerRowAccentColorId :: Int
+  , gamePlayerRowPrimaryFinishId :: Int
+  , gamePlayerRowAccentFinishId :: Int
+  , gamePlayerRowFov :: Float
+  , gamePlayerRowHeight :: Float
+  , gamePlayerRowAngle :: Float
+  , gamePlayerRowDistance :: Float
+  , gamePlayerRowStiffness :: Float
+  , gamePlayerRowSwivelSpeed :: Float
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow GamePlayerRow
+
+instance Common.ToJSON GamePlayerRow where
+  toJSON = Common.genericToJSON "GamePlayerRow"
 
 getNamesAndTimes :: Sql.Connection
                  -> Int
