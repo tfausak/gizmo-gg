@@ -321,12 +321,20 @@ getGames connection day playlists templates player =
         playlists.name,
         arenas.id,
         arenas.name,
+        arena_skins.id,
+        arena_skins.name,
+        arena_models.id,
+        arena_models.name,
+        arena_templates.id,
+        arena_templates.name,
         games.played_at,
         games.duration,
         games.blue_goals,
         games.orange_goals
       FROM games
       INNER JOIN arenas ON arenas.id = games.arena_id
+      INNER JOIN arena_skins ON arena_skins.id = arenas.skin_id
+      INNER JOIN arena_models ON arena_models.id = arenas.model_id
       INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
       INNER JOIN games_players ON games_players.game_id = games.id
       INNER JOIN playlists ON playlists.id = games.playlist_id
@@ -346,6 +354,12 @@ data PlayerGameRow = PlayerGameRow
   , playerGameRowPlaylistName :: Maybe Common.Text
   , playerGameRowArenaId :: Int
   , playerGameRowArenaName :: Maybe Common.Text
+  , playerGameRowArenaSkinId :: Int
+  , playerGameRowArenaSkinName :: Maybe Common.Text
+  , playerGameRowArenaModelId :: Int
+  , playerGameRowArenaModelName :: Maybe Common.Text
+  , playerGameRowArenaTemplateId :: Int
+  , playerGameRowArenaTemplateName :: Maybe Common.Text
   , playerGameRowPlayedAt :: Time.LocalTime
   , playerGameRowDuration :: Int
   , playerGameRowBlueGoals :: Int
@@ -476,6 +490,12 @@ data GameOutput = GameOutput
   , gameOutputPlaylistName :: Maybe Common.Text
   , gameOutputArenaId :: Int
   , gameOutputArenaName :: Maybe Common.Text
+  , gameOutputArenaSkinId :: Int
+  , gameOutputArenaSkinName :: Maybe Common.Text
+  , gameOutputArenaModelId :: Int
+  , gameOutputArenaModelName :: Maybe Common.Text
+  , gameOutputArenaTemplateId :: Int
+  , gameOutputArenaTemplateName :: Maybe Common.Text
   , gameOutputPlayedAt :: Time.LocalTime
   , gameOutputDuration :: Int
   , gameOutputBlueGoals :: Int
@@ -494,6 +514,12 @@ makeGameOutput (game, players) =
   , gameOutputPlaylistName = playerGameRowPlaylistName game
   , gameOutputArenaId = playerGameRowArenaId game
   , gameOutputArenaName = playerGameRowArenaName game
+  , gameOutputArenaSkinId = playerGameRowArenaSkinId game
+  , gameOutputArenaSkinName = playerGameRowArenaSkinName game
+  , gameOutputArenaModelId = playerGameRowArenaModelId game
+  , gameOutputArenaModelName = playerGameRowArenaModelName game
+  , gameOutputArenaTemplateId = playerGameRowArenaTemplateId game
+  , gameOutputArenaTemplateName = playerGameRowArenaTemplateName game
   , gameOutputPlayedAt = playerGameRowPlayedAt game
   , gameOutputDuration = playerGameRowDuration game
   , gameOutputBlueGoals = playerGameRowBlueGoals game
