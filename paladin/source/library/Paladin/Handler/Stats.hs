@@ -374,37 +374,49 @@ getGamesPlayers connection gameIds =
     connection
     [Common.sql|
       SELECT
-        id,
-        game_id,
-        player_id,
-        name,
-        xp,
-        is_blue,
-        is_present_at_end,
-        score,
-        goals,
-        assists,
-        saves,
-        shots,
-        body_id,
-        decal_id,
-        wheel_id,
-        rocket_trail_id,
-        antenna_id,
-        topper_id,
-        wheel_paint_id,
-        topper_paint_id,
-        primary_color_id,
-        accent_color_id,
-        primary_finish_id,
-        accent_finish_id,
-        fov,
-        height,
-        angle,
-        distance,
-        stiffness,
-        swivel_speed
+        games_players.id,
+        games_players.game_id,
+        games_players.player_id,
+        games_players.name,
+        games_players.xp,
+        games_players.is_blue,
+        games_players.is_present_at_end,
+        games_players.score,
+        games_players.goals,
+        games_players.assists,
+        games_players.saves,
+        games_players.shots,
+        games_players.body_id,
+        bodies.name,
+        games_players.decal_id,
+        decals.name,
+        games_players.wheel_id,
+        wheels.name,
+        games_players.rocket_trail_id,
+        rocket_trails.name,
+        games_players.antenna_id,
+        antennas.name,
+        games_players.topper_id,
+        toppers.name,
+        games_players.wheel_paint_id,
+        games_players.topper_paint_id,
+        games_players.primary_color_id,
+        games_players.accent_color_id,
+        games_players.primary_finish_id,
+        games_players.accent_finish_id,
+        games_players.fov,
+        games_players.height,
+        games_players.angle,
+        games_players.distance,
+        games_players.stiffness,
+        games_players.swivel_speed
       FROM games_players
+      LEFT OUTER JOIN bodies ON bodies.id = games_players.body_id
+      LEFT OUTER JOIN decals ON decals.id = games_players.decal_id
+      LEFT OUTER JOIN wheels ON wheels.id = games_players.wheel_id
+      LEFT OUTER JOIN rocket_trails ON rocket_trails.id = games_players.rocket_trail_id
+      LEFT OUTER JOIN antennas ON antennas.id = games_players.antenna_id
+      LEFT OUTER JOIN toppers ON toppers.id = games_players.topper_id
       WHERE game_id IN ?
       ORDER BY game_id ASC, player_id ASC
     |]
@@ -424,11 +436,17 @@ data GamePlayerRow = GamePlayerRow
   , gamePlayerRowSaves :: Int
   , gamePlayerRowShots :: Int
   , gamePlayerRowBodyId :: Int
+  , gamePlayerRowBodyName :: Maybe Common.Text
   , gamePlayerRowDecalId :: Int
+  , gamePlayerRowDecalName :: Maybe Common.Text
   , gamePlayerRowWheelId :: Int
+  , gamePlayerRowWheelName :: Maybe Common.Text
   , gamePlayerRowRocketTrailId :: Int
+  , gamePlayerRowRocketTrailName :: Maybe Common.Text
   , gamePlayerRowAntennaId :: Int
+  , gamePlayerRowAntennaName :: Maybe Common.Text
   , gamePlayerRowTopperId :: Int
+  , gamePlayerRowTopperName :: Maybe Common.Text
   , gamePlayerRowWheelPaintId :: Maybe Int
   , gamePlayerRowTopperPaintId :: Maybe Int
   , gamePlayerRowPrimaryColorId :: Int
@@ -577,11 +595,17 @@ makeGamePlayerOutput player =
 
 data LoadoutOutput = LoadoutOutput
   { loadoutOutputBodyId :: Int
+  , loadoutOutputBodyName :: Maybe Common.Text
   , loadoutOutputDecalId :: Int
+  , loadoutOutputDecalName :: Maybe Common.Text
   , loadoutOutputWheelId :: Int
+  , loadoutOutputWheelName :: Maybe Common.Text
   , loadoutOutputRocketTrailId :: Int
+  , loadoutOutputRocketTrailName :: Maybe Common.Text
   , loadoutOutputAntennaId :: Int
+  , loadoutOutputAntennaName :: Maybe Common.Text
   , loadoutOutputTopperId :: Int
+  , loadoutOutputTopperName :: Maybe Common.Text
   , loadoutOutputWheelPaintId :: Maybe Int
   , loadoutOutputTopperPaintId :: Maybe Int
   , loadoutOutputPrimaryColorId :: Int
@@ -597,11 +621,17 @@ makeLoadoutOutput :: GamePlayerRow -> LoadoutOutput
 makeLoadoutOutput player =
   LoadoutOutput
   { loadoutOutputBodyId = gamePlayerRowBodyId player
+  , loadoutOutputBodyName = gamePlayerRowBodyName player
   , loadoutOutputDecalId = gamePlayerRowDecalId player
+  , loadoutOutputDecalName = gamePlayerRowDecalName player
   , loadoutOutputWheelId = gamePlayerRowWheelId player
+  , loadoutOutputWheelName = gamePlayerRowWheelName player
   , loadoutOutputRocketTrailId = gamePlayerRowRocketTrailId player
+  , loadoutOutputRocketTrailName = gamePlayerRowRocketTrailName player
   , loadoutOutputAntennaId = gamePlayerRowAntennaId player
+  , loadoutOutputAntennaName = gamePlayerRowAntennaName player
   , loadoutOutputTopperId = gamePlayerRowTopperId player
+  , loadoutOutputTopperName = gamePlayerRowTopperName player
   , loadoutOutputWheelPaintId = gamePlayerRowWheelPaintId player
   , loadoutOutputTopperPaintId = gamePlayerRowTopperPaintId player
   , loadoutOutputPrimaryColorId = gamePlayerRowPrimaryColorId player
