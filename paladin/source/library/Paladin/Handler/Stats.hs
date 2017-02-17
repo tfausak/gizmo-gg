@@ -333,7 +333,7 @@ getGames connection day playlists templates player =
         games.orange_goals
       FROM games
       INNER JOIN arenas ON arenas.id = games.arena_id
-      INNER JOIN arena_skins ON arena_skins.id = arenas.skin_id
+      LEFT OUTER JOIN arena_skins ON arena_skins.id = arenas.skin_id
       INNER JOIN arena_models ON arena_models.id = arenas.model_id
       INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
       INNER JOIN games_players ON games_players.game_id = games.id
@@ -354,7 +354,7 @@ data PlayerGameRow = PlayerGameRow
   , playerGameRowPlaylistName :: Maybe Common.Text
   , playerGameRowArenaId :: Int
   , playerGameRowArenaName :: Maybe Common.Text
-  , playerGameRowArenaSkinId :: Int
+  , playerGameRowArenaSkinId :: Maybe Int
   , playerGameRowArenaSkinName :: Maybe Common.Text
   , playerGameRowArenaModelId :: Int
   , playerGameRowArenaModelName :: Maybe Common.Text
@@ -516,7 +516,7 @@ makeGameOutput (game, players) =
 data ArenaOutput = ArenaOutput
   { arenaOutputId :: Int
   , arenaOutputName :: Maybe Common.Text
-  , arenaOutputSkinId :: Int
+  , arenaOutputSkinId :: Maybe Int
   , arenaOutputSkinName :: Maybe Common.Text
   , arenaOutputModelId :: Int
   , arenaOutputModelName :: Maybe Common.Text
