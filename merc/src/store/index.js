@@ -66,13 +66,14 @@ const store = new Vuex.Store({
 
     FETCH: function ({ commit, state }, { endpoint }) {
       if (endpoint in state.cache) {
-        return Promise.resolve(state.cache[endpoint])
+        return state.cache[endpoint]
       }
-      return getResource(endpoint)
+      let promise = getResource(endpoint)
         .then(function (data) {
-          commit('SAVE_CACHE', { k: endpoint, v: data })
           return data
         })
+      commit('SAVE_CACHE', { k: endpoint, v: promise })
+      return promise
     }
   },
   mutations: {
