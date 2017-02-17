@@ -377,6 +377,10 @@ getGamesPlayers connection gameIds =
         games_players.id,
         games_players.game_id,
         games_players.player_id,
+        players.platform_id,
+        platforms.name,
+        players.remote_id,
+        players.local_id,
         games_players.name,
         games_players.xp,
         games_players.is_blue,
@@ -411,6 +415,8 @@ getGamesPlayers connection gameIds =
         games_players.stiffness,
         games_players.swivel_speed
       FROM games_players
+      INNER JOIN players ON players.id = games_players.player_id
+      INNER JOIN platforms ON platforms.id = players.platform_id
       LEFT OUTER JOIN bodies ON bodies.id = games_players.body_id
       LEFT OUTER JOIN decals ON decals.id = games_players.decal_id
       LEFT OUTER JOIN wheels ON wheels.id = games_players.wheel_id
@@ -426,6 +432,10 @@ data GamePlayerRow = GamePlayerRow
   { gamePlayerRowId :: Int
   , gamePlayerRowGameId :: Int
   , gamePlayerRowPlayerId :: Int
+  , gamePlayerRowPlatformId :: Int
+  , gamePlayerRowPlatformName :: Common.Text
+  , gamePlayerRowRemoteId :: Common.Text
+  , gamePlayerRowLocalId :: Int
   , gamePlayerRowName :: Common.Text
   , gamePlayerRowXp :: Int
   , gamePlayerRowIsBlue :: Bool
@@ -560,6 +570,10 @@ makeArenaOutput game =
 
 data GamePlayerOutput = GamePlayerOutput
   { gamePlayerOutputPlayerId :: Int
+  , gamePlayerOutputPlatformId :: Int
+  , gamePlayerOutputPlatformName :: Common.Text
+  , gamePlayerOutputRemoteId :: Common.Text
+  , gamePlayerOutputLocalId :: Int
   , gamePlayerOutputName :: Common.Text
   , gamePlayerOutputXp :: Int
   , gamePlayerOutputIsOnBlueTeam :: Bool
@@ -580,6 +594,10 @@ makeGamePlayerOutput :: GamePlayerRow -> GamePlayerOutput
 makeGamePlayerOutput player =
   GamePlayerOutput
   { gamePlayerOutputPlayerId = gamePlayerRowPlayerId player
+  , gamePlayerOutputPlatformId = gamePlayerRowPlatformId player
+  , gamePlayerOutputPlatformName = gamePlayerRowPlatformName player
+  , gamePlayerOutputRemoteId = gamePlayerRowRemoteId player
+  , gamePlayerOutputLocalId = gamePlayerRowLocalId player
   , gamePlayerOutputName = gamePlayerRowName player
   , gamePlayerOutputXp = gamePlayerRowXp player
   , gamePlayerOutputIsOnBlueTeam = gamePlayerRowIsBlue player
