@@ -25,6 +25,8 @@ route request =
     ("GET", ["stats", "bodies"]) -> Handler.getStatsBodiesHandler
     ("GET", ["stats", "players", playerId]) ->
       Handler.getStatsPlayersHandler playerId
+    ("GET", ["stats", "players", playerId, "arenas"]) ->
+      Handler.getStatsPlayersArenasHandler playerId
     ("GET", ["stats", "players", playerId, "new"]) ->
       Handler.getNewStatsPlayersHandler playerId
     ("GET", ["stats", "summary"]) -> Handler.getStatsSummaryHandler

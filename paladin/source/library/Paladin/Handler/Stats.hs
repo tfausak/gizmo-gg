@@ -17,6 +17,47 @@ import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
+getStatsPlayersArenasHandler :: Common.Text -> Common.Handler
+getStatsPlayersArenasHandler rawPlayerId _config connection request = do
+  let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
+  maybePlayerId <-
+    Database.query
+      connection
+      [Common.sql| SELECT id FROM players WHERE id = ? |]
+      [playerId :: Int]
+  case maybePlayerId :: [[Int]] of
+    [[_]] -> do
+      (day, playlists, templates) <- getFilters request
+      arenas <-
+        Database.query
+          connection
+          [Common.sql|
+            SELECT
+              arenas.id,
+              arenas.name,
+              sum(games_players.score),
+              sum(games_players.goals),
+              sum(games_players.assists),
+              sum(games_players.saves),
+              sum(games_players.shots),
+              count(*)
+            FROM games_players
+            INNER JOIN games ON games.id = games_players.game_id
+            INNER JOIN arenas ON arenas.id = games.arena_id
+            INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
+            WHERE
+              games_players.player_id = ? AND
+              games.played_at >= ? AND
+              games.playlist_id IN ? AND
+              arena_templates.name IN ?
+            GROUP BY arenas.id
+            ORDER BY arenas.id
+          |]
+          (playerId, day, Common.In playlists, Common.In templates)
+      let json = Aeson.toJSON (arenas :: [ArenaStats])
+      pure (Common.jsonResponse Http.status200 [] json)
+    _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
   (day, playlists, templates) <- getFilters request
