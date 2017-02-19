@@ -44,3 +44,9 @@ notFoundHandler _config _connection _request =
 
 makeUrl :: Config.Config -> String -> String
 makeUrl config url = Config.configUrl config ++ url
+
+getParam :: String -> Query -> Maybe String
+getParam name query =
+  case lookup (ByteString.pack name) query of
+    Just (Just value) -> Just (ByteString.unpack value)
+    _ -> Nothing

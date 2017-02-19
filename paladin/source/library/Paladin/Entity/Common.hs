@@ -6,7 +6,7 @@ module Paladin.Entity.Common
   ) where
 
 import Crypto.Hash as Export (SHA1)
-import Data.Aeson as Export (ToJSON(toEncoding))
+import Data.Aeson as Export (ToJSON(toEncoding, toJSON))
 import Data.Proxy as Export (Proxy(Proxy))
 import Data.Text as Export (Text)
 import Data.Time as Export (LocalTime, UTCTime)

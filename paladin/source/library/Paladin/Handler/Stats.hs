@@ -4,7 +4,6 @@
 module Paladin.Handler.Stats where
 
 import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Ratio as Ratio
@@ -855,7 +854,7 @@ getDay query = do
   now <- Time.getCurrentTime
   let today = Time.utctDay now
   let day =
-        case getParam "time" query of
+        case Common.getParam "time" query of
           Just "month" -> Time.addDays (-28) today
           Just "week" -> Time.addDays (-7) today
           Just "day" -> Time.addDays (-1) today
@@ -867,7 +866,7 @@ startOfSeason3 = Time.fromGregorian 2016 6 20
 
 getPlaylists :: Common.Query -> [Int]
 getPlaylists query =
-  case getParam "playlist" query of
+  case Common.getParam "playlist" query of
     Just "ranked1v1" -> [competitiveSoloDuel]
     Just "ranked2v2" -> [competitiveDoubles]
     Just "ranked3v3solo" -> [competitiveSoloStandard]
@@ -896,7 +895,7 @@ competitiveStandard = 13
 
 getTemplates :: Common.Query -> [String]
 getTemplates query =
-  case getParam "map" query of
+  case Common.getParam "map" query of
     Just "arc" -> [starbaseArcTemplate]
     Just "standard" -> [standardTemplate]
     Just "tokyo" -> [neoTokyoTemplate]
@@ -918,9 +917,3 @@ starbaseArcTemplate = "Starbase ARC"
 
 wastelandTemplate :: String
 wastelandTemplate = "Wasteland"
-
-getParam :: String -> Common.Query -> Maybe String
-getParam name query =
-  case lookup (ByteString.pack name) query of
-    Just (Just value) -> Just (ByteString.unpack value)
-    _ -> Nothing

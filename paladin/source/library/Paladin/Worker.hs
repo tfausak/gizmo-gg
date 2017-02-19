@@ -294,16 +294,6 @@ makeGameHash gameType playlist server mode size fair arena blue orange players =
           ]
   in Hash.hash (ByteString.pack key)
 
-data PlatformName
-  = PlayStation
-  | Splitscreen
-  | Steam
-  | Xbox
-  deriving (Eq, Show)
-
-instance Sql.ToField PlatformName where
-  toField name = name & show & ByteString.pack & Sql.Escape
-
 insertPlayer :: Sql.Connection -> Analysis.PlayerAnalysis -> IO ()
 insertPlayer connection player = do
   let (platform, remoteId, localId) = getPlayerId player
@@ -481,19 +471,19 @@ insertOptionalAuxiliary connection player (table, getValue) =
     Just value ->
       insertRequiredAuxiliary connection player (table, const value)
 
-getPlayerId :: Analysis.PlayerAnalysis -> (Text.Text, Text.Text, Int)
+getPlayerId :: Analysis.PlayerAnalysis -> (Entity.PlatformName, Text.Text, Int)
 getPlayerId player =
   ( player & Analysis.playerAnalysisRemoteId & toPlatform
   , player & Analysis.playerAnalysisRemoteId & toRemoteId
   , Analysis.playerAnalysisLocalId player)
 
-toPlatform :: Rattletrap.RemoteId -> Text.Text
+toPlatform :: Rattletrap.RemoteId -> Entity.PlatformName
 toPlatform remoteId =
   case remoteId of
-    Rattletrap.PlayStationId _ _ -> Text.pack "PlayStation"
-    Rattletrap.SplitscreenId _ -> Text.pack "Splitscreen"
-    Rattletrap.SteamId _ -> Text.pack "Steam"
-    Rattletrap.XboxId _ -> Text.pack "Xbox"
+    Rattletrap.PlayStationId _ _ -> Entity.PlayStation
+    Rattletrap.SplitscreenId _ -> Entity.Splitscreen
+    Rattletrap.SteamId _ -> Entity.Steam
+    Rattletrap.XboxId _ -> Entity.Xbox
 
 toRemoteId :: Rattletrap.RemoteId -> Text.Text
 toRemoteId remoteId =
