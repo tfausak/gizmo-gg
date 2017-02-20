@@ -20,7 +20,7 @@
   background-color: lighten($solarized_blue, 30%);
 }
 .panel-loss {
-  background-color: lighten($solarized_red, 40%);
+  background-color: #E2B6B3;
 }
 </style>
 
@@ -45,6 +45,7 @@
         <div class="column is-2 has-text-centered">
           <div class="title is-5" style="margin-bottom: 0; font-weight: normal;">{{ player.score }} Points</div>
           <div>{{ player.goals }}/{{ player.assists }}/{{ player.saves }}/{{ player.shots }} ({{ player.accuracy }}%)</div>
+          <div>{{ player.scorePct }}%</div>
         </div>
         <div class="column is-2 has-text-centered">
           <div class="title is-4">{{ teamGoals }} - {{ oppGoals }}</div>
@@ -54,7 +55,7 @@
         </div>
         <div class="column is-2">
           <div v-for="gplayer in game.players">
-            <span>{{ gplayer.name }}</span>
+            <span class="text-small" :class="{ 'text-primary': gplayer.isOnBlueTeam, 'text-danger': !gplayer.isOnBlueTeam }">{{ gplayer.score }} {{ gplayer.name }}</span>
           </div>
         </div>
       </div>
@@ -72,11 +73,19 @@ export default {
   data: function () {
     let vm = this
     let player = null
+    let totalScore = 0
     _.each(vm.game.players, function (gplayer) {
+      totalScore += gplayer.score
       if (gplayer.playerId === _.parseInt(vm.playerId)) {
         player = gplayer
       }
     })
+    if (player.score) {
+      player.scorePct = 100
+    }
+    if (totalScore) {
+      player.scorePct = _.round(player.score / totalScore * 100)
+    }
     player.accuracy = getPct(player.goals, player.shots)
     let teamGoals = 0
     let oppGoals = 0

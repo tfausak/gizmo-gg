@@ -10,6 +10,18 @@
   }
 }
 
+.noBodyIcon {
+  font-size: 45px;
+  height: 96px;
+  width: 96px;
+  text-align: center;
+  line-height: 90px;
+  color: $grey-light;
+}
+.playerActions {
+  margin-top: 10px;
+  margin-bottom: -38px;
+}
 </style>
 
 <template>
@@ -60,25 +72,26 @@
               <div class="level level-chained">
                 <div class="level-item" id="playerBody">
                   <figure class="image is-96x96 is-circle-dark">
-                    <img :src="'/static/img/bodies/octane.png'">
-                    bodyId: {{ bodyId }}
+                    <img :src="'/static/img/bodies/' + bodyName + '.png'" v-if="bodyName">
+                    <i class="fa fa-question noBodyIcon" v-else></i>
                   </figure>
+                </div>
+                <div class="level-item">
+                  <span class="icon is-medium">
+                    <i class="fa fa-steam"></i>
+                  </span>
                 </div>
                 <div class="level-item">
                   <div class="is-block">
                     <h1 class="title no-margin-top">
-                      <span class="icon is-medium">
-                        <i class="fa fa-steam"></i>
-                      </span>
-                      <span>
-                        {{ GET_PLAYER.name }}
-                      </span>
+                      {{ GET_PLAYER.name }}
                     </h1>
                     <h2 class="subtitle no-margin-top">
                       last played {{ lastUpdated }}
                     </h2>
-                    <div class="is-muted" v-if="GET_PLAYER.aliases">
-                      Aliases: <span v-for="alias in GET_PLAYER.aliases">{{ alias }}</span>
+                    <div class="playerActions">
+                      <a class="button">Update</a>
+                      <a class="button">upload</a>
                     </div>
                   </div>
                 </div>
@@ -106,6 +119,8 @@
 </template>
 
 <script>
+import slugger from '../store/slugger.js'
+
 var moment = require('moment')
 var _ = require('lodash')
 
@@ -113,7 +128,8 @@ export default {
   beforeMount: function () {
     var vm = this
     vm.$store.dispatch('GET_PLAYER', {
-      id: vm.id
+      id: vm.id,
+      playlist: 'all'
     }).then(function (data) {
       vm.GET_PLAYER = data
     }).catch(function () {
@@ -121,18 +137,18 @@ export default {
     })
   },
   computed: {
-    bodyId: function () {
+    bodyName: function () {
       let vm = this
       let game = _.head(vm.GET_PLAYER.games)
-      let bodyId = null
+      let bodyName = null
       if (game) {
         _.each(game.players, function (player) {
           if (player.playerId === _.parseInt(vm.id)) {
-            bodyId = player.loadout.bodyId
+            bodyName = player.loadout.bodyName
           }
         })
       }
-      return bodyId
+      return slugger.slugBody(bodyName)
     },
     lastUpdated: function () {
       return moment(this.GET_PLAYER.lastPlayedAt).fromNow()

@@ -21,41 +21,99 @@
   width: 100%;
   align-items: center;
 }
+
+#gamesRecord {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}
+#gamesDiff {
+  color: $grey;
+  text-align: center;
+  font-size: 12px;
+}
+#gamesTable {
+  font-size: 12px;
+  border: 1px solid $white-ish;
+  background-color: $white-bis;
+  margin: -10px 0;
+  th,
+  td {
+    padding: 0px 5px;
+    text-align: right;
+  }
+}
+.mapBlock {
+  padding: 10px;
+}
+.mapBlockStats {
+  padding-left: 10px;
+  font-size: 12px;
+}
+.mapBlockName {
+  font-weight: bold;
+}
+.mapBlockRecord {
+  font-size: 11px;
+}
 </style>
 
 <template>
   <div>
-    <div v-if="loading">
-      <loading-component :loading="true"></loading-component>
-    </div>
-    <div v-else>
-      <div class="panel">
-        <div class="panel-block panel-tabs">
-          <div class="tabs">
-            <ul>
-              <li v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }"><a>{{ value }}</a></li>
-            </ul>
-          </div>
+    <div class="panel">
+      <div class="panel-block panel-tabs">
+        <div class="tabs">
+          <ul>
+            <li v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }"><a>{{ value }}</a></li>
+          </ul>
         </div>
-        <div class="panel-block">
-          <div class="columns">
-            <div class="column is-2">
-              <chart-wins-component :wins="stats.wins" :losses="stats.losses"></chart-wins-component>
-            </div>
-            <div class="column is-2">
-              {{ stats.wins }}W {{ stats.losses }}L
-            </div>
-            <div class="column is-3 has-text-centered">
-              <div class="title is-5">{{ stats.ptsPerMin }} Pts/min</div>
-              <div class="subtitle is-6">{{ stats.goals }}/{{ stats.assists }}/{{ stats.saves }}/{{ stats.shots }} ({{ stats.accuracy }}%)</div>
-            </div>
-            <div class="column is-3 has-text-centered">
-              <div class="title is-5">{{ stats.goalsFor }} - {{ stats.goalsAgainst }}</div>
+      </div>
+      <div class="panel-block is-block" v-if="!loading">
+        <div class="level level-chained">
+          <div>
+            <chart-wins-component :wins="stats.wins" :losses="stats.losses"></chart-wins-component>
+            <div id="gamesRecord">{{ stats.wins }}W {{ stats.losses }}L</div>
+            <div id="gamesDiff">{{ stats.goalsFor }} - {{ stats.goalsAgainst }}</div>
+          </div>
+          <div>
+            <table id="gamesTable">
+              <thead>
+                <tr><th>Total</th><th>Per min</th><th>Stat</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>{{ stats.points }}</td><td>{{ stats.perMin.points }}</td><td>Points</td></tr>
+                <tr><td>{{ stats.goals }}</td><td>{{ stats.perMin.goals }}</td><td>Goals</td></tr>
+                <tr><td>{{ stats.assists }}</td><td>{{ stats.perMin.assists }}</td><td>Assists</td></tr>
+                <tr><td>{{ stats.saves }}</td><td>{{ stats.perMin.saves }}</td><td>Saves</td></tr>
+                <tr><td>{{ stats.shots }}</td><td>{{ stats.perMin.shots }}</td><td>Shots</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mapBlock" v-for="mapStats in stats.perMap">
+            <div class="level level-chained">
+              <figure class="image is-48x48">
+                <img :src="'/static/img/maps/' + mapStats.nameSlug + '.jpg'" class="is-circle-dark">
+              </figure>
+              <div class="mapBlockStats">
+                <div class="mapBlockName">{{ mapStats.name }}</div>
+                <div class="mapBlockRecord">
+                  {{ mapStats.winPct }}%
+                  <br>
+                  {{ mapStats.wins }}W {{ mapStats.losses }}L
+                  <br>
+                  {{ mapStats.goalsFor }} - {{ mapStats.goalsAgainst }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
+    <div v-if="loading">
+      <loading-component :loading="true"></loading-component>
+    </div>
+    <div v-else>
       <game-component v-for="game in GET_PLAYER.games" :game="game" :playerId="playerId"></game-component>
     </div>
   </div>
@@ -66,6 +124,7 @@ import ChartWinsComponent from './ChartWins'
 import GameComponent from './Game'
 import LoadingComponent from '../../components/Loading'
 import options from '../../../store/options.js'
+import slugger from '../../../store/slugger.js'
 import { getPct } from '../../../store/scrubber.js'
 
 var _ = require('lodash')
@@ -99,7 +158,14 @@ export default {
         saves: 0,
         shots: 0,
         accuracy: 0,
-        ptsPerMin: 0,
+        perMin: {
+          goals: 0,
+          points: 0,
+          assists: 0,
+          saves: 0,
+          shots: 0
+        },
+        perMap: {},
         goalsFor: 0,
         goalsAgainst: 0
       }
@@ -118,14 +184,39 @@ export default {
             let didWin = player.isOnBlueTeam ? game.blueGoals > game.orangeGoals : game.blueGoals < game.orangeGoals
             stats.wins += didWin ? 1 : 0
             stats.losses += didWin ? 0 : 1
-            stats.goalsFor += player.isOnBlueTeam ? game.blueGoals : game.orangeGoals
-            stats.goalsAgainst += player.isOnBlueTeam ? game.orangeGoals : game.blueGoals
+            let goalsFor = player.isOnBlueTeam ? game.blueGoals : game.orangeGoals
+            let goalsAgainst = player.isOnBlueTeam ? game.orangeGoals : game.blueGoals
+            stats.goalsFor += goalsFor
+            stats.goalsAgainst += goalsAgainst
+            if (!_.has(stats.perMap, game.arena.templateName)) {
+              stats.perMap[game.arena.templateName] = {
+                games: 0,
+                wins: 0,
+                losses: 0,
+                goalsFor: 0,
+                goalsAgainst: 0,
+                name: game.arena.templateName,
+                nameSlug: slugger.slugMap(game.arena.templateName)
+              }
+            }
+            let tmp = stats.perMap[game.arena.templateName]
+            tmp.games++
+            tmp.wins += didWin ? 1 : 0
+            tmp.losses += didWin ? 0 : 1
+            tmp.winPct = getPct(tmp.wins, tmp.wins + tmp.losses)
+            tmp.goalsFor += goalsFor
+            tmp.goalsAgainst += goalsAgainst
           }
         })
       })
+      stats.perMap = _.slice(_.reverse(_.sortBy(stats.perMap, 'games')), 0, 3)
       stats.accuracy = getPct(stats.goals, stats.shots)
       if (stats.duration) {
-        stats.ptsPerMin = _.round(stats.points / (stats.duration / 60))
+        stats.perMin.points = _.round(stats.points / (stats.duration / 60), 2)
+        stats.perMin.goals = _.round(stats.goals / (stats.duration / 60), 2)
+        stats.perMin.assists = _.round(stats.assists / (stats.duration / 60), 2)
+        stats.perMin.saves = _.round(stats.saves / (stats.duration / 60), 2)
+        stats.perMin.shots = _.round(stats.shots / (stats.duration / 60), 2)
       }
       return stats
     }
