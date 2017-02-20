@@ -34,9 +34,6 @@
 }
 #gamesTable {
   font-size: 12px;
-  border: 1px solid $white-ish;
-  background-color: $white-bis;
-  margin: -10px 0;
   th,
   td {
     padding: 0px 5px;
@@ -69,7 +66,7 @@
         </div>
       </div>
       <div class="panel-block is-block" v-if="!loading">
-        <div class="level level-chained">
+        <div class="level">
           <div>
             <chart-wins-component :wins="stats.wins" :losses="stats.losses"></chart-wins-component>
             <div id="gamesRecord">{{ stats.wins }}W {{ stats.losses }}L</div>
