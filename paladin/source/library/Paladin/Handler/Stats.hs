@@ -16,6 +16,57 @@ import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
+getStatsPlayersBodiesHandler :: Common.Text -> Common.Handler
+getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
+  let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
+  maybePlayerId <-
+    Database.query
+      connection
+      [Common.sql| SELECT id FROM players WHERE id = ? |]
+      [playerId :: Int]
+  case maybePlayerId :: [[Int]] of
+    [[_]] -> do
+      (day, playlists, templates) <- getFilters request
+      bodies <-
+        Database.query
+          connection
+          [Common.sql|
+            SELECT
+              bodies.id,
+              bodies.name,
+              sum(games_players.score),
+              sum(games_players.goals),
+              sum(games_players.assists),
+              sum(games_players.saves),
+              sum(games_players.shots),
+              count(*),
+              count(CASE WHEN games_players.is_blue
+                THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
+                ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
+                END),
+              count( CASE WHEN games_players.is_blue
+                THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
+                ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
+                END)
+            FROM bodies
+            INNER JOIN games_players ON games_players.body_id = bodies.id
+            INNER JOIN games ON games.id = games_players.game_id
+            INNER JOIN arenas ON arenas.id = games.arena_id
+            INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
+            WHERE
+              games_players.player_id = ? AND
+              games_players.is_present_at_end = true AND
+              games.played_at >= ? AND
+              games.playlist_id IN ? AND
+              arena_templates.name IN ?
+            GROUP BY bodies.id
+            ORDER BY bodies.id ASC
+          |]
+          (playerId, day, Common.In playlists, Common.In templates)
+      let json = Aeson.toJSON (bodies :: [BodyStats])
+      pure (Common.jsonResponse Http.status200 [] json)
+    _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+
 getStatsPlayersArenasHandler :: Common.Text -> Common.Handler
 getStatsPlayersArenasHandler rawPlayerId _config connection request = do
   let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
@@ -46,11 +97,12 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
             INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
             WHERE
               games_players.player_id = ? AND
+              games_players.is_present_at_end = true AND
               games.played_at >= ? AND
               games.playlist_id IN ? AND
               arena_templates.name IN ?
             GROUP BY arenas.id
-            ORDER BY arenas.id
+            ORDER BY arenas.id ASC
           |]
           (playerId, day, Common.In playlists, Common.In templates)
       let json = Aeson.toJSON (arenas :: [ArenaStats])
