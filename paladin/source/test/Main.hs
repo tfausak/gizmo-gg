@@ -30,6 +30,7 @@ session = do
   assertStatus 200 "/players"
   assertStatus 200 "/playlists"
   assertStatus 200 "/replays"
+  assertStatus 200 "/search"
   assertStatus 200 "/servers"
   assertStatus 200 "/stats/arenas"
   assertStatus 200 "/stats/bodies"

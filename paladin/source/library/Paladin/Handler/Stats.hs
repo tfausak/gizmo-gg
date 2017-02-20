@@ -4,7 +4,6 @@
 module Paladin.Handler.Stats where
 
 import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Ratio as Ratio
@@ -16,6 +15,47 @@ import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
+
+getStatsPlayersArenasHandler :: Common.Text -> Common.Handler
+getStatsPlayersArenasHandler rawPlayerId _config connection request = do
+  let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
+  maybePlayerId <-
+    Database.query
+      connection
+      [Common.sql| SELECT id FROM players WHERE id = ? |]
+      [playerId :: Int]
+  case maybePlayerId :: [[Int]] of
+    [[_]] -> do
+      (day, playlists, templates) <- getFilters request
+      arenas <-
+        Database.query
+          connection
+          [Common.sql|
+            SELECT
+              arenas.id,
+              arenas.name,
+              sum(games_players.score),
+              sum(games_players.goals),
+              sum(games_players.assists),
+              sum(games_players.saves),
+              sum(games_players.shots),
+              count(*)
+            FROM games_players
+            INNER JOIN games ON games.id = games_players.game_id
+            INNER JOIN arenas ON arenas.id = games.arena_id
+            INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
+            WHERE
+              games_players.player_id = ? AND
+              games.played_at >= ? AND
+              games.playlist_id IN ? AND
+              arena_templates.name IN ?
+            GROUP BY arenas.id
+            ORDER BY arenas.id
+          |]
+          (playerId, day, Common.In playlists, Common.In templates)
+      let json = Aeson.toJSON (arenas :: [ArenaStats])
+      pure (Common.jsonResponse Http.status200 [] json)
+    _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
@@ -814,7 +854,7 @@ getDay query = do
   now <- Time.getCurrentTime
   let today = Time.utctDay now
   let day =
-        case getParam "time" query of
+        case Common.getParam "time" query of
           Just "month" -> Time.addDays (-28) today
           Just "week" -> Time.addDays (-7) today
           Just "day" -> Time.addDays (-1) today
@@ -826,7 +866,7 @@ startOfSeason3 = Time.fromGregorian 2016 6 20
 
 getPlaylists :: Common.Query -> [Int]
 getPlaylists query =
-  case getParam "playlist" query of
+  case Common.getParam "playlist" query of
     Just "ranked1v1" -> [competitiveSoloDuel]
     Just "ranked2v2" -> [competitiveDoubles]
     Just "ranked3v3solo" -> [competitiveSoloStandard]
@@ -855,7 +895,7 @@ competitiveStandard = 13
 
 getTemplates :: Common.Query -> [String]
 getTemplates query =
-  case getParam "map" query of
+  case Common.getParam "map" query of
     Just "arc" -> [starbaseArcTemplate]
     Just "standard" -> [standardTemplate]
     Just "tokyo" -> [neoTokyoTemplate]
@@ -877,9 +917,3 @@ starbaseArcTemplate = "Starbase ARC"
 
 wastelandTemplate :: String
 wastelandTemplate = "Wasteland"
-
-getParam :: String -> Common.Query -> Maybe String
-getParam name query =
-  case lookup (ByteString.pack name) query of
-    Just (Just value) -> Just (ByteString.unpack value)
-    _ -> Nothing
