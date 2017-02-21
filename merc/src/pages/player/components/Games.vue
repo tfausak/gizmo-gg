@@ -34,23 +34,22 @@
 }
 #gamesTable {
   font-size: 12px;
+  width: auto;
+  margin: 0 auto;
   th,
   td {
     padding: 0px 5px;
     text-align: right;
   }
 }
-.mapBlock {
-  padding: 10px;
-}
-.mapBlockStats {
+.groupStats {
   padding-left: 10px;
-  font-size: 12px;
+  font-size: 11px;
 }
-.mapBlockName {
+.groupName {
   font-weight: bold;
 }
-.mapBlockRecord {
+.groupRecord {
   font-size: 11px;
 }
 </style>
@@ -66,39 +65,62 @@
         </div>
       </div>
       <div class="panel-block is-block" v-if="!loading">
-        <div class="level">
-          <div>
+        <div class="columns">
+          <div class="column is-2">
             <chart-wins-component :wins="stats.wins" :losses="stats.losses"></chart-wins-component>
             <div id="gamesRecord">{{ stats.wins }}W {{ stats.losses }}L</div>
             <div id="gamesDiff">{{ stats.goalsFor }} - {{ stats.goalsAgainst }}</div>
           </div>
-          <div>
+          <div class="column is-3">
             <table id="gamesTable">
               <thead>
-                <tr><th>Total</th><th>Per min</th><th>Stat</th></tr>
+                <tr><th>Total</th><th>Per game</th><th>Stat</th></tr>
               </thead>
               <tbody>
-                <tr><td>{{ stats.points }}</td><td>{{ stats.perMin.points }}</td><td>Points</td></tr>
-                <tr><td>{{ stats.goals }}</td><td>{{ stats.perMin.goals }}</td><td>Goals</td></tr>
-                <tr><td>{{ stats.assists }}</td><td>{{ stats.perMin.assists }}</td><td>Assists</td></tr>
-                <tr><td>{{ stats.saves }}</td><td>{{ stats.perMin.saves }}</td><td>Saves</td></tr>
-                <tr><td>{{ stats.shots }}</td><td>{{ stats.perMin.shots }}</td><td>Shots</td></tr>
+                <tr><td>{{ stats.points }}</td><td>{{ stats.perGame.points }}</td><td>Points</td></tr>
+                <tr><td>{{ stats.goals }}</td><td>{{ stats.perGame.goals }}</td><td>Goals</td></tr>
+                <tr><td>{{ stats.assists }}</td><td>{{ stats.perGame.assists }}</td><td>Assists</td></tr>
+                <tr><td>{{ stats.saves }}</td><td>{{ stats.perGame.saves }}</td><td>Saves</td></tr>
+                <tr><td>{{ stats.shots }}</td><td>{{ stats.perGame.shots }}</td><td>Shots</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="mapBlock" v-for="mapStats in stats.perMap">
-            <div class="level level-chained">
-              <figure class="image is-48x48">
-                <img :src="'/static/img/maps/' + mapStats.nameSlug + '.jpg'" class="is-circle-dark">
-              </figure>
-              <div class="mapBlockStats">
-                <div class="mapBlockName">{{ mapStats.name }}</div>
-                <div class="mapBlockRecord">
-                  {{ mapStats.winPct }}%
-                  <br>
-                  {{ mapStats.wins }}W {{ mapStats.losses }}L
-                  <br>
-                  {{ mapStats.goalsFor }} - {{ mapStats.goalsAgainst }}
+          <div class="column is-7">
+            <div>
+              <div class="columns">
+                <div class="column is-4" v-for="mapStats in stats.perMap">
+                  <div class="level level-chained">
+                    <figure class="image is-32x32">
+                      <img :src="'/static/img/maps/' + mapStats.nameSlug + '.jpg'" class="is-circle-dark">
+                    </figure>
+                    <div class="groupStats">
+                      <div class="groupName">{{ mapStats.name }}</div>
+                      <div class="groupRecord">
+                        {{ mapStats.winPct }}%
+                        <br>
+                        {{ mapStats.wins }}W {{ mapStats.losses }}L
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="columns">
+                <div class="column is-4" v-for="bodyStats in stats.perBody">
+                  <div class="level level-chained">
+                    <figure class="image is-32x32">
+                      <img :src="'/static/img/bodies/' + bodyStats.nameSlug + '.png'" class="is-circle-dark">
+                    </figure>
+                    <div class="groupStats">
+                      <div class="groupName">{{ bodyStats.name }}</div>
+                      <div class="groupRecord">
+                        {{ bodyStats.winPct }}%
+                        <br>
+                        {{ bodyStats.wins }}W {{ bodyStats.losses }}L
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -155,7 +177,7 @@ export default {
         saves: 0,
         shots: 0,
         accuracy: 0,
-        perMin: {
+        perGame: {
           goals: 0,
           points: 0,
           assists: 0,
@@ -163,6 +185,7 @@ export default {
           shots: 0
         },
         perMap: {},
+        perBody: {},
         goalsFor: 0,
         goalsAgainst: 0
       }
@@ -185,18 +208,42 @@ export default {
             let goalsAgainst = player.isOnBlueTeam ? game.orangeGoals : game.blueGoals
             stats.goalsFor += goalsFor
             stats.goalsAgainst += goalsAgainst
-            if (!_.has(stats.perMap, game.arena.templateName)) {
-              stats.perMap[game.arena.templateName] = {
+
+            // map
+            let mapName = game.arena.templateName
+            if (!_.has(stats.perMap, mapName)) {
+              stats.perMap[mapName] = {
                 games: 0,
                 wins: 0,
                 losses: 0,
                 goalsFor: 0,
                 goalsAgainst: 0,
-                name: game.arena.templateName,
-                nameSlug: slugger.slugMap(game.arena.templateName)
+                name: mapName,
+                nameSlug: slugger.slugMap(mapName)
               }
             }
-            let tmp = stats.perMap[game.arena.templateName]
+            let tmp = stats.perMap[mapName]
+            tmp.games++
+            tmp.wins += didWin ? 1 : 0
+            tmp.losses += didWin ? 0 : 1
+            tmp.winPct = getPct(tmp.wins, tmp.wins + tmp.losses)
+            tmp.goalsFor += goalsFor
+            tmp.goalsAgainst += goalsAgainst
+
+            // body
+            let bodyName = player.loadout.bodyName
+            if (!_.has(stats.perBody, bodyName)) {
+              stats.perBody[bodyName] = {
+                games: 0,
+                wins: 0,
+                losses: 0,
+                goalsFor: 0,
+                goalsAgainst: 0,
+                name: bodyName,
+                nameSlug: slugger.slugBody(bodyName)
+              }
+            }
+            tmp = stats.perBody[bodyName]
             tmp.games++
             tmp.wins += didWin ? 1 : 0
             tmp.losses += didWin ? 0 : 1
@@ -206,14 +253,16 @@ export default {
           }
         })
       })
+
       stats.perMap = _.slice(_.reverse(_.sortBy(stats.perMap, 'games')), 0, 3)
+      stats.perBody = _.slice(_.reverse(_.sortBy(stats.perBody, 'games')), 0, 3)
       stats.accuracy = getPct(stats.goals, stats.shots)
       if (stats.duration) {
-        stats.perMin.points = _.round(stats.points / (stats.duration / 60), 2)
-        stats.perMin.goals = _.round(stats.goals / (stats.duration / 60), 2)
-        stats.perMin.assists = _.round(stats.assists / (stats.duration / 60), 2)
-        stats.perMin.saves = _.round(stats.saves / (stats.duration / 60), 2)
-        stats.perMin.shots = _.round(stats.shots / (stats.duration / 60), 2)
+        stats.perGame.points = _.round(stats.points / (stats.duration / 60) * 5, 2)
+        stats.perGame.goals = _.round(stats.goals / (stats.duration / 60) * 5, 2)
+        stats.perGame.assists = _.round(stats.assists / (stats.duration / 60) * 5, 2)
+        stats.perGame.saves = _.round(stats.saves / (stats.duration / 60) * 5, 2)
+        stats.perGame.shots = _.round(stats.shots / (stats.duration / 60) * 5, 2)
       }
       return stats
     }

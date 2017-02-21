@@ -38,7 +38,7 @@
         </div>
         <div class="column is-2">
           <figure class="image is-48x48 is-circle-dark">
-            <img :src="'/static/img/bodies/octane.png'">
+            <img :src="'/static/img/bodies/' + player.bodySlug + '.png'">
           </figure>
           {{ game.bodyName }}
         </div>
@@ -65,6 +65,7 @@
 
 <script>
 import { getPct } from '../../../store/scrubber.js'
+import slugger from '../../../store/slugger.js'
 
 var moment = require('moment')
 var _ = require('lodash')
@@ -80,6 +81,7 @@ export default {
         player = gplayer
       }
     })
+    player.bodySlug = slugger.slugBody(player.loadout.bodyName)
     if (player.score) {
       player.scorePct = 100
     }
