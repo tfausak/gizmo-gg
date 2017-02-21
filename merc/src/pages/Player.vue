@@ -37,7 +37,7 @@
                   <i class="fa fa-circle-o-notch fa-spin"></i>
                 </span>
               </div>
-              &nbsp;Searching..
+              Loading..
             </h1>
             <h2 class="subtitle">
               for player ID#{{ id }}
