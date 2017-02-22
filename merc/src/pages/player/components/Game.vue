@@ -21,13 +21,20 @@
   background-color: lighten($solarized_blue, 30%);
 }
 .panel-loss {
-  background-color: #E2B6B3;
+  background-color: lighten($solarized_red, 35%);
 }
 .teamTable {
   font-size: 12px;
   width: auto;
+  margin: 0 auto;
   th {
     width: 100px;
+  }
+  a {
+    color: rgba(0, 0, 0, 0.6);
+  }
+  a:hover {
+    color: rgba(0, 0, 0, 0.9);
   }
 }
 .summarySection {
@@ -49,11 +56,41 @@
   width: 140px;
   font-size: 12px;
 }
+.scoreSection {
+  width: 100px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+.expander,
+.gameDetails {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.gameDetails {
+  border: 0;
+}
+.expander {
+  height: 100px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: -0.5em -0.75em;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.7);
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+  }
+}
+.gameStuff {
+  border-color: rgba(0, 0, 0, 0.1)!important;
+}
 </style>
 
 <template>
   <div class="panel" :class="{ 'panel-win': isWin, 'panel-loss': !isWin }" v-if="player">
-    <div class="panel-block">
+    <div class="panel-block gameStuff">
       <div class="columns is-gapless is-mobile">
         <div class="column summarySection is-narrow">
           <strong>{{ playlistSlug }}</strong>
@@ -79,7 +116,9 @@
           <div class="title is-5" style="margin-bottom: 0; font-weight: normal;">{{ player.score }} Points</div>
           {{ player.goals }} / {{ player.assists }} / {{ player.saves }} / {{ player.shots }}
         </div>
-
+        <div class="column scoreSection is-narrow">
+          {{ teamGoals }} - {{ oppGoals }}
+        </div>
         <div class="column">
           <table class="teamTable">
             <thead>
@@ -100,7 +139,16 @@
             </tbody>
           </table>
         </div>
+        <div class="column expandSection is-narrow">
+          <div class="expander" @click="toggleDetails">
+            <i class="fa fa-angle-up" v-if="expanded"></i>
+            <i class="fa fa-angle-down" v-else></i>
+          </div>
+        </div>
       </div>
+    </div>
+    <div class="panel-block gameDetails" v-if="expanded">
+      <p class="heading">Game Details</p>
     </div>
   </div>
 </template>
@@ -160,7 +208,8 @@ export default {
       blueTeam: blueTeam,
       maxPlayers: _.max([orangeTeam.length, blueTeam.length]),
       templateSlug: slugger.slugMap(vm.game.arena.templateName),
-      playlistSlug: slugger.slugPlaylist(vm.game.playlistName)
+      playlistSlug: slugger.slugPlaylist(vm.game.playlistName),
+      expanded: false
     }
   },
   methods: {
@@ -170,6 +219,9 @@ export default {
         name: 'player.summary',
         params: { id: playerId }
       })
+    },
+    toggleDetails: function () {
+      this.expanded = !this.expanded
     }
   },
   props: [ 'game', 'playerId' ]

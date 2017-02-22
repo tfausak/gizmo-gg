@@ -42,6 +42,9 @@
     text-align: right;
   }
 }
+.gamesTableCol {
+  background-color: #f5f5f5;
+}
 .groupStats {
   padding-left: 10px;
   font-size: 11px;
@@ -71,7 +74,7 @@
             <div id="gamesRecord">{{ stats.wins }}W {{ stats.losses }}L</div>
             <div id="gamesDiff">{{ stats.goalsFor }} - {{ stats.goalsAgainst }}</div>
           </div>
-          <div class="column is-3">
+          <div class="column is-3 gamesTableCol">
             <table id="gamesTable">
               <thead>
                 <tr><th>Total</th><th>Per game</th><th>Stat</th></tr>
