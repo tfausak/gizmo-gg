@@ -126,15 +126,7 @@ var _ = require('lodash')
 
 export default {
   beforeMount: function () {
-    var vm = this
-    vm.$store.dispatch('GET_PLAYER', {
-      id: vm.id,
-      playlist: 'all'
-    }).then(function (data) {
-      vm.GET_PLAYER = data
-    }).catch(function () {
-      vm.missing = true
-    })
+    this.fetchData()
   },
   computed: {
     bodyName: function () {
@@ -163,6 +155,26 @@ export default {
       missing: false
     }
   },
-  props: [ 'id' ]
+  methods: {
+    fetchData: function () {
+      var vm = this
+      this.GET_PLAYER = null
+      this.missing = false
+      vm.$store.dispatch('GET_PLAYER', {
+        id: vm.id,
+        playlist: 'all'
+      }).then(function (data) {
+        vm.GET_PLAYER = data
+      }).catch(function () {
+        vm.missing = true
+      })
+    }
+  },
+  props: [ 'id' ],
+  watch: {
+    id: function () {
+      this.fetchData()
+    }
+  }
 }
 </script>
