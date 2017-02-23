@@ -42,6 +42,7 @@ instance Common.FromRow Platform
 
 instance Common.ToJSON Platform where
   toEncoding = Common.genericToEncoding "Platform"
+  toJSON = Common.genericToJSON "Platform"
 
 platformProxy :: Common.Proxy Platform
 platformProxy = Common.Proxy

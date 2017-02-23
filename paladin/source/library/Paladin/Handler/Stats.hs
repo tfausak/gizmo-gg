@@ -388,13 +388,15 @@ getNewStatsPlayersHandler rawPlayerId _config connection request = do
   case maybePlayerId of
     Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
     Just playerId -> do
+      platform <- getPlatform connection playerId
       namesAndTimes <- getNamesAndTimes connection playerId
       (day, playlists, templates) <- getFilters request
       games <- getGames connection day playlists templates playerId
       let gameIds = map playerGameRowGameId games
       gamesPlayers <- getGamesPlayers connection gameIds
       let body =
-            Aeson.toJSON (makePlayerOutput namesAndTimes games gamesPlayers)
+            Aeson.toJSON
+              (makePlayerOutput platform namesAndTimes games gamesPlayers)
       pure (Common.jsonResponse Http.status200 [] body)
 
 getGames :: Sql.Connection
@@ -569,6 +571,7 @@ data PlayerOutput = PlayerOutput
   { playerOutputName :: Common.Text
   , playerOutputAliases :: [Common.Text]
   , playerOutputLastPlayedAt :: Common.LocalTime
+  , playerOutputPlatform :: Common.Platform
   , playerOutputGames :: [GameOutput]
   } deriving (Eq, Common.Generic, Show)
 
@@ -576,11 +579,13 @@ instance Common.ToJSON PlayerOutput where
   toJSON = Common.genericToJSON "PlayerOutput"
 
 makePlayerOutput
-  :: [(Common.Text, Common.LocalTime)]
+  :: Maybe Common.Platform
+  -> [(Common.Text, Common.LocalTime)]
   -> [PlayerGameRow]
   -> [GamePlayerRow]
   -> Maybe PlayerOutput
-makePlayerOutput namesAndTimes games players = do
+makePlayerOutput maybePlatform namesAndTimes games players = do
+  platform <- maybePlatform
   (name, aliases, lastPlayedAt) <-
     case namesAndTimes of
       (n, t):nts -> pure (n, map fst nts, t)
@@ -601,8 +606,25 @@ makePlayerOutput namesAndTimes games players = do
     { playerOutputName = name
     , playerOutputAliases = aliases
     , playerOutputLastPlayedAt = lastPlayedAt
+    , playerOutputPlatform = platform
     , playerOutputGames = map makeGameOutput gamesWithPlayers
     }
+
+getPlatform :: Sql.Connection -> Int -> IO (Maybe Common.Platform)
+getPlatform connection playerId = do
+  result <-
+    Database.query
+      connection
+      [Common.sql|
+        SELECT platforms.id, platforms.name
+        FROM platforms
+        INNER JOIN players ON players.platform_id = platforms.id
+        WHERE players.id = ?
+      |]
+      [playerId]
+  case result of
+    [platform] -> pure (Just platform)
+    _ -> pure Nothing
 
 data GameOutput = GameOutput
   { gameOutputId :: Int
