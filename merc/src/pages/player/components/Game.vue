@@ -27,20 +27,21 @@
   font-size: 12px;
   width: auto;
   margin: 0 auto;
-  th {
-    width: 100px;
-  }
-  a {
+  .playerName {
     color: rgba(0, 0, 0, 0.6);
-  }
-  a:hover {
-    color: rgba(0, 0, 0, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100px;
+    display: block;
   }
 }
 .summarySection {
   font-size: 12px;
   text-align: center;
   width: 70px;
+  .playedAt {
+    white-space: nowrap;
+  }
 }
 .bodySection,
 .mapSection {
@@ -68,6 +69,7 @@
 }
 .gameDetails {
   border: 0;
+  display: block;
 }
 .expander {
   height: 100px;
@@ -94,7 +96,7 @@
       <div class="columns is-gapless is-mobile">
         <div class="column summarySection is-narrow">
           <strong>{{ playlistSlug }}</strong>
-          <br>{{ playedAt }}
+          <br><span class="playedAt">{{ playedAt }}</span>
           <hr>
           <strong v-if="isWin">Victory</strong>
           <strong v-else>Defeat</strong><br>
@@ -123,17 +125,17 @@
           <table class="teamTable">
             <thead>
               <tr>
-                <th>Orange</th>
                 <th>Blue</th>
+                <th>Orange</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="i in maxPlayers">
-                <td v-if="i <= orangeTeam.length">
-                  <a @click="goPlayer(orangeTeam[i - 1].playerId)">{{ orangeTeam[i - 1].name }}</a>
-                </td>
                 <td v-if="i <= blueTeam.length">
-                  <router-link :to="'/player/' + blueTeam[i - 1].playerId">{{ blueTeam[i - 1].name }}</router-link>
+                  <span class="playerName">{{ blueTeam[i - 1].name }}</span>
+                </td>
+                <td v-if="i <= orangeTeam.length">
+                  <span class="playerName">{{ orangeTeam[i - 1].name }}</span>
                 </td>
               </tr>
             </tbody>
@@ -148,7 +150,8 @@
       </div>
     </div>
     <div class="panel-block gameDetails" v-if="expanded">
-      <p class="heading">Game Details</p>
+      <scoreboard-component :players="blueTeam" :team="'Blue'" :goals="game.blueGoals"></scoreboard-component>
+      <scoreboard-component :players="orangeTeam" :team="'Orange'" :goals="game.orangeGoals"></scoreboard-component>
     </div>
   </div>
 </template>
@@ -156,11 +159,15 @@
 <script>
 import { getPct } from '../../../store/scrubber.js'
 import slugger from '../../../store/slugger.js'
+import ScoreboardComponent from './Scoreboard'
 
 var moment = require('moment')
 var _ = require('lodash')
 
 export default {
+  components: {
+    ScoreboardComponent
+  },
   data: function () {
     let vm = this
     let player = null
@@ -168,6 +175,7 @@ export default {
     let blueTeam = []
     let orangeTeam = []
     _.each(vm.game.players, function (gplayer) {
+      gplayer.bodySlug = slugger.slugBody(gplayer.loadout.bodyName)
       totalScore += gplayer.score
       if (gplayer.playerId === _.parseInt(vm.playerId)) {
         player = gplayer
@@ -178,7 +186,15 @@ export default {
         orangeTeam.push(gplayer)
       }
     })
-    player.bodySlug = slugger.slugBody(player.loadout.bodyName)
+
+    // sort teams by score desc
+    orangeTeam = _.reverse(_.sortBy(orangeTeam, function (tplayer) {
+      return tplayer.score
+    }))
+    blueTeam = _.reverse(_.sortBy(blueTeam, function (tplayer) {
+      return tplayer.score
+    }))
+
     if (player.score) {
       player.scorePct = 100
     }
@@ -213,13 +229,6 @@ export default {
     }
   },
   methods: {
-    goPlayer: function (playerId) {
-      console.log('goPlayer', playerId)
-      this.$router.push({
-        name: 'player.summary',
-        params: { id: playerId }
-      })
-    },
     toggleDetails: function () {
       this.expanded = !this.expanded
     }
