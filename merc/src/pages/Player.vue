@@ -91,7 +91,6 @@
                     </h2>
                     <div class="playerActions">
                       <a class="button">Update</a>
-                      <a class="button">upload</a>
                     </div>
                   </div>
                 </div>
