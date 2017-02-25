@@ -19,7 +19,9 @@ export default {
     if (name.match(/starbase/i)) {
       return 'arc'
     }
-    return _.toLower(name)
+    name = _.toLower(name)
+    name = _.replace(name, /\s+/g, '-')
+    return name
   },
   slugPlaylist: function (name) {
     if (!name) {
