@@ -1,11 +1,14 @@
 <style lang="scss" scoped>
 .scoreboard {
   table {
-    margin: 0 auto;
+    margin: 0 auto 10px;
     background-color: transparent;
     font-size: 12px;
     width: auto;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    .progress {
+      width: 100px;
+    }
     th {
       background-color: rgba(255, 255, 255, 0.2);
       font-weight: normal;
@@ -14,6 +17,9 @@
       overflow: hidden;
       color: rgba(0, 0, 0, 0.7);
       vertical-align: bottom;
+    }
+    .perfTh {
+      text-align: left;
     }
     .teamTh {
       width: 300px;
@@ -34,10 +40,10 @@
       text-align: left;
     }
     a {
-      color: inherit;
+      color: #666;
       font-weight: normal;
       &:hover {
-        color: #fff;
+        color: #000;
       }
     }
     td {
@@ -72,6 +78,8 @@
           <th>Saves</th>
           <th>Shots</th>
           <th>Points</th>
+          <th>Accuracy</th>
+          <th class="perfTh">Performance</th>
         </tr>
       </thead>
       <tbody>
@@ -91,6 +99,17 @@
           <td>{{ gplayer.saves }}</td>
           <td>{{ gplayer.shots }}</td>
           <td>{{ gplayer.score }}</td>
+          <td>{{ gplayer.accuracy }}%</td>
+          <td>
+            <div class="level level-chained">
+              <div class="level-item">
+                <progress class="progress is-small" :class="{ 'is-primary': gplayer.perf >= regularPerfPct, 'is-success': gplayer.perf >= goodPerfPct, 'is-danger': gplayer.perf >= amazePerfPct }" :value="gplayer.perf" :max="maxPerf"></progress>
+              </div>
+              <div class="level-item">
+                {{ gplayer.perf }}%
+              </div>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -98,7 +117,45 @@
 </template>
 
 <script>
+import { getPct } from '../../../store/scrubber.js'
+
+var _ = require('lodash')
+
 export default {
-  props: [ 'players', 'goals', 'team' ]
+  data: function () {
+    let vm = this
+    let accuracy = 0
+    _.each(vm.players, function (player) {
+      player.accuracy = getPct(player.goals, player.shots)
+      player.perf = getPct(player.score, vm.totalScore)
+    })
+    let regularPerfPct = 100 / (vm.teamSize * 2)
+    let goodPerfPct = 200 / (vm.teamSize * 2)
+    let amazePerfPct = 300 / (vm.teamSize * 2)
+    if (vm.teamSize === 1) {
+      regularPerfPct = 50
+      goodPerfPct = 62.5
+      amazePerfPct = 75
+    } else if (vm.teamSize === 2) {
+      regularPerfPct = 25
+      goodPerfPct = 33.3
+      amazePerfPct = 50
+    } else if (vm.teamSize === 3) {
+      regularPerfPct = 16.6
+      goodPerfPct = 25
+      amazePerfPct = 33.3
+    } else if (vm.teamSize === 4) {
+      regularPerfPct = 12.5
+      goodPerfPct = 16.6
+      amazePerfPct = 25
+    }
+    return {
+      accuracy: accuracy,
+      regularPerfPct: regularPerfPct,
+      goodPerfPct: goodPerfPct,
+      amazePerfPct: amazePerfPct
+    }
+  },
+  props: [ 'players', 'goals', 'team', 'maxPerf', 'totalScore', 'teamSize' ]
 }
 </script>

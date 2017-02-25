@@ -18,17 +18,33 @@
   margin-bottom: 10px!important;
 }
 .panel-win {
-  background-color: lighten($solarized_blue, 30%);
+  background-color: lighten($solarized_blue, 40%);
+  .offcolor,
+  a {
+    color: #555;
+  }
+  a:hover {
+    color: darken(saturate($solarized_blue, 10%), 20%);
+  }
 }
 .panel-loss {
-  background-color: lighten($solarized_red, 35%);
+  background-color: lighten($solarized_red, 40%);
+  .offcolor,
+  a {
+    color: #555;
+  }
+  a:hover {
+    color: darken(saturate($solarized_red, 10%), 20%);
+  }
+}
+.gameResult {
+  font-weight: bold;
 }
 .teamTable {
   font-size: 12px;
   width: auto;
   margin: 0 auto;
-  .playerName {
-    color: rgba(0, 0, 0, 0.6);
+  .playerName a {
     white-space: nowrap;
     overflow: hidden;
     width: 100px;
@@ -38,7 +54,7 @@
 .summarySection {
   font-size: 12px;
   text-align: center;
-  width: 70px;
+  width: 80px;
   .playedAt {
     white-space: nowrap;
   }
@@ -58,14 +74,14 @@
   font-size: 12px;
 }
 .scoreSection {
-  width: 100px;
+  width: 90px;
   text-align: center;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 23px;
+  font-weight: thin;
 }
 .expander,
 .gameDetails {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 .gameDetails {
   border: 0;
@@ -98,18 +114,20 @@
           <strong>{{ playlistSlug }}</strong>
           <br><span class="playedAt">{{ playedAt }}</span>
           <hr>
-          <strong v-if="isWin">Victory</strong>
-          <strong v-else>Defeat</strong><br>
+          <div class="gameResult offcolor">
+            <span v-if="isWin">Victory</span>
+            <span v-else>Defeat</span>
+          </div>
           {{ fDuration }}
         </div>
         <div class="column bodySection is-narrow">
-          <figure class="image is-32x32 is-circle-dark">
+          <figure class="image is-48x48 is-circle-dark">
             <img :src="'/static/img/bodies/' + player.bodySlug + '.png'">
           </figure>
           {{ player.loadout.bodyName }}
         </div>
         <div class="column mapSection is-narrow">
-          <figure class="image is-32x32">
+          <figure class="image is-48x48">
             <img :src="'/static/img/maps/' + templateSlug + '.jpg'"  class="is-circle-dark">
           </figure>
           {{ game.arena.templateName }}
@@ -132,10 +150,18 @@
             <tbody>
               <tr v-for="i in maxPlayers">
                 <td v-if="i <= blueTeam.length">
-                  <span class="playerName">{{ blueTeam[i - 1].name }}</span>
+                  <span class="playerName">
+                    <router-link :to="'/player/' + blueTeam[i - 1].playerId">
+                      {{ blueTeam[i - 1].name }}
+                    </router-link>
+                  </span>
                 </td>
                 <td v-if="i <= orangeTeam.length">
-                  <span class="playerName">{{ orangeTeam[i - 1].name }}</span>
+                  <span class="playerName">
+                    <router-link :to="'/player/' + orangeTeam[i - 1].playerId">
+                      {{ orangeTeam[i - 1].name }}
+                    </router-link>
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -150,14 +176,14 @@
       </div>
     </div>
     <div class="panel-block gameDetails" v-if="expanded">
-      <scoreboard-component :players="blueTeam" :team="'Blue'" :goals="game.blueGoals"></scoreboard-component>
-      <scoreboard-component :players="orangeTeam" :team="'Orange'" :goals="game.orangeGoals"></scoreboard-component>
+      <scoreboard-component :players="blueTeam" :team="'Blue'" :goals="game.blueGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize"></scoreboard-component>
+      <scoreboard-component :players="orangeTeam" :team="'Orange'" :goals="game.orangeGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize"></scoreboard-component>
     </div>
   </div>
 </template>
 
 <script>
-import { getPct } from '../../../store/scrubber.js'
+import { getPct, getTeamSize } from '../../../store/scrubber.js'
 import slugger from '../../../store/slugger.js'
 import ScoreboardComponent from './Scoreboard'
 
@@ -174,9 +200,14 @@ export default {
     let totalScore = 0
     let blueTeam = []
     let orangeTeam = []
+    let maxPerf = 0
+    let maxScore = 0
+    let teamSize = getTeamSize(vm.game.playlistName)
+
     _.each(vm.game.players, function (gplayer) {
       gplayer.bodySlug = slugger.slugBody(gplayer.loadout.bodyName)
       totalScore += gplayer.score
+      maxScore = _.max([maxScore, gplayer.score])
       if (gplayer.playerId === _.parseInt(vm.playerId)) {
         player = gplayer
       }
@@ -186,6 +217,9 @@ export default {
         orangeTeam.push(gplayer)
       }
     })
+    if (maxScore) {
+      maxPerf = _.round(maxScore / totalScore * 100, 2)
+    }
 
     // sort teams by score desc
     orangeTeam = _.reverse(_.sortBy(orangeTeam, function (tplayer) {
@@ -225,7 +259,10 @@ export default {
       maxPlayers: _.max([orangeTeam.length, blueTeam.length]),
       templateSlug: slugger.slugMap(vm.game.arena.templateName),
       playlistSlug: slugger.slugPlaylist(vm.game.playlistName),
-      expanded: false
+      expanded: false,
+      maxPerf: maxPerf,
+      totalScore: totalScore,
+      teamSize: teamSize
     }
   },
   methods: {
