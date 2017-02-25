@@ -43,3 +43,28 @@ export function getPct (top, bot, precision = 2) {
   }
   return 0
 }
+
+export function getTeamSize (playlistName) {
+  if (!playlistName) {
+    return 0
+  }
+  if (playlistName.match(/doubles/i)) {
+    return 2
+  }
+  if (playlistName.match(/solo duel/i)) {
+    return 1
+  }
+  if (playlistName.match(/standard/i)) {
+    return 3
+  }
+  if (playlistName.match(/solo standard/i)) {
+    return 3
+  }
+  if (playlistName.match(/rumble/i)) {
+    return 3
+  }
+  if (playlistName.match(/chaos/i)) {
+    return 4
+  }
+  return 0
+}
