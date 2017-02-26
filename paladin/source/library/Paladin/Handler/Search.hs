@@ -1,12 +1,16 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Paladin.Handler.Search
   ( getSearchHandler
   ) where
 
+import Control.Category ((>>>))
+
 import qualified Data.Aeson as Aeson
 import qualified Data.Maybe as Maybe
+import qualified Data.Text as Text
 import qualified Network.HTTP.Types as Http
 import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
@@ -16,6 +20,7 @@ getSearchHandler :: Common.Handler
 getSearchHandler _config connection request = do
   let query = Wai.queryString request
   let name = getName query
+  let pattern = makePattern name
   let platforms = getPlatforms query
   results <-
     Database.query
@@ -35,8 +40,9 @@ getSearchHandler _config connection request = do
         INNER JOIN players on players.id = games_players.id
         INNER JOIN platforms ON platforms.id = players.platform_id
         WHERE games_players.name ILIKE ? AND platforms.name IN ?
+        LIMIT 20
       |]
-      (name, Common.In platforms)
+      (pattern, Common.In platforms)
   let body = Aeson.toJSON (results :: [SearchResult])
   pure (Common.jsonResponse Http.status200 [] body)
 
@@ -58,6 +64,21 @@ instance Common.ToJSON SearchResult where
 
 getName :: Common.Query -> String
 getName query = Maybe.fromMaybe "" (Common.getParam "name" query)
+
+makePattern :: String -> Common.Text
+makePattern
+  = Text.pack
+  >>> likeEscape
+  >>> wrap "%" "%"
+
+likeEscape :: Common.Text -> Common.Text
+likeEscape
+  = Text.replace "\\" "\\\\"
+  >>> Text.replace "_" "\\_"
+  >>> Text.replace "%" "\\%"
+
+wrap :: Common.Text -> Common.Text -> Common.Text -> Common.Text
+wrap l r x = Text.concat [l, x, r]
 
 getPlatforms :: Common.Query -> [Common.PlatformName]
 getPlatforms query =
