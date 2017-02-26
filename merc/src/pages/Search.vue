@@ -65,9 +65,15 @@ export default {
   data: function () {
     return {
       loading: true,
-      platform: this.$route.query.platform,
-      search: this.$route.query.search,
       results: []
+    }
+  },
+  computed: {
+    search: function () {
+      return this.$route.query.search
+    },
+    platform: function () {
+      return this.$route.query.platform
     }
   },
   methods: {
