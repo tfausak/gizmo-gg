@@ -75,7 +75,7 @@ aside > ul {
           </aside>
         </div>
       </span>
-      <input v-model="search" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" :placeholder="selected_platform.placeholder">
+      <input v-model="mysearch" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" :placeholder="selected_platform.placeholder">
       <button type="submit" class="button is-medium">
         <span class="icon is-small">
           <i class="fa fa-search"></i>
@@ -98,7 +98,8 @@ export default {
       focused: true,
       show_dropdown: false,
       selected_platform: platforms[0],
-      platforms: platforms
+      platforms: platforms,
+      mysearch: this.search
     }
   },
   beforeMount: function () {
@@ -113,7 +114,7 @@ export default {
         name: 'search',
         query: {
           platform: this.selected_platform.slug,
-          search: this.search
+          search: this.mysearch
         }
       })
     },
