@@ -49,6 +49,11 @@ const store = new Vuex.Store({
       return dispatch('FETCH', { endpoint })
     },
 
+    GET_SEARCH: function ({ dispatch }, params) {
+      let endpoint = `search${getQueryString(params)}`
+      return dispatch('FETCH', { endpoint })
+    },
+
     GET_STATS_SUMMARY: function ({ dispatch }, params) {
       let endpoint = 'stats/summary' + getQueryString(params)
       return dispatch('FETCH', { endpoint })

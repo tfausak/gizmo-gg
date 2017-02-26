@@ -109,25 +109,31 @@ export default {
   },
   methods: {
     submit: function () {
-      // TODO: Look for a player. If found, redirect to "player". Otherwise redirect to "search"
-      let i = 1
-      if (i === 1) {
-        this.$router.push({
-          name: 'search',
-          query: {
-            platform: this.selected_platform.slug,
-            search: this.search
-          }
-        })
-      } else {
-        this.$router.push({
-          name: 'player',
-          params: {
-            platform: this.selected_platform.slug,
-            id: this.search
-          }
-        })
-      }
+      // TODO: Display loading screen or something.
+      this.$store.dispatch('GET_SEARCH', {
+        name: this.search,
+        platform: this.platform
+      }).then((players) => {
+        if (players.length === 1) {
+          this.$router.push({
+            name: 'player.summary',
+            params: {
+              id: players[0].id
+            }
+          })
+        } else {
+          // TODO: Populate players on search page.
+          this.$router.push({
+            name: 'search',
+            query: {
+              platform: this.selected_platform.slug,
+              search: this.search
+            }
+          })
+        }
+      }).catch(() => {
+        // TODO: Handle errors.
+      })
     },
 
     focusInput: function () {
