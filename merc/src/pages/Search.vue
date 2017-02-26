@@ -16,7 +16,8 @@
         </div>
       </div>
     </section>
-    <section class="section">
+    <loading-component :loading="loading"></loading-component>
+    <section v-if="!loading" class="section">
       <div class="container">
         <div v-if="!results.length">
           <div class="container has-text-centered">
@@ -34,12 +35,21 @@
             <thead>
               <tr>
                 <th>Platform</th>
-                <th>Avatar</th>
                 <th>Name</th>
-                <th>Aliases</th>
-                <th>Rank</th>
+                <th>Last seen</th>
               </tr>
             </thead>
+            <tbody>
+              <tr v-for="player in results">
+                <td>{{ player.platformName }}</td>
+                <td>
+                  <router-link :to="'/player/' + player.id">
+                    {{ player.name }}
+                  </router-link>
+                </td>
+                <td>{{ player.lastSeen }}</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -48,17 +58,50 @@
 </template>
 
 <script>
+import LoadingComponent from './components/Loading'
 import PlayerSearchComponent from './components/PlayerSearch'
 
 export default {
   data: function () {
     return {
+      loading: true,
       platform: this.$route.query.platform,
       search: this.$route.query.search,
       results: []
     }
   },
+  methods: {
+    performSearch: function () {
+      const vm = this
+      vm.loading = true
+      this.$store.dispatch('GET_SEARCH', {
+        name: this.search,
+        platform: this.platform
+      }).then(function (players) {
+        vm.loading = false
+        if (players.length === 1) {
+          vm.$router.push({
+            name: 'player.summary',
+            params: {
+              id: players[0].id
+            }
+          })
+        } else {
+          vm.results = players
+        }
+      }).catch(function (message) {
+        vm.loading = false
+        vm.results = []
+      })
+    }
+  },
+  beforeMount: function () { this.performSearch() },
+  watch: {
+    '$route.query.platform': function () { this.performSearch() },
+    '$route.query.search': function () { this.performSearch() }
+  },
   components: {
+    LoadingComponent,
     PlayerSearchComponent
   }
 }
