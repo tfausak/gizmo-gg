@@ -103,8 +103,8 @@ export default {
   },
   beforeMount: function () { this.performSearch() },
   watch: {
-    '$route.query.platform': function () { this.performSearch() },
-    '$route.query.search': function () { this.performSearch() }
+    search: function () { this.performSearch() },
+    platform: function () { this.performSearch() }
   },
   components: {
     LoadingComponent,
