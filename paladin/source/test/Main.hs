@@ -20,7 +20,6 @@ session = do
   assertStatus 404 "/not-found"
   assertStatus 200 "/arenas"
   assertStatus 200 "/search"
-  assertStatus 200 "/servers"
   assertStatus 200 "/stats/arenas"
   assertStatus 200 "/stats/bodies"
   assertStatus 200 "/stats/summary"

@@ -10,7 +10,6 @@ route request =
   case (Wai.requestMethod request, Wai.pathInfo request) of
     ("GET", ["arenas"]) -> Handler.getArenasHandler
     ("GET", ["search"]) -> Handler.getSearchHandler
-    ("GET", ["servers"]) -> Handler.getServersHandler
     ("GET", ["stats", "arenas"]) -> Handler.getStatsArenasHandler
     ("GET", ["stats", "bodies"]) -> Handler.getStatsBodiesHandler
     ("GET", ["stats", "players", playerId]) ->
