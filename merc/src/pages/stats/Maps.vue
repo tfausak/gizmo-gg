@@ -17,7 +17,7 @@
 
       <loading-component :loading="loading"></loading-component>
 
-      <div v-if="!loading">
+      <div v-if="source">
         <h2 class="title">Map</h2>
         <map-table-component :source="source['byTemplate']"></map-table-component>
 
@@ -37,6 +37,7 @@ import LoadingComponent from '../components/Loading'
 import MapTableComponent from './components/MapTable'
 
 import options from '../../store/options.js'
+import { compileMapStats } from '../../store/scrubber.js'
 
 var _ = require('lodash')
 
@@ -72,8 +73,6 @@ export default {
       time: _.head(_.keys(timeOptions)),
       GET_STATS_ARENAS: null,
       GET_ARENAS: null,
-      types: [ 'byTemplate', 'byModel', 'bySkin' ],
-      type: 'byModel',
       source: null
     }
   },
@@ -91,96 +90,10 @@ export default {
       })
     },
     compileData: function () {
-      let vm = this
-      if (vm.loading) {
+      if (this.loading) {
         return
       }
-
-      vm.source = {}
-      _.each(vm.types, function (type) {
-        vm.source[type] = { maxFreqPct: 0, maxScore: 0, data: {} }
-      })
-
-      let totalGames = 0
-      _.each(vm.GET_STATS_ARENAS, function (value, key) {
-        totalGames += value.numGames
-      })
-
-      let sumCols = [
-        'numGames',
-        'totalShots',
-        'totalGoals',
-        'totalScore',
-        'totalSaves',
-        'totalAssists'
-      ]
-      _.each(vm.GET_STATS_ARENAS, function (value, key) {
-        _.each(vm.GET_ARENAS, function (arena) {
-          if (arena.name === value.arenaName) {
-            // Template
-            if (!_.has(vm.source['byTemplate']['data'], arena.templateName)) {
-              vm.source['byTemplate']['data'][arena.templateName] = {
-                displayName: arena.templateName
-              }
-              _.each(sumCols, function (col) {
-                vm.source['byTemplate']['data'][arena.templateName][col] = 0
-              })
-            }
-            _.each(sumCols, function (col) {
-              vm.source['byTemplate']['data'][arena.templateName][col] += value[col]
-            })
-
-            // Model
-            if (!_.has(vm.source['byModel']['data'], arena.modelName)) {
-              vm.source['byModel']['data'][arena.modelName] = {
-                displayName: arena.modelName
-              }
-              _.each(sumCols, function (col) {
-                vm.source['byModel']['data'][arena.modelName][col] = 0
-              })
-            }
-            _.each(sumCols, function (col) {
-              vm.source['byModel']['data'][arena.modelName][col] += value[col]
-            })
-
-            // Skin
-            let fullSkinName = arena.modelName
-            if (arena.skinName) {
-              fullSkinName += ' (' + arena.skinName + ')'
-            }
-            if (!_.has(vm.source['bySkin']['data'], fullSkinName)) {
-              vm.source['bySkin']['data'][fullSkinName] = {
-                displayName: fullSkinName
-              }
-              _.each(sumCols, function (col) {
-                vm.source['bySkin']['data'][fullSkinName][col] = 0
-              })
-            }
-            _.each(sumCols, function (col) {
-              vm.source['bySkin']['data'][fullSkinName][col] += value[col]
-            })
-          }
-        })
-      })
-
-      _.each(vm.types, function (type) {
-        vm.source[type]['maxFreqPct'] = 0
-        vm.source[type]['maxScore'] = 0
-        vm.source[type]['data'] = _.map(vm.source[type]['data'], function (value, key) {
-          value.accuracy = 0
-          if (value.totalGoals > 0) {
-            value.accuracy = 100
-          }
-          if (value.totalShots > 0) {
-            value.accuracy = _.round(value.totalGoals / value.totalShots * 100, 2)
-          }
-          value.avgScore = _.round(value.totalScore / value.numGames, 2)
-          value.freqPct = _.round(value.numGames / totalGames * 100, 2)
-          vm.source[type]['maxFreqPct'] = _.max([value.freqPct, vm.source[type]['maxFreqPct']])
-          vm.source[type]['maxScore'] = _.max([value.avgScore, vm.source[type]['maxScore']])
-          return value
-        })
-      })
+      this.source = compileMapStats(this.GET_STATS_ARENAS, this.GET_ARENAS)
     }
   },
   watch: {
