@@ -1,7 +1,14 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Paladin.Handler.Stats where
+module Paladin.Handler.Stats
+  ( getStatsArenasHandler
+  , getStatsBodiesHandler
+  , getStatsPlayersArenasHandler
+  , getStatsPlayersBodiesHandler
+  , getStatsPlayersHandler
+  , getStatsSummaryHandler
+  ) where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
@@ -141,20 +148,20 @@ getStatsArenasHandler _config connection request = do
   pure (Common.jsonResponse Http.status200 [] json)
 
 data ArenaStats = ArenaStats
-  { arenaStatsArenaId :: Int
-  , arenaStatsArenaName :: Common.Text
-  , arenaStatsTotalScore :: Int
-  , arenaStatsTotalGoals :: Int
-  , arenaStatsTotalAssists :: Int
-  , arenaStatsTotalSaves :: Int
-  , arenaStatsTotalShots :: Int
-  , arenaStatsNumGames :: Int
+  { _arenaStatsArenaId :: Int
+  , _arenaStatsArenaName :: Common.Text
+  , _arenaStatsTotalScore :: Int
+  , _arenaStatsTotalGoals :: Int
+  , _arenaStatsTotalAssists :: Int
+  , _arenaStatsTotalSaves :: Int
+  , _arenaStatsTotalShots :: Int
+  , _arenaStatsNumGames :: Int
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow ArenaStats
 
 instance Common.ToJSON ArenaStats where
-  toJSON = Common.genericToJSON "ArenaStats"
+  toJSON = Common.genericToJSON "_ArenaStats"
 
 getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
@@ -198,192 +205,25 @@ getStatsBodiesHandler _config connection request = do
   pure (Common.jsonResponse Http.status200 [] json)
 
 data BodyStats = BodyStats
-  { bodyStatsBodyId :: Int
-  , bodyStatsBodyName :: Maybe Common.Text
-  , bodyStatsTotalScore :: Int
-  , bodyStatsTotalGoals :: Int
-  , bodyStatsTotalAssists :: Int
-  , bodyStatsTotalSaves :: Int
-  , bodyStatsTotalShots :: Int
-  , bodyStatsNumGames :: Int
-  , bodyStatsNumWins :: Int
-  , bodyStatsNumLosses :: Int
+  { _bodyStatsBodyId :: Int
+  , _bodyStatsBodyName :: Maybe Common.Text
+  , _bodyStatsTotalScore :: Int
+  , _bodyStatsTotalGoals :: Int
+  , _bodyStatsTotalAssists :: Int
+  , _bodyStatsTotalSaves :: Int
+  , _bodyStatsTotalShots :: Int
+  , _bodyStatsNumGames :: Int
+  , _bodyStatsNumWins :: Int
+  , _bodyStatsNumLosses :: Int
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow BodyStats
 
 instance Common.ToJSON BodyStats where
-  toJSON = Common.genericToJSON "BodyStats"
+  toJSON = Common.genericToJSON "_BodyStats"
 
 getStatsPlayersHandler :: Common.Text -> Common.Handler
 getStatsPlayersHandler rawPlayerId _config connection request = do
-  let playerId = Maybe.fromMaybe 0 (Read.readMaybe (Text.unpack rawPlayerId))
-  maybePlayerId <-
-    Database.query
-      connection
-      [Common.sql| SELECT id FROM players WHERE id = ? |]
-      [playerId :: Int]
-  case maybePlayerId :: [[Int]] of
-    [[_]] -> do
-      (day, playlists, templates) <- getFilters request
-      players <-
-        Database.query
-          connection
-          [Common.sql|
-            SELECT
-              count(CASE WHEN games_players.is_blue THEN 1 END),
-              count(CASE WHEN NOT games_players.is_blue THEN 1 END),
-              count(CASE WHEN games_players.is_blue AND games.blue_goals > games.orange_goals THEN 1 END),
-              count(CASE WHEN NOT games_players.is_blue and games.orange_goals > games.blue_goals THEN 1 END),
-              coalesce(sum(games_players.score), 0),
-              coalesce(sum(games_players.goals), 0),
-              coalesce(sum(games_players.assists), 0),
-              coalesce(sum(games_players.saves), 0),
-              coalesce(sum(games_players.shots), 0),
-              coalesce(sum(games.duration), 0)
-            FROM games
-            INNER JOIN games_players ON games_players.game_id = games.id
-            INNER JOIN arenas ON arenas.id = games.arena_id
-            INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
-            WHERE
-              games_players.player_id = ? AND
-              games_players.is_present_at_end = true AND
-              games.played_at >= ? AND
-              games.playlist_id IN ? AND
-              arena_templates.name IN ?
-          |]
-          (playerId, day, Common.In playlists, Common.In templates)
-      let player = Maybe.fromMaybe defaultPlayerRow (Maybe.listToMaybe players)
-      let numBlueGames = playerRowNumBlueGames player
-      let numOrangeGames = playerRowNumOrangeGames player
-      let numBlueWins = playerRowNumBlueWins player
-      let numOrangeWins = playerRowNumOrangeWins player
-      let totalScore = playerRowTotalScore player
-      let totalGoals = playerRowTotalGoals player
-      let totalAssists = playerRowTotalAssists player
-      let totalSaves = playerRowTotalSaves player
-      let totalShots = playerRowTotalShots player
-      let secondsPlayed = playerRowSecondsPlayed player
-      games <-
-        Database.query
-          connection
-          [Common.sql|
-            SELECT
-              games.playlist_id,
-              playlists.name,
-              games.played_at,
-              CASE WHEN games_players.is_blue THEN games.blue_goals ELSE games.orange_goals END,
-              CASE WHEN games_players.is_blue THEN games.orange_goals ELSE games.blue_goals END,
-              games.duration,
-              games_players.body_id,
-              bodies.name,
-              games_players.score,
-              games_players.goals,
-              games_players.assists,
-              games_players.saves,
-              games_players.shots,
-              games.arena_id,
-              arenas.name
-            FROM games
-            INNER JOIN games_players ON games_players.game_id = games.id
-            INNER JOIN playlists ON playlists.id = games.playlist_id
-            INNER JOIN bodies ON bodies.id = games_players.body_id
-            INNER JOIN arenas ON arenas.id = games.arena_id
-            WHERE
-              games_players.player_id = ? AND
-              games_players.is_present_at_end = true AND
-              games.played_at >= ? AND
-              games.playlist_id IN ?
-            ORDER BY
-              games.played_at DESC
-            LIMIT 20
-          |]
-          (playerId, day, Common.In playlists)
-      let numGames = numBlueGames + numOrangeGames
-      let numWins = numBlueWins + numOrangeWins
-      let body =
-            Aeson.object
-              [ (Text.pack "numGames", Aeson.toJSON numGames)
-              , (Text.pack "numWins", Aeson.toJSON numWins)
-              , (Text.pack "numLosses", Aeson.toJSON (numGames - numWins))
-              , (Text.pack "winPct", Aeson.toJSON (makeRatio numWins numGames))
-              , (Text.pack "numBlueGames", Aeson.toJSON numBlueGames)
-              , (Text.pack "numBlueWins", Aeson.toJSON numBlueWins)
-              , ( Text.pack "numBlueLosses"
-                , Aeson.toJSON (numBlueGames - numBlueWins))
-              , ( Text.pack "blueWinPct"
-                , Aeson.toJSON (makeRatio numBlueWins numBlueGames))
-              , (Text.pack "numOrangeWins", Aeson.toJSON numOrangeWins)
-              , ( Text.pack "numOrangeLosses"
-                , Aeson.toJSON (numOrangeGames - numOrangeWins))
-              , ( Text.pack "orangeWinPct"
-                , Aeson.toJSON (makeRatio numOrangeWins numOrangeGames))
-              , (Text.pack "totalScore", Aeson.toJSON totalScore)
-              , (Text.pack "totalGoals", Aeson.toJSON totalGoals)
-              , (Text.pack "totalAssists", Aeson.toJSON totalAssists)
-              , (Text.pack "totalSaves", Aeson.toJSON totalSaves)
-              , (Text.pack "totalShots", Aeson.toJSON totalShots)
-              , (Text.pack "secondsPlayed", Aeson.toJSON secondsPlayed)
-              , (Text.pack "games", Aeson.toJSON (games :: [GameRow]))
-              ]
-      pure (Common.jsonResponse Http.status200 [] body)
-    _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
-
-data PlayerRow = PlayerRow
-  { playerRowNumBlueGames :: Integer
-  , playerRowNumOrangeGames :: Integer
-  , playerRowNumBlueWins :: Integer
-  , playerRowNumOrangeWins :: Integer
-  , playerRowTotalScore :: Integer
-  , playerRowTotalGoals :: Integer
-  , playerRowTotalAssists :: Integer
-  , playerRowTotalSaves :: Integer
-  , playerRowTotalShots :: Integer
-  , playerRowSecondsPlayed :: Integer
-  } deriving (Eq, Common.Generic, Show)
-
-instance Common.FromRow PlayerRow
-
-defaultPlayerRow :: PlayerRow
-defaultPlayerRow =
-  PlayerRow
-  { playerRowNumBlueGames = 0
-  , playerRowNumOrangeGames = 0
-  , playerRowNumBlueWins = 0
-  , playerRowNumOrangeWins = 0
-  , playerRowTotalScore = 0
-  , playerRowTotalGoals = 0
-  , playerRowTotalAssists = 0
-  , playerRowTotalSaves = 0
-  , playerRowTotalShots = 0
-  , playerRowSecondsPlayed = 0
-  }
-
-data GameRow = GameRow
-  { gameRowPlaylistId :: Integer
-  , gameRowPlaylistName :: Maybe Common.Text
-  , gameRowPlayedAt :: Common.LocalTime
-  , gameRowYourGoals :: Integer
-  , gameRowTheirGoals :: Integer
-  , gameRowDuration :: Integer
-  , gameRowBodyId :: Integer
-  , gameRowBodyName :: Maybe Common.Text
-  , gameRowScore :: Integer
-  , gameRowGoals :: Integer
-  , gameRowAssists :: Integer
-  , gameRowSaves :: Integer
-  , gameRowShots :: Integer
-  , gameRowArenaId :: Integer
-  , gameRowArenaName :: Maybe Common.Text
-  } deriving (Eq, Common.Generic, Show)
-
-instance Common.FromRow GameRow
-
-instance Common.ToJSON GameRow where
-  toJSON = Common.genericToJSON "GameRow"
-
-getNewStatsPlayersHandler :: Common.Text -> Common.Handler
-getNewStatsPlayersHandler rawPlayerId _config connection request = do
   maybePlayerId <- getPlayerId connection rawPlayerId
   case maybePlayerId of
     Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
@@ -523,7 +363,7 @@ getGamesPlayers connection gameIds =
     [Common.In gameIds]
 
 data GamePlayerRow = GamePlayerRow
-  { gamePlayerRowId :: Int
+  { _gamePlayerRowId :: Int
   , gamePlayerRowGameId :: Int
   , gamePlayerRowPlayerId :: Int
   , gamePlayerRowPlatformId :: Int
