@@ -117,7 +117,7 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
               sum(games_players.assists),
               sum(games_players.saves),
               sum(games_players.shots),
-              sum(games_players.duration),
+              sum(games.duration),
               count(*),
               count(CASE WHEN games_players.is_blue
                 THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
