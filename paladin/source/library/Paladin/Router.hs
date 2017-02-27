@@ -8,7 +8,6 @@ import qualified Paladin.Handler as Handler
 route :: Wai.Request -> Handler.Handler
 route request =
   case (Wai.requestMethod request, Wai.pathInfo request) of
-    ("GET", []) -> Handler.getRootHandler
     ("GET", ["arenas"]) -> Handler.getArenasHandler
     ("GET", ["game-modes"]) -> Handler.getGameModesHandler
     ("GET", ["game-types"]) -> Handler.getGameTypesHandler
