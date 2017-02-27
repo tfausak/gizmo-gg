@@ -44,6 +44,13 @@ const store = new Vuex.Store({
       return dispatch('FETCH', { endpoint })
     },
 
+    GET_PLAYER_ARENAS: function ({ dispatch }, params) {
+      let endpoint = 'stats/players/' + params.id + '/arenas'
+      delete params.id
+      endpoint += getQueryString(params)
+      return dispatch('FETCH', { endpoint })
+    },
+
     GET_PLAYERS: function ({ dispatch }) {
       let endpoint = 'players'
       return dispatch('FETCH', { endpoint })

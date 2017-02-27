@@ -10,7 +10,7 @@
   <div class="container">
     <div class="columns">
       <div class="column is-one-third">
-        <ranks-component :playerId="playerId"></ranks-component>
+        <!-- <ranks-component :playerId="playerId"></ranks-component> -->
         <maps-component :playerId="playerId"></maps-component>
       </div>
       <div class="column">
