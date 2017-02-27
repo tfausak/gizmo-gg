@@ -37,7 +37,7 @@ getSearchHandler _config connection request = do
           games.played_at
         FROM games_players
         INNER JOIN games ON games.id = games_players.game_id
-        INNER JOIN players on players.id = games_players.id
+        INNER JOIN players on players.id = games_players.player_id
         INNER JOIN platforms ON platforms.id = players.platform_id
         WHERE games_players.name ILIKE ? AND platforms.name IN ?
         LIMIT 20
