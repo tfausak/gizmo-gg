@@ -12,11 +12,17 @@
     margin-bottom: 5px;
   }
 }
+.splashDesc {
+  font-size: 15px;
+  p {
+    margin: 0 0 10px;
+  }
+}
 </style>
 
 <template>
   <div>
-    <section class="hero is-primary is-bold is-large has-text-centered">
+    <section class="hero is-primary is-medium has-text-centered">
       <div class="hero-body">
         <div class="container">
           <h1 class="title">
@@ -30,73 +36,35 @@
       </div>
     </section>
 
-    <section class="hero is-light">
-      <div class="hero-body">
-        <div class="container">
-          <div class="level has-text-centered">
-            <div class="level-item">
-              <div>
-                <p class="heading">Replays</p>
-                <p class="title">3,456</p>
-              </div>
-            </div>
-            <div class="level-item">
-              <div>
-                <p class="heading">Players</p>
-                <p class="title">123</p>
-              </div>
-            </div>
+    <section class="section">
+      <div class="container has-text-centered">
+        <h1 class="title is-3">Keep track of your Rocket League games.</h1>
+        <hr>
+        <div class="columns">
+          <div class="column is-half is-offset-one-quarter splashDesc">
+            <p>gizmo.gg is a Rocket League statistics site that helps you keep track of your games. We analyze your replays and provide you with data about your wins, losses, goals, assists, and everything else. Use our simple open-source tool to automatically upload your replays after each game.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section bg-offwhite">
       <div class="container">
         <div class="columns has-text-centered" id="gizmo-snippets">
-
-          <div class="column">
+          <div class="column is-4 is-offset-1">
             <span class="icon is-large">
-              <i class="fa fa-car"></i>
+              <i class="fa fa-cloud-upload"></i>
             </span>
-            <div>
-              <h2 class="subtitle">Powered by <a target="_blank" href="https://github.com/tfausak/rattletrap">Rattletrap</a></h2>
-              <p>Best in class replay parsing. Fastest in it's sub-phylum.</p>
-            </div>
+            <h2 class="title is-3">Automatically Upload Replays</h2>
+            <p class="splashDesc">Download our <router-link to="/desktop-app">desktop app</router-link> to automatically upload your replays. Your stats will be generated as you play.</p>
           </div>
-
-          <div class="column">
-            <span class="icon is-large">
-              <i class="fa fa-area-chart"></i>
-            </span>
-            <div>
-              <h2 class="subtitle">Track Your Progress</h2>
-              <p>Download our <router-link to="/desktop-app">desktop app</router-link> to automatically upload your replays. Your stats will be generated as you play.</p>
-            </div>
-          </div>
-
-          <div class="column">
+          <div class="column is-3 is-offset-2">
             <span class="icon is-large">
               <i class="fa fa-comments-o"></i>
             </span>
-            <div>
-              <h2 class="subtitle">Join the Community</h2>
-              <p>Have a good idea? Want to help us lower the salt levels? <a target="_blank" href="https://discord.gg/nqZHDpy">Join us on discord</a>.</p>
-            </div>
+            <h2 class="title is-3">Join the Community</h2>
+            <p class="splashDesc">Have a good idea or feature request? Found a problem? <a target="_blank" href="https://discord.gg/nqZHDpy">Join us on discord</a>.</p>
           </div>
-
-          <div class="column">
-            <span class="icon is-large">
-              <i class="fa fa-gears"></i>
-            </span>
-            <div>
-              <h2 class="subtitle">Test</h2>
-              <ul>
-                <li><router-link to="/dev">dev</router-link></li>
-              </ul>
-            </div>
-          </div>
-
         </div>
       </div>
     </section>

@@ -3,7 +3,6 @@ import Router from 'vue-router'
 
 import DefaultPage from '../pages/templates/Default'
 
-import AboutPage from '../pages/About'
 import DesktopAppPage from '../pages/DesktopApp'
 import DevPage from '../pages/Dev'
 import DevPlayersPage from '../pages/dev/Players'
@@ -34,11 +33,6 @@ export default new Router({
           path: '',
           name: 'index',
           component: IndexPage
-        },
-        {
-          path: 'about',
-          name: 'about',
-          component: AboutPage
         },
         {
           path: 'desktop-app',
