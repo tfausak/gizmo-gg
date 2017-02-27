@@ -46,6 +46,7 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
               sum(games_players.assists),
               sum(games_players.saves),
               sum(games_players.shots),
+              sum(games.duration),
               count(*),
               count(CASE WHEN games_players.is_blue
                 THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
@@ -70,9 +71,28 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
             ORDER BY bodies.id ASC
           |]
           (playerId, day, Common.In playlists, Common.In templates)
-      let json = Aeson.toJSON (bodies :: [BodyStats])
+      let json = Aeson.toJSON (bodies :: [PlayerBodyStats])
       pure (Common.jsonResponse Http.status200 [] json)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+
+data PlayerBodyStats = PlayerBodyStats
+  { _playerBodyStatsBodyId :: Int
+  , _playerBodyStatsBodyName :: Maybe Common.Text
+  , _playerBodyStatsTotalScore :: Int
+  , _playerBodyStatsTotalGoals :: Int
+  , _playerBodyStatsTotalAssists :: Int
+  , _playerBodyStatsTotalSaves :: Int
+  , _playerBodyStatsTotalShots :: Int
+  , _playerBodyStatsTotalDuration :: Int
+  , _playerBodyStatsNumGames :: Int
+  , _playerBodyStatsNumWins :: Int
+  , _playerBodyStatsNumLosses :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow PlayerBodyStats
+
+instance Common.ToJSON PlayerBodyStats where
+  toJSON = Common.genericToJSON "_PlayerBodyStats"
 
 getStatsPlayersArenasHandler :: Common.Text -> Common.Handler
 getStatsPlayersArenasHandler rawPlayerId _config connection request = do
