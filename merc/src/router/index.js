@@ -4,8 +4,6 @@ import Router from 'vue-router'
 import DefaultPage from '../pages/templates/Default'
 
 import DesktopAppPage from '../pages/DesktopApp'
-import DevPage from '../pages/Dev'
-import DevPlayersPage from '../pages/dev/Players'
 import IndexPage from '../pages/Index'
 import PlayerPage from '../pages/Player'
 import PlayerSummaryPage from '../pages/player/Summary'
@@ -38,17 +36,6 @@ export default new Router({
           path: 'desktop-app',
           name: 'desktop-app',
           component: DesktopAppPage
-        },
-        {
-          path: 'dev',
-          component: DevPage,
-          children: [
-            {
-              path: '',
-              name: 'dev.players',
-              component: DevPlayersPage
-            }
-          ]
         },
         {
           path: '/player/:id',
