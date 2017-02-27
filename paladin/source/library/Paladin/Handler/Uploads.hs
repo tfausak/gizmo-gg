@@ -21,26 +21,6 @@ import qualified Paladin.Utility as Utility
 import qualified System.FilePath as FilePath
 import qualified Text.Read as Read
 
-getUploadsHandler :: Common.Handler
-getUploadsHandler =
-  Common.jsonHandler
-    Common.uploadProxy
-    [Common.sql|
-      SELECT
-        id,
-        created_at,
-        name,
-        size,
-        hash,
-        started_parsing_at,
-        parser_id,
-        finished_parsing_at,
-        parse_error_id,
-        replay_id
-      FROM uploads
-      ORDER BY created_at DESC
-    |]
-
 postUploadHandler :: Common.Handler
 postUploadHandler config connection request = do
   let options =

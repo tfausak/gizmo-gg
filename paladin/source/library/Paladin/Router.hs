@@ -21,7 +21,6 @@ route request =
     ("GET", ["stats", "players", playerId, "new"]) ->
       Handler.getNewStatsPlayersHandler playerId
     ("GET", ["stats", "summary"]) -> Handler.getStatsSummaryHandler
-    ("GET", ["uploads"]) -> Handler.getUploadsHandler
     ("POST", ["uploads"]) -> Handler.postUploadHandler
     ("GET", ["uploads", uploadId]) -> Handler.getUploadHandler uploadId
     _ -> Handler.notFoundHandler

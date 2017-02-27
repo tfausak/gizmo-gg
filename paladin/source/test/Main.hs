@@ -23,7 +23,6 @@ session = do
   assertStatus 200 "/stats/arenas"
   assertStatus 200 "/stats/bodies"
   assertStatus 200 "/stats/summary"
-  assertStatus 200 "/uploads"
   assertStatus 400 "/uploads/invalid-id"
   assertStatus 404 "/uploads/0"
 
