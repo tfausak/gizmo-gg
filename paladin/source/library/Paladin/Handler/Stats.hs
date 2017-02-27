@@ -52,7 +52,7 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
                 THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
                 ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
                 END),
-              count( CASE WHEN games_players.is_blue
+              count(CASE WHEN games_players.is_blue
                 THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
                 ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
                 END)
@@ -117,7 +117,16 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
               sum(games_players.assists),
               sum(games_players.saves),
               sum(games_players.shots),
-              count(*)
+              sum(games_players.duration),
+              count(*),
+              count(CASE WHEN games_players.is_blue
+                THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
+                ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
+                END),
+              count(CASE WHEN games_players.is_blue
+                THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
+                ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
+                END)
             FROM games_players
             INNER JOIN games ON games.id = games_players.game_id
             INNER JOIN arenas ON arenas.id = games.arena_id
@@ -132,9 +141,28 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
             ORDER BY arenas.id ASC
           |]
           (playerId, day, Common.In playlists, Common.In templates)
-      let json = Aeson.toJSON (arenas :: [ArenaStats])
+      let json = Aeson.toJSON (arenas :: [PlayerArenaStats])
       pure (Common.jsonResponse Http.status200 [] json)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+
+data PlayerArenaStats = PlayerArenaStats
+  { _playerArenaStatsArenaId :: Int
+  , _playerArenaStatsArenaName :: Common.Text
+  , _playerArenaStatsTotalScore :: Int
+  , _playerArenaStatsTotalGoals :: Int
+  , _playerArenaStatsTotalAssists :: Int
+  , _playerArenaStatsTotalSaves :: Int
+  , _playerArenaStatsTotalShots :: Int
+  , _playerArenaStatsTotalDuration :: Int
+  , _playerArenaStatsNumGames :: Int
+  , _playerArenaStatsNumWins :: Int
+  , _playerArenaStatsNumLosses :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.FromRow PlayerArenaStats
+
+instance Common.ToJSON PlayerArenaStats where
+  toJSON = Common.genericToJSON "_PlayerArenaStats"
 
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
