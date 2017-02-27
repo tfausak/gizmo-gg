@@ -66,16 +66,12 @@ getName :: Common.Query -> String
 getName query = Maybe.fromMaybe "" (Common.getParam "name" query)
 
 makePattern :: String -> Common.Text
-makePattern
-  = Text.pack
-  >>> likeEscape
-  >>> wrap "%" "%"
+makePattern = Text.pack >>> likeEscape >>> wrap "%" "%"
 
 likeEscape :: Common.Text -> Common.Text
-likeEscape
-  = Text.replace "\\" "\\\\"
-  >>> Text.replace "_" "\\_"
-  >>> Text.replace "%" "\\%"
+likeEscape =
+  Text.replace "\\" "\\\\" >>>
+  Text.replace "_" "\\_" >>> Text.replace "%" "\\%"
 
 wrap :: Common.Text -> Common.Text -> Common.Text -> Common.Text
 wrap l r x = Text.concat [l, x, r]
