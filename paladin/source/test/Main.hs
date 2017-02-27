@@ -19,7 +19,6 @@ session :: Test.Session ()
 session = do
   assertStatus 404 "/not-found"
   assertStatus 200 "/arenas"
-  assertStatus 200 "/playlists"
   assertStatus 200 "/replays"
   assertStatus 200 "/search"
   assertStatus 200 "/servers"
