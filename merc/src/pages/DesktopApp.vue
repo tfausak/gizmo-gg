@@ -9,7 +9,7 @@
           <h2 class="subtitle">
             Automatically upload your saved replays to gizmo.gg.
           </h2>
-          <a class="button is-white-outlined is-medium" target="_blank" href="https://github.com/tfausak/gizmo-gg-uploader/releases/latest">
+          <a class="button is-white-outlined is-medium" target="_blank" href="https://github.com/tfausak/gizmo-gg-uploader">
             <span class="icon">
               <i class="fa fa-download"></i>
             </span>
