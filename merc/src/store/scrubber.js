@@ -84,11 +84,14 @@ export function compileMapStats (STATS_ARENAS, ARENAS) {
 
   let sumCols = [
     'numGames',
+    'numWins',
+    'numLosses',
     'totalShots',
     'totalGoals',
     'totalScore',
     'totalSaves',
-    'totalAssists'
+    'totalAssists',
+    'totalDuration'
   ]
   _.each(STATS_ARENAS, function (value, key) {
     _.each(ARENAS, function (arena) {
@@ -144,6 +147,23 @@ export function compileMapStats (STATS_ARENAS, ARENAS) {
     data[type]['maxFreqPct'] = 0
     data[type]['maxScore'] = 0
     data[type]['data'] = _.map(data[type]['data'], function (value, key) {
+      value['winPct'] = _.round(getPct(value['numWins'], value['numGames']))
+      value['perGame'] = {
+        score: 0,
+        goals: 0,
+        assists: 0,
+        saves: 0,
+        shots: 0
+      }
+      if (value.totalDuration) {
+        value['perGame'] = {
+          score: _.round(value.totalScore / (value.totalDuration / 60) * 5),
+          goals: _.round(value.totalGoals / (value.totalDuration / 60) * 5, 1).toFixed(1),
+          assists: _.round(value.totalAssists / (value.totalDuration / 60) * 5, 1).toFixed(1),
+          saves: _.round(value.totalSaves / (value.totalDuration / 60) * 5, 1).toFixed(1),
+          shots: _.round(value.totalShots / (value.totalDuration / 60) * 5, 1).toFixed(1)
+        }
+      }
       value.accuracy = 0
       if (value.totalGoals > 0) {
         value.accuracy = 100

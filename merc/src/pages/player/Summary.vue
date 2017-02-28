@@ -12,6 +12,7 @@
       <div class="column is-one-third">
         <!-- <ranks-component :playerId="playerId"></ranks-component> -->
         <maps-component :playerId="playerId"></maps-component>
+        <bodies-component :playerId="playerId"></bodies-component>
       </div>
       <div class="column">
         <games-component :playerId="playerId"></games-component>
@@ -23,12 +24,14 @@
 <script>
 import GamesComponent from './components/Games'
 import MapsComponent from './components/Maps'
+import BodiesComponent from './components/Bodies'
 import RanksComponent from './components/Ranks'
 
 export default {
   components: {
     GamesComponent,
     MapsComponent,
+    BodiesComponent,
     RanksComponent
   },
   props: [ 'playerId' ]

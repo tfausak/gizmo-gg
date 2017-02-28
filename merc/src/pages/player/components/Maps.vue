@@ -1,3 +1,29 @@
+<style lang="scss" scoped>
+@import "~styles/vars.scss";
+
+.mapStatsLevel {
+  font-size: 13px;
+  width: 100%;
+  .mapPlayer {
+    flex-grow: 1!important;
+    text-align: center;
+    .score {
+      font-size: 15px;
+    }
+  }
+  .mapDesc {
+    width: 100px;
+  }
+  .mapRecord {
+    width: 70px;
+    text-align: center;
+    .recordPct {
+      font-size: 14px;
+    }
+  }
+}
+</style>
+
 <template>
   <div class="panel">
     <p class="panel-heading panel-squish">
@@ -11,21 +37,23 @@
     </div>
     <div v-if="source">
       <div class="panel-block" v-for="map in source['byTemplate']['data']">
-        <div class="level level-chained is-relative">
-          <div class="level-item">
+        <div class="level level-chained mapStatsLevel">
+          <div class="level-item mapImage">
             <figure class="image is-48x48">
               <img :src="'/static/img/maps/' + map.slug + '.jpg'">
             </figure>
           </div>
-          <div class="level-item">
-            <div class="level level-stacked level-chained">
-              <div class="level-item">
-                <div class="heading is-medium no-margin">{{ map.displayName }}</div>
-              </div>
-              <div class="level-item text-small">
-                <span>{{ map.numGames }} Games</span>
-              </div>
-            </div>
+          <div class="level-item is-block mapDesc">
+            <div class="heading">{{ map.displayName }}</div>
+            <div>{{ map.numGames }} Games</div>
+          </div>
+          <div class="level-item is-block mapPlayer">
+            <div class="score">{{ map.perGame.score }}</div>
+            <div class="text-muted">{{ map.perGame.goals }} / {{ map.perGame.assists }} / {{ map.perGame.saves }} / {{ map.perGame.shots }}</div>
+          </div>
+          <div class="level-item is-block mapRecord">
+            <div class="recordPct">{{ map.winPct }}%</div>
+            <div class="text-muted">{{ map.numWins }}W {{ map.numLosses }}L</div>
           </div>
         </div>
       </div>

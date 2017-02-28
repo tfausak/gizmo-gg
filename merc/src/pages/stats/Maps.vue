@@ -80,6 +80,7 @@ export default {
     fetchData: function () {
       let vm = this
       vm.GET_STATS_ARENAS = null
+      vm.source = null
       vm.$store.dispatch('GET_STATS_ARENAS', {
         playlist: vm.playlist,
         tier: vm.tier,
