@@ -90,7 +90,6 @@
                       last played {{ lastUpdated }}
                     </h2>
                     <div class="playerActions">
-                      <a class="button">Update</a>
                     </div>
                   </div>
                 </div>

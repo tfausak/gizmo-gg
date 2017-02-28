@@ -1,11 +1,6 @@
 <template>
   <div class="container">
     <div class="columns">
-      <!--
-      <div class="column is-one-quarter">
-        <filter-panel-component v-model="tier" title="Tier" :options="tierOptions"></filter-panel-component>
-      </div>
-      -->
       <div class="column is-one-quarter">
         <filter-panel-component v-model="time" title="Time" :options="timeOptions"></filter-panel-component>
       </div>
