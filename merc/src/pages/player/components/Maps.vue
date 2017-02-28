@@ -1,21 +1,36 @@
 <style lang="scss" scoped>
 @import "~styles/vars.scss";
 
+.mapStats {
+  padding: 0;
+}
 .mapStatsLevel {
   font-size: 13px;
+  margin: 0!important;
   width: 100%;
+  .column {
+    padding: 0;
+  }
+  .mapImage {
+    flex-grow: 0;
+    padding-right: 5px;
+  }
   .mapPlayer {
-    flex-grow: 1!important;
+    padding-top: 3px;
     text-align: center;
     .score {
       font-size: 15px;
     }
   }
   .mapDesc {
-    width: 100px;
+    padding-top: 6px;
+    .heading {
+      margin-bottom: 0;
+    }
   }
   .mapRecord {
-    width: 70px;
+    flex-grow: 1;
+    padding-top: 3px;
     text-align: center;
     .recordPct {
       font-size: 14px;
@@ -27,7 +42,7 @@
 <template>
   <div class="panel">
     <p class="panel-heading panel-squish">
-      <span class="heading">Maps (this season)</span>
+      <span class="heading">Maps (this season)  - <router-link :to="'/player/' + playerId + '/maps'">More</router-link></span>
     </p>
     <p class="panel-tabs">
       <a v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }">{{ value }}</a>
@@ -36,22 +51,22 @@
       <loading-component :loading="true"></loading-component>
     </div>
     <div v-if="source">
-      <div class="panel-block" v-for="map in source['byTemplate']['data']">
-        <div class="level level-chained mapStatsLevel">
-          <div class="level-item mapImage">
+      <div class="panel-block mapStats" v-for="map in source['byTemplate']['data']">
+        <div class="columns mapStatsLevel">
+          <div class="column mapImage">
             <figure class="image is-48x48">
               <img :src="'/static/img/maps/' + map.slug + '.jpg'">
             </figure>
           </div>
-          <div class="level-item is-block mapDesc">
+          <div class="column is-block mapDesc">
             <div class="heading">{{ map.displayName }}</div>
             <div>{{ map.numGames }} Games</div>
           </div>
-          <div class="level-item is-block mapPlayer">
+          <div class="column is-block mapPlayer">
             <div class="score">{{ map.perGame.score }}</div>
             <div class="text-muted">{{ map.perGame.goals }} / {{ map.perGame.assists }} / {{ map.perGame.saves }} / {{ map.perGame.shots }}</div>
           </div>
-          <div class="level-item is-block mapRecord">
+          <div class="column is-block mapRecord">
             <div class="recordPct">{{ map.winPct }}%</div>
             <div class="text-muted">{{ map.numWins }}W {{ map.numLosses }}L</div>
           </div>
@@ -79,7 +94,7 @@ export default {
   },
   computed: {
     loading: function () {
-      return this.GET_ARENAS === null || this.GET_STATS_ARENAS === null
+      return this.GET_ARENAS === null || this.GET_PLAYER_ARENAS === null
     }
   },
   components: {
@@ -89,7 +104,7 @@ export default {
     let playlistOptions = options.shortPlaylists()
     return {
       GET_ARENAS: null,
-      GET_STATS_ARENAS: null,
+      GET_PLAYER_ARENAS: null,
       playlistOptions: playlistOptions,
       playlist: _.head(_.keys(playlistOptions)),
       source: null
@@ -98,14 +113,14 @@ export default {
   methods: {
     fetchData: function () {
       let vm = this
-      vm.GET_STATS_ARENAS = null
+      vm.GET_PLAYER_ARENAS = null
       vm.source = null
       vm.$store.dispatch('GET_PLAYER_ARENAS', {
         id: vm.playerId,
         playlist: vm.playlist,
         time: 'season'
       }).then(function (data) {
-        vm.GET_STATS_ARENAS = data
+        vm.GET_PLAYER_ARENAS = data
         vm.compileData()
       })
     },
@@ -113,7 +128,7 @@ export default {
       if (this.loading) {
         return
       }
-      this.source = compileMapStats(this.GET_STATS_ARENAS, this.GET_ARENAS)
+      this.source = compileMapStats(this.GET_PLAYER_ARENAS, this.GET_ARENAS)
     },
     setPlaylist: function (key) {
       this.playlist = key
