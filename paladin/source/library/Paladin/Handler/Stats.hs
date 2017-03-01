@@ -252,6 +252,25 @@ getStatsArenasHandler _config connection request = do
         SELECT
           arenas.id,
           arenas.name,
+          arena_templates.id,
+          arena_templates.name,
+          null, -- arena_models.id
+          null, -- arena_models.name
+          null, -- arena_skins.id
+          null -- arena_skins.name
+        FROM arenas
+        INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
+        WHERE arena_templates.name IN ?
+        ORDER BY arenas.name ASC
+      |]
+      [Common.In templates]
+  stats <-
+    Database.query
+      connection
+      [Common.sql|
+        SELECT
+          arenas.id,
+          arenas.name,
           sum(games_players.score),
           sum(games_players.goals),
           sum(games_players.assists),
@@ -270,11 +289,15 @@ getStatsArenasHandler _config connection request = do
         ORDER BY arenas.id
       |]
       (day, Common.In playlists, Common.In templates)
-  let json = Aeson.toJSON (arenas :: [ArenaStats])
+  let statsById = toMapBy _arenaStatsArenaId stats
+  let get x =
+        Map.findWithDefault (defaultArenaStats x) (Common.arenaId x) statsById
+  let output = map get arenas
+  let json = Aeson.toJSON output
   pure (Common.jsonResponse Http.status200 [] json)
 
 data ArenaStats = ArenaStats
-  { _arenaStatsArenaId :: Int
+  { _arenaStatsArenaId :: Common.Tagged Common.Arena Int
   , _arenaStatsArenaName :: Common.Text
   , _arenaStatsTotalScore :: Int
   , _arenaStatsTotalGoals :: Int
@@ -288,6 +311,19 @@ instance Common.FromRow ArenaStats
 
 instance Common.ToJSON ArenaStats where
   toJSON = Common.genericToJSON "_ArenaStats"
+
+defaultArenaStats :: Common.Arena -> ArenaStats
+defaultArenaStats arena =
+  ArenaStats
+  { _arenaStatsArenaId = Common.arenaId arena
+  , _arenaStatsArenaName = Common.arenaName arena
+  , _arenaStatsTotalScore = 0
+  , _arenaStatsTotalGoals = 0
+  , _arenaStatsTotalAssists = 0
+  , _arenaStatsTotalSaves = 0
+  , _arenaStatsTotalShots = 0
+  , _arenaStatsNumGames = 0
+  }
 
 getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
