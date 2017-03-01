@@ -329,6 +329,14 @@ getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
   (day, playlists, templates) <- getFilters request
   bodies <-
+    Database.query_
+      connection
+      [Common.sql|
+        SELECT id, name
+        FROM bodies
+        ORDER BY name ASC
+      |]
+  stats <-
     Database.query
       connection
       [Common.sql|
@@ -363,11 +371,15 @@ getStatsBodiesHandler _config connection request = do
         ORDER BY bodies.id ASC
       |]
       (day, Common.In playlists, Common.In templates)
-  let json = Aeson.toJSON (bodies :: [BodyStats])
+  let statsById = toMapBy _bodyStatsBodyId stats
+  let get x =
+        Map.findWithDefault (defaultBodyStats x) (Common.bodyId x) statsById
+  let output = map get bodies
+  let json = Aeson.toJSON output
   pure (Common.jsonResponse Http.status200 [] json)
 
 data BodyStats = BodyStats
-  { _bodyStatsBodyId :: Int
+  { _bodyStatsBodyId :: Common.Tagged Common.Body Int
   , _bodyStatsBodyName :: Maybe Common.Text
   , _bodyStatsTotalScore :: Int
   , _bodyStatsTotalGoals :: Int
@@ -383,6 +395,21 @@ instance Common.FromRow BodyStats
 
 instance Common.ToJSON BodyStats where
   toJSON = Common.genericToJSON "_BodyStats"
+
+defaultBodyStats :: Common.Body -> BodyStats
+defaultBodyStats body =
+  BodyStats
+  { _bodyStatsBodyId = Common.bodyId body
+  , _bodyStatsBodyName = Common.bodyName body
+  , _bodyStatsTotalScore = 0
+  , _bodyStatsTotalGoals = 0
+  , _bodyStatsTotalAssists = 0
+  , _bodyStatsTotalSaves = 0
+  , _bodyStatsTotalShots = 0
+  , _bodyStatsNumGames = 0
+  , _bodyStatsNumWins = 0
+  , _bodyStatsNumLosses = 0
+  }
 
 getStatsPlayersHandler :: Common.Text -> Common.Handler
 getStatsPlayersHandler rawPlayerId _config connection request = do
