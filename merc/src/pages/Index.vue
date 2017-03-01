@@ -1,6 +1,5 @@
 <style scoped lang="scss">
 #gizmo-splash {
-  background-image: url('/static/img/gizmo/gizmo-green-hq.png');
   background-position: center center;
   height: 150px;
   background-repeat: no-repeat;
@@ -26,7 +25,7 @@
       <div class="hero-body">
         <div class="container">
           <h1 class="title">
-            <div id="gizmo-splash"></div>
+            <div id="gizmo-splash" v-bind:style="{ backgroundImage: backgroundImage }"></div>
             gizmo.gg
           </h1>
           <div class="text-normal">
@@ -76,6 +75,13 @@
 import PlayerSearchComponent from './components/PlayerSearch'
 
 export default {
+  data: () => {
+    const colors = ['blue', 'green', 'orange'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    return {
+      backgroundImage: `url('/static/img/gizmo/gizmo-${color}-hq.png')`
+    };
+  },
   components: {
     PlayerSearchComponent
   }
