@@ -467,7 +467,7 @@ getGames connection day playlists templates player =
         arena_templates.name IN ? AND
         games_players.player_id = ?
       ORDER BY games.played_at DESC
-      LIMIT 20
+      LIMIT 100
     |]
     (day, Common.In playlists, Common.In templates, player)
 
