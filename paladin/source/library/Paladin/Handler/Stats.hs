@@ -80,8 +80,11 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
           |]
           (playerId, day, Common.In playlists, Common.In templates)
       let statsById = toMapBy _playerBodyStatsBodyId stats
-      let def x = defaultPlayerBodyStats (Common.bodyId x) (Common.bodyName x)
-      let get x = Map.findWithDefault (def x) (Common.bodyId x) statsById
+      let get x =
+            Map.findWithDefault
+              (defaultPlayerBodyStats x)
+              (Common.bodyId x)
+              statsById
       let output = map get bodies
       let json = Aeson.toJSON output
       pure (Common.jsonResponse Http.status200 [] json)
@@ -111,13 +114,11 @@ instance Common.FromRow PlayerBodyStats
 instance Common.ToJSON PlayerBodyStats where
   toJSON = Common.genericToJSON "_PlayerBodyStats"
 
-defaultPlayerBodyStats :: Common.Tagged Common.Body Int
-                       -> Maybe Common.Text
-                       -> PlayerBodyStats
-defaultPlayerBodyStats bodyId bodyName =
+defaultPlayerBodyStats :: Common.Body -> PlayerBodyStats
+defaultPlayerBodyStats body =
   PlayerBodyStats
-  { _playerBodyStatsBodyId = bodyId
-  , _playerBodyStatsBodyName = bodyName
+  { _playerBodyStatsBodyId = Common.bodyId body
+  , _playerBodyStatsBodyName = Common.bodyName body
   , _playerBodyStatsTotalScore = 0
   , _playerBodyStatsTotalGoals = 0
   , _playerBodyStatsTotalAssists = 0
@@ -141,6 +142,25 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
     [[_]] -> do
       (day, playlists, templates) <- getFilters request
       arenas <-
+        Database.query
+          connection
+          [Common.sql|
+            SELECT
+              arenas.id,
+              arenas.name,
+              arena_templates.id,
+              arena_templates.name,
+              null, -- arena_models.id
+              null, -- arena_models.name
+              null, -- arena_skins.id
+              null -- arena_skins.name
+            FROM arenas
+            INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
+            WHERE arena_templates.name IN ?
+            ORDER BY arenas.name ASC
+          |]
+          [Common.In competitiveTemplates]
+      stats <-
         Database.query
           connection
           [Common.sql|
@@ -176,12 +196,19 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
             ORDER BY arenas.id ASC
           |]
           (playerId, day, Common.In playlists, Common.In templates)
-      let json = Aeson.toJSON (arenas :: [PlayerArenaStats])
+      let statsById = toMapBy _playerArenaStatsArenaId stats
+      let get x =
+            Map.findWithDefault
+              (defaultPlayerArenaStats x)
+              (Common.arenaId x)
+              statsById
+      let output = map get arenas
+      let json = Aeson.toJSON output
       pure (Common.jsonResponse Http.status200 [] json)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
 data PlayerArenaStats = PlayerArenaStats
-  { _playerArenaStatsArenaId :: Int
+  { _playerArenaStatsArenaId :: Common.Tagged Common.Arena Int
   , _playerArenaStatsArenaName :: Common.Text
   , _playerArenaStatsTotalScore :: Int
   , _playerArenaStatsTotalGoals :: Int
@@ -198,6 +225,22 @@ instance Common.FromRow PlayerArenaStats
 
 instance Common.ToJSON PlayerArenaStats where
   toJSON = Common.genericToJSON "_PlayerArenaStats"
+
+defaultPlayerArenaStats :: Common.Arena -> PlayerArenaStats
+defaultPlayerArenaStats arena =
+  PlayerArenaStats
+  { _playerArenaStatsArenaId = Common.arenaId arena
+  , _playerArenaStatsArenaName = Common.arenaName arena
+  , _playerArenaStatsTotalScore = 0
+  , _playerArenaStatsTotalGoals = 0
+  , _playerArenaStatsTotalAssists = 0
+  , _playerArenaStatsTotalSaves = 0
+  , _playerArenaStatsTotalShots = 0
+  , _playerArenaStatsTotalDuration = 0
+  , _playerArenaStatsNumGames = 0
+  , _playerArenaStatsNumWins = 0
+  , _playerArenaStatsNumLosses = 0
+  }
 
 getStatsArenasHandler :: Common.Handler
 getStatsArenasHandler _config connection request = do
