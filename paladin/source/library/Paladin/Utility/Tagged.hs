@@ -5,7 +5,7 @@ import qualified Database.PostgreSQL.Simple.FromField as Sql
 
 newtype Tagged tag value = Tagged
   { tagValue :: value
-  } deriving (Eq, Show)
+  } deriving (Eq, Ord, Show)
 
 instance Sql.FromField value =>
          Sql.FromField (Tagged tag value) where

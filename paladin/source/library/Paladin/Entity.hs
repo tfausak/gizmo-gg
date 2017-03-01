@@ -3,6 +3,7 @@ module Paladin.Entity
   ) where
 
 import Paladin.Entity.Arena as Export
+import Paladin.Entity.Body as Export
 import Paladin.Entity.Common as Export
 import Paladin.Entity.Game as Export
 import Paladin.Entity.GameMode as Export

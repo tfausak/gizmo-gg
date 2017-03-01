@@ -35,6 +35,14 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
     [[_]] -> do
       (day, playlists, templates) <- getFilters request
       bodies <-
+        Database.query_
+          connection
+          [Common.sql|
+            SELECT id, name
+            FROM bodies
+            ORDER BY name ASC
+          |]
+      stats <-
         Database.query
           connection
           [Common.sql|
@@ -71,12 +79,21 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
             ORDER BY bodies.id ASC
           |]
           (playerId, day, Common.In playlists, Common.In templates)
-      let json = Aeson.toJSON (bodies :: [PlayerBodyStats])
+      let statsById = toMapBy _playerBodyStatsBodyId stats
+      let def x = defaultPlayerBodyStats (Common.bodyId x) (Common.bodyName x)
+      let get x = Map.findWithDefault (def x) (Common.bodyId x) statsById
+      let output = map get bodies
+      let json = Aeson.toJSON output
       pure (Common.jsonResponse Http.status200 [] json)
     _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
+toMapBy
+  :: Ord k
+  => (v -> k) -> [v] -> Map.Map k v
+toMapBy f xs = Map.fromList (map (\x -> (f x, x)) xs)
+
 data PlayerBodyStats = PlayerBodyStats
-  { _playerBodyStatsBodyId :: Int
+  { _playerBodyStatsBodyId :: Common.Tagged Common.Body Int
   , _playerBodyStatsBodyName :: Maybe Common.Text
   , _playerBodyStatsTotalScore :: Int
   , _playerBodyStatsTotalGoals :: Int
@@ -93,6 +110,24 @@ instance Common.FromRow PlayerBodyStats
 
 instance Common.ToJSON PlayerBodyStats where
   toJSON = Common.genericToJSON "_PlayerBodyStats"
+
+defaultPlayerBodyStats :: Common.Tagged Common.Body Int
+                       -> Maybe Common.Text
+                       -> PlayerBodyStats
+defaultPlayerBodyStats bodyId bodyName =
+  PlayerBodyStats
+  { _playerBodyStatsBodyId = bodyId
+  , _playerBodyStatsBodyName = bodyName
+  , _playerBodyStatsTotalScore = 0
+  , _playerBodyStatsTotalGoals = 0
+  , _playerBodyStatsTotalAssists = 0
+  , _playerBodyStatsTotalSaves = 0
+  , _playerBodyStatsTotalShots = 0
+  , _playerBodyStatsTotalDuration = 0
+  , _playerBodyStatsNumGames = 0
+  , _playerBodyStatsNumWins = 0
+  , _playerBodyStatsNumLosses = 0
+  }
 
 getStatsPlayersArenasHandler :: Common.Text -> Common.Handler
 getStatsPlayersArenasHandler rawPlayerId _config connection request = do
