@@ -276,7 +276,7 @@ getStatsArenasHandler _config connection request = do
           sum(games_players.assists),
           sum(games_players.saves),
           sum(games_players.shots),
-          count(games.id)
+          count(distinct games.id)
         FROM arenas
         INNER JOIN games ON games.arena_id = arenas.id
         INNER JOIN games_players ON games_players.game_id = games.id
@@ -285,8 +285,7 @@ getStatsArenasHandler _config connection request = do
           games.played_at >= ? AND
           games.playlist_id IN ? AND
           arena_templates.name IN ?
-        GROUP BY games.id, arenas.id
-        ORDER BY arenas.id
+        GROUP BY arenas.id
       |]
       (day, Common.In playlists, Common.In templates)
   let statsById = toMapBy _arenaStatsArenaId stats
