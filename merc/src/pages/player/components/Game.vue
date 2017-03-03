@@ -15,7 +15,7 @@
 }
 .panel-win,
 .panel-loss {
-  margin-bottom: 10px!important;
+  margin-bottom: 4px!important;
 }
 .panel-win {
   background-color: lighten($solarized_blue, 40%);
@@ -53,6 +53,7 @@
 }
 .summarySection {
   font-size: 12px;
+  line-height: 1.3;
   text-align: center;
   width: 80px;
   .playedAt {
@@ -88,12 +89,12 @@
   display: block;
 }
 .expander {
-  height: 100px;
+  height: 75px;
   text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: -0.5em -0.75em;
+  padding: 0 0.5em;
   font-weight: bold;
   color: rgba(0, 0, 0, 0.7);
   &:hover {
@@ -103,6 +104,7 @@
 }
 .gameStuff {
   border-color: rgba(0, 0, 0, 0.1)!important;
+  padding: 0;
 }
 </style>
 
@@ -176,8 +178,8 @@
       </div>
     </div>
     <div class="panel-block gameDetails" v-if="expanded">
-      <scoreboard-component :players="blueTeam" :team="'Blue'" :goals="game.blueGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize"></scoreboard-component>
-      <scoreboard-component :players="orangeTeam" :team="'Orange'" :goals="game.orangeGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize"></scoreboard-component>
+      <scoreboard-component :players="blueTeam" :team="'Blue'" :goals="game.blueGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize" :playerId="playerId"></scoreboard-component>
+      <scoreboard-component :players="orangeTeam" :team="'Orange'" :goals="game.orangeGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize" :playerId="playerId"></scoreboard-component>
     </div>
   </div>
 </template>

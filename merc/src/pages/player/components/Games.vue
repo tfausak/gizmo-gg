@@ -44,6 +44,10 @@
 }
 .gamesTableCol {
   background-color: #f5f5f5;
+  td.has-text-left,
+  th.has-text-left {
+    text-align: left!important;
+  }
 }
 .groupStats {
   padding-left: 10px;
@@ -77,14 +81,14 @@
           <div class="column is-3 gamesTableCol">
             <table id="gamesTable">
               <thead>
-                <tr><th>Total</th><th>Per game</th><th>Stat</th></tr>
+                <tr><th class="has-text-left">Stat</th><th>Total</th><th>Per game</th></tr>
               </thead>
               <tbody>
-                <tr><td>{{ stats.points }}</td><td>{{ stats.perGame.points }}</td><td>Points</td></tr>
-                <tr><td>{{ stats.goals }}</td><td>{{ stats.perGame.goals }}</td><td>Goals</td></tr>
-                <tr><td>{{ stats.assists }}</td><td>{{ stats.perGame.assists }}</td><td>Assists</td></tr>
-                <tr><td>{{ stats.saves }}</td><td>{{ stats.perGame.saves }}</td><td>Saves</td></tr>
-                <tr><td>{{ stats.shots }}</td><td>{{ stats.perGame.shots }}</td><td>Shots</td></tr>
+                <tr><td class="has-text-left">Points</td><td>{{ stats.points }}</td><td>{{ stats.perGame.points }}</td></tr>
+                <tr><td class="has-text-left">Goals</td><td>{{ stats.goals }}</td><td>{{ stats.perGame.goals }}</td></tr>
+                <tr><td class="has-text-left">Assists</td><td>{{ stats.assists }}</td><td>{{ stats.perGame.assists }}</td></tr>
+                <tr><td class="has-text-left">Saves</td><td>{{ stats.saves }}</td><td>{{ stats.perGame.saves }}</td></tr>
+                <tr><td class="has-text-left">Shots</td><td>{{ stats.shots }}</td><td>{{ stats.perGame.shots }}</td></tr>
               </tbody>
             </table>
           </div>
