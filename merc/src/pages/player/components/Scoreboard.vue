@@ -9,6 +9,9 @@
     .progress {
       width: 100px;
     }
+    tr.is-me {
+      background-color: #fff;
+    }
     th {
       background-color: rgba(255, 255, 255, 0.2);
       font-weight: normal;
@@ -83,7 +86,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="gplayer in players">
+        <tr v-for="gplayer in players" :class="{ 'is-me': gplayer.playerId === playerId }">
           <td class="playerBody">
             <figure class="image is-24x24 is-circle-dark">
               <img :src="'/static/img/bodies/' + gplayer.bodySlug + '.png'">
@@ -156,6 +159,6 @@ export default {
       amazePerfPct: amazePerfPct
     }
   },
-  props: [ 'players', 'goals', 'team', 'maxPerf', 'totalScore', 'teamSize' ]
+  props: [ 'players', 'goals', 'team', 'maxPerf', 'totalScore', 'teamSize', 'playerId' ]
 }
 </script>
