@@ -35,13 +35,15 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
     [[_]] -> do
       (day, playlists, templates) <- getFilters request
       bodies <-
-        Database.query_
+        Database.query
           connection
           [Common.sql|
             SELECT id, name
             FROM bodies
+            WHERE name NOT IN ?
             ORDER BY name ASC
           |]
+          [Common.In bodyNamesToIgnore]
       stats <-
         Database.query
           connection
@@ -328,13 +330,15 @@ getStatsBodiesHandler :: Common.Handler
 getStatsBodiesHandler _config connection request = do
   (day, playlists, templates) <- getFilters request
   bodies <-
-    Database.query_
+    Database.query
       connection
       [Common.sql|
         SELECT id, name
         FROM bodies
+        WHERE name NOT IN ?
         ORDER BY name ASC
       |]
+      [Common.In bodyNamesToIgnore]
   stats <-
     Database.query
       connection
@@ -906,10 +910,11 @@ getStatsSummaryHandler _config connection request = do
         INNER JOIN bodies ON bodies.id = games_players.body_id
         WHERE
           games.played_at >= ? AND
-          games.playlist_id IN ?
+          games.playlist_id IN ? AND
+          bodies.name NOT IN ?
         GROUP BY body
       |]
-      (day, Common.In playlists)
+      (day, Common.In playlists, Common.In bodyNamesToIgnore)
   let numBodies = sum (map snd bodyFrequencies)
   let bodyPercents =
         map
@@ -1019,3 +1024,10 @@ starbaseArcTemplate = "Starbase ARC"
 
 wastelandTemplate :: String
 wastelandTemplate = "Wasteland"
+
+bodyNamesToIgnore :: [String]
+bodyNamesToIgnore =
+  [ "Armadillo"
+  , "Hogsticker"
+  , "Sweet Tooth"
+  ]
