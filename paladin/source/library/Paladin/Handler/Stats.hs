@@ -158,10 +158,12 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
               null -- arena_skins.name
             FROM arenas
             INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
-            WHERE arena_templates.name IN ?
+            WHERE
+              arena_templates.name IN ? AND
+              arenas.name NOT IN ?
             ORDER BY arenas.name ASC
           |]
-          [Common.In competitiveTemplates]
+          (Common.In competitiveTemplates, Common.In arenaNamesToIgnore)
       stats <-
         Database.query
           connection
@@ -262,10 +264,12 @@ getStatsArenasHandler _config connection request = do
           null -- arena_skins.name
         FROM arenas
         INNER JOIN arena_templates ON arena_templates.id = arenas.template_id
-        WHERE arena_templates.name IN ?
+        WHERE
+          arena_templates.name IN ? AND
+          arenas.name NOT IN ?
         ORDER BY arenas.name ASC
       |]
-      [Common.In templates]
+      (Common.In templates, Common.In arenaNamesToIgnore)
   stats <-
     Database.query
       connection
@@ -890,10 +894,11 @@ getStatsSummaryHandler _config connection request = do
         WHERE
           games.played_at >= ? AND
           games.playlist_id IN ? AND
-          arena_templates.name IN ?
+          arena_templates.name IN ? AND
+          arenas.name NOT IN ?
         GROUP BY arenas.name
       |]
-      (day, Common.In playlists, Common.In templates)
+      (day, Common.In playlists, Common.In templates, Common.In arenaNamesToIgnore)
   let arenaPercents =
         map
           (\(arena, frequency) -> (arena, makeRatio frequency numGames))
@@ -1030,4 +1035,9 @@ bodyNamesToIgnore =
   [ "Armadillo"
   , "Hogsticker"
   , "Sweet Tooth"
+  ]
+
+arenaNamesToIgnore :: [String]
+arenaNamesToIgnore =
+  [ "stadium_winter_p"
   ]
