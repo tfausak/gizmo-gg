@@ -164,15 +164,9 @@ export function compileMapStats (STATS_ARENAS, ARENAS) {
           shots: _.round(value.totalShots / (value.totalDuration / 60) * 5, 1).toFixed(1)
         }
       }
-      value.accuracy = 0
-      if (value.totalGoals > 0) {
-        value.accuracy = 100
-      }
-      if (value.totalShots > 0) {
-        value.accuracy = _.round(value.totalGoals / value.totalShots * 100, 2)
-      }
-      value.avgScore = _.round(value.totalScore / value.numGames, 2)
-      value.freqPct = _.round(value.numGames / totalGames * 100, 2)
+      value.accuracy = _.round(value.totalGoals / (value.totalShots || 1) * 100, 2)
+      value.avgScore = _.round(value.totalScore / (value.numGames || 1), 2)
+      value.freqPct = _.round(value.numGames / (totalGames || 1) * 100, 2)
       data[type]['maxFreqPct'] = _.max([value.freqPct, data[type]['maxFreqPct']])
       data[type]['maxScore'] = _.max([value.avgScore, data[type]['maxScore']])
       return value

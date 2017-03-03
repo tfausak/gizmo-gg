@@ -134,15 +134,9 @@ export default {
         vm.maxWinPct = 0
         vm.maxScore = 0
         vm.GET_PLAYER_BODIES = _.map(data, function (value, key) {
-          value.winPct = _.round(value.numWins / value.numGames * 100, 2)
-          value.accuracy = 0
-          if (value.totalGoals > 0) {
-            value.accuracy = 100
-          }
-          if (value.totalShots > 0) {
-            value.accuracy = _.round(value.totalGoals / value.totalShots * 100, 2)
-          }
-          value.avgScore = _.round(value.totalScore / value.numGames, 2)
+          value.winPct = _.round(value.numWins / (value.numGames || 1) * 100, 2)
+          value.accuracy = _.round(value.totalGoals / (value.totalShots || 1) * 100, 2)
+          value.avgScore = _.round(value.totalScore / (value.numGames || 1), 2)
           value.bodySlug = slugger.slugBody(value.bodyName)
           vm.maxWinPct = _.max([value.winPct, vm.maxWinPct])
           vm.maxScore = _.max([value.avgScore, vm.maxScore])
