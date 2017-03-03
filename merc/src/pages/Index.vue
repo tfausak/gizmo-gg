@@ -76,11 +76,11 @@ import PlayerSearchComponent from './components/PlayerSearch'
 
 export default {
   data: () => {
-    const colors = ['blue', 'green', 'orange'];
-    const color = colors[Math.floor(Math.random() * colors.length)];
+    const colors = ['blue', 'green', 'orange']
+    const color = colors[Math.floor(Math.random() * colors.length)]
     return {
       backgroundImage: `url('/static/img/gizmo/gizmo-${color}-hq.png')`
-    };
+    }
   },
   components: {
     PlayerSearchComponent
