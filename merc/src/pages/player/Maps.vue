@@ -13,13 +13,13 @@
 
     <div v-if="source">
       <h2 class="title">Map</h2>
-      <map-table-component :source="source['byTemplate']"></map-table-component>
+      <map-table-component :source="source['byTemplate']" :scope="'player'"></map-table-component>
 
       <h2 class="title">Field</h2>
-      <map-table-component :source="source['byModel']"></map-table-component>
+      <map-table-component :source="source['byModel']" :scope="'player'"></map-table-component>
 
       <h2 class="title">Variant</h2>
-      <map-table-component :source="source['bySkin']"></map-table-component>
+      <map-table-component :source="source['bySkin']" :scope="'player'"></map-table-component>
     </div>
   </div>
 </template>

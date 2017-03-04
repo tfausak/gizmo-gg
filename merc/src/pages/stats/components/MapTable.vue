@@ -1,5 +1,5 @@
 <template>
-<table class="table is-striped table-outerborder table-stats">
+  <table class="table is-striped table-outerborder table-stats">
     <thead>
       <tr>
         <sortable-th-component v-for="col in cols" @orderByCol="orderByCol" :sort="sort" :col="col.key">{{ col.name }}</sortable-th-component>
@@ -19,6 +19,16 @@
           </div>
         </td>
         <td class="has-text-right">{{ row.numGames }}</td>
+        <td class="has-text-right" v-if="hasCol('winPct')">
+          <div class="level">
+            <div class="level-left">
+              <div class="level-item">{{ row.winPct }}%</div>
+            </div>
+            <div class="level-right">
+              <div class="level-item">{{ row.numWins }}W - {{ row.numLosses }}L</div>
+            </div>
+          </div>
+        </td>
         <td>
           <div class="level level-chained">
             <div class="level-item">
@@ -57,24 +67,54 @@ export default {
     }
   },
   data: function () {
-    return {
-      sort: null,
-      dir: 1,
-      cols: [
+    let cols
+    if (this.scope === 'map') {
+      cols = [
         { key: 'displayName', name: 'Map' },
         { key: 'freqPct', name: 'Freq. Pct' },
         { key: 'numGames', name: 'Games Played' },
         { key: 'avgScore', name: 'Avg Score' },
         { key: 'accuracy', name: 'Accuracy' }
       ]
+    } else if (this.scope === 'player') {
+      cols = [
+        { key: 'displayName', name: 'Map' },
+        { key: 'freqPct', name: 'Freq. Pct' },
+        { key: 'numGames', name: 'Games Played' },
+        { key: 'winPct', name: 'Win Pct' },
+        { key: 'avgScore', name: 'Avg Score' },
+        { key: 'accuracy', name: 'Accuracy' }
+      ]
+    }
+    return {
+      sort: null,
+      dir: 1,
+      cols: cols
     }
   },
   methods: {
     orderByCol: function (col, dir) {
       this.sort = col
       this.dir = dir
+    },
+    hasCol: function (col) {
+      let found = false
+      _.each(this.cols, function (o) {
+        if (o.key === col) {
+          found = true
+          return
+        }
+      })
+      return found
     }
   },
-  props: [ 'source' ]
+  props: {
+    source: {
+      required: true
+    },
+    scope: {
+      default: 'map'
+    }
+  }
 }
 </script>
