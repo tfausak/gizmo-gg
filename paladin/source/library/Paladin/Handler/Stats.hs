@@ -360,7 +360,7 @@ getStatsBodiesHandler _config connection request = do
             THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
             ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
             END),
-          count( CASE WHEN games_players.is_blue
+          count(CASE WHEN games_players.is_blue
             THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
             ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
             END)
