@@ -15,6 +15,7 @@ import qualified Control.Monad.Fail as Fail
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
+import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Time as Time
@@ -279,7 +280,15 @@ makeGameHash
   -> Set.Set Analysis.PlayerAnalysis
   -> Hash.Digest Hash.SHA1
 makeGameHash gameType playlist server mode size fair arena blue orange players =
-  let key =
+  let getPlayerInfo player = if Analysis.playerAnalysisIsPresentAtEnd player
+        then Just
+          ( Analysis.playerAnalysisRemoteId player
+          , Analysis.playerAnalysisLocalId player
+          , Analysis.playerAnalysisXp player
+          , Analysis.playerAnalysisIsBlue player
+          )
+        else Nothing
+      key =
         unwords
           [ gameType & Text.unpack
           , playlist & show
@@ -290,7 +299,7 @@ makeGameHash gameType playlist server mode size fair arena blue orange players =
           , arena & Text.unpack
           , blue & show
           , orange & show
-          , players & Set.toAscList & show
+          , players & Set.toAscList & Maybe.mapMaybe getPlayerInfo & show
           ]
   in Hash.hash (ByteString.pack key)
 
