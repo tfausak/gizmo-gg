@@ -27,7 +27,7 @@
          <router-link to="/" class="nav-item brand">gizmo.gg</router-link>
         </div>
         <div class="nav-right">
-          <router-link to="/stats" class="nav-item is-tab">Statistics</router-link>
+          <router-link :to="{ name: 'stats' }" class="nav-item is-tab">Statistics</router-link>
           <router-link to="/desktop-app" class="nav-item is-tab">Desktop App</router-link>
           <router-link to="/upload" class="nav-item is-tab">Upload Replay</router-link>
         </div>

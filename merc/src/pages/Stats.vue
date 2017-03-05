@@ -13,7 +13,7 @@
         <div class="container">
           <nav class="tabs is-boxed is-centered">
             <ul>
-              <router-link to="/stats" tag="li" exact><a>Summary</a></router-link>
+              <router-link :to="{ name: 'stats' }" tag="li"><a>Summary</a></router-link>
               <router-link to="/stats/battle-cars" tag="li"><a>Battle-Cars</a></router-link>
               <router-link to="/stats/maps" tag="li"><a>Maps</a></router-link>
             </ul>

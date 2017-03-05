@@ -70,7 +70,7 @@ export default new Router({
           component: StatsPage,
           children: [
             {
-              path: '',
+              path: 'summary',
               name: 'stats',
               component: StatsSummaryPage,
               props: true
