@@ -4,17 +4,17 @@
       <div class="columns">
         <!--
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="tier" title="Tier" :options="tierOptions"></filter-panel-component>
+          <filter-panel-component v-model="tier" title="Tier" :options="tierOptions" :sync="tier"></filter-panel-component>
         </div>
         -->
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="time" title="Time" :options="timeOptions"></filter-panel-component>
+          <filter-panel-component v-model="time" title="Time" :options="timeOptions" :sync="time"></filter-panel-component>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="map" title="Map" :options="mapOptions"></filter-panel-component>
+          <filter-panel-component v-model="map" title="Map" :options="mapOptions" :sync="map"></filter-panel-component>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel-component>
+          <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions" :sync="playlist"></filter-panel-component>
         </div>
       </div>
 
@@ -73,9 +73,12 @@
 import FilterPanelComponent from '../components/FilterPanel'
 import LoadingComponent from '../components/Loading'
 import SortableThComponent from '../components/SortableTh'
+import FilterTierMixin from '../mixins/FilterTierMixin'
+import FilterPlaylistMixin from '../mixins/FilterPlaylistMixin'
+import FilterTimeMixin from '../mixins/FilterTimeMixin'
+import FilterMapMixin from '../mixins/FilterMapMixin'
 
 import slugger from '../../store/slugger.js'
-import options from '../../store/options.js'
 
 var _ = require('lodash')
 
@@ -104,19 +107,7 @@ export default {
     }
   },
   data: function () {
-    let playlistOptions = options.playlists()
-    let mapOptions = options.mapTemplates()
-    let tierOptions = options.tiers()
-    let timeOptions = options.times()
     return {
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
-      mapOptions: mapOptions,
-      map: _.head(_.keys(mapOptions)),
-      tierOptions: tierOptions,
-      tier: _.head(_.keys(tierOptions)),
-      timeOptions: timeOptions,
-      time: _.head(_.keys(timeOptions)),
       sort: null,
       dir: 1,
       cols: [
@@ -159,11 +150,6 @@ export default {
       this.dir = dir
     }
   },
-  watch: {
-    playlist: function (val) { this.fetchData() },
-    tier: function (val) { this.fetchData() },
-    map: function (val) { this.fetchData() },
-    time: function (val) { this.fetchData() }
-  }
+  mixins: [ FilterTierMixin, FilterPlaylistMixin, FilterTimeMixin, FilterMapMixin ]
 }
 </script>

@@ -4,14 +4,14 @@
       <div class="columns">
         <!--
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="tier" title="Tier" :options="tierOptions"></filter-panel-component>
+          <filter-panel-component v-model="tier" title="Tier" :options="tierOptions" :sync="tier"></filter-panel-component>
         </div>
         -->
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="time" title="Time" :options="timeOptions"></filter-panel-component>
+          <filter-panel-component v-model="time" title="Time" :options="timeOptions" :sync="time"></filter-panel-component>
         </div>
         <div class="column is-one-quarter">
-          <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel-component>
+          <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions" :sync="playlist"></filter-panel-component>
         </div>
       </div>
 
@@ -35,11 +35,11 @@
 import FilterPanelComponent from '../components/FilterPanel'
 import LoadingComponent from '../components/Loading'
 import MapTableComponent from './components/MapTable'
+import FilterTierMixin from '../mixins/FilterTierMixin'
+import FilterPlaylistMixin from '../mixins/FilterPlaylistMixin'
+import FilterTimeMixin from '../mixins/FilterTimeMixin'
 
-import options from '../../store/options.js'
 import { compileMapStats } from '../../store/scrubber.js'
-
-var _ = require('lodash')
 
 export default {
   beforeMount: function () {
@@ -61,16 +61,7 @@ export default {
     }
   },
   data: function () {
-    let playlistOptions = options.playlists()
-    let tierOptions = options.tiers()
-    let timeOptions = options.times()
     return {
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
-      tierOptions: tierOptions,
-      tier: _.head(_.keys(tierOptions)),
-      timeOptions: timeOptions,
-      time: _.head(_.keys(timeOptions)),
       GET_STATS_ARENAS: null,
       GET_ARENAS: null,
       source: null
@@ -97,10 +88,6 @@ export default {
       this.source = compileMapStats(this.GET_STATS_ARENAS, this.GET_ARENAS)
     }
   },
-  watch: {
-    playlist: function (val) { this.fetchData() },
-    tier: function (val) { this.fetchData() },
-    time: function (val) { this.fetchData() }
-  }
+  mixins: [ FilterTierMixin, FilterPlaylistMixin, FilterTimeMixin ]
 }
 </script>

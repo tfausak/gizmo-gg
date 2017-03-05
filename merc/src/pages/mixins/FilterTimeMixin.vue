@@ -22,7 +22,7 @@ export default {
     time: function (val) {
       let data = Object.assign({}, this.$route.query)
       data['time'] = val
-      this.$router.replace({
+      this.$router.push({
         name: this.$route.name,
         query: data
       })
