@@ -93,7 +93,7 @@
             </figure>
           </td>
           <td class="playerName">
-            <router-link :to="'/player/' + gplayer.playerId">
+            <router-link :to="'/player/' + gplayer.playerId + '/summary'">
               {{ gplayer.name }}
             </router-link>
           </td>

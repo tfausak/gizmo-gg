@@ -43,7 +43,7 @@
               <tr v-for="player in results">
                 <td>{{ player.platformName }}</td>
                 <td>
-                  <router-link :to="'/player/' + player.id">
+                  <router-link :to="'/player/' + player.id + '/summary'">
                     {{ player.name }}
                   </router-link>
                 </td>

@@ -153,14 +153,14 @@
               <tr v-for="i in maxPlayers">
                 <td v-if="i <= blueTeam.length">
                   <span class="playerName">
-                    <router-link :to="'/player/' + blueTeam[i - 1].playerId">
+                    <router-link :to="'/player/' + blueTeam[i - 1].playerId + '/summary'">
                       {{ blueTeam[i - 1].name }}
                     </router-link>
                   </span>
                 </td>
                 <td v-if="i <= orangeTeam.length">
                   <span class="playerName">
-                    <router-link :to="'/player/' + orangeTeam[i - 1].playerId">
+                    <router-link :to="'/player/' + orangeTeam[i - 1].playerId + '/summary'">
                       {{ orangeTeam[i - 1].name }}
                     </router-link>
                   </span>
