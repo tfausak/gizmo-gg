@@ -7,8 +7,11 @@ module Paladin.Handler.Stats
   , getStatsPlayersArenasHandler
   , getStatsPlayersBodiesHandler
   , getStatsPlayersHandler
+  , getStatsPlayersPollHandler
   , getStatsSummaryHandler
   ) where
+
+import Data.Function ((&))
 
 import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
@@ -22,6 +25,24 @@ import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
+
+getStatsPlayersPollHandler :: Common.Text -> Common.Handler
+getStatsPlayersPollHandler rawPlayerId _config connection _request = do
+  let playerId = rawPlayerId & Text.unpack & Read.readMaybe & Maybe.fromMaybe 0
+  maybeLastPlayedAt <- Database.query connection
+    [Common.sql|
+      select max(games.played_at)
+      from games
+      inner join games_players
+      on games_players.game_id = games.id
+      where games_players.player_id = ?
+    |]
+    [playerId :: Int]
+  case maybeLastPlayedAt of
+    [[Just lastPlayedAt]] -> do
+      let json = Aeson.toJSON (lastPlayedAt :: Time.LocalTime)
+      pure (Common.jsonResponse Http.status200 [] json)
+    _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
 
 getStatsPlayersBodiesHandler :: Common.Text -> Common.Handler
 getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
