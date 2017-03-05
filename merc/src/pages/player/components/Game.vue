@@ -136,10 +136,10 @@
         </div>
         <div class="column statsSection is-narrow">
           <div class="title is-5" style="margin-bottom: 0; font-weight: normal;">{{ player.score }} Points</div>
-          {{ player.goals }} / {{ player.assists }} / {{ player.saves }} / {{ player.shots }}
+          <span v-tooltip.bottom-center="{ content: 'Goals / Assists / Saves / Shots', classes: 'bottom' }">{{ player.goals }} / {{ player.assists }} / {{ player.saves }} / {{ player.shots }}</span>
         </div>
         <div class="column scoreSection is-narrow">
-          {{ teamGoals }} - {{ oppGoals }}
+          <span v-tooltip.top-center="'Goals For - Goals Against'">{{ teamGoals }} - {{ oppGoals }}</span>
         </div>
         <div class="column">
           <table class="teamTable">

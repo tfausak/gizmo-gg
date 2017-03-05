@@ -69,7 +69,9 @@
           <div class="column is-2">
             <chart-wins-component :wins="stats.wins" :losses="stats.losses"></chart-wins-component>
             <div id="gamesRecord">{{ stats.wins }}W {{ stats.losses }}L</div>
-            <div id="gamesDiff">{{ stats.goalsFor }} - {{ stats.goalsAgainst }}</div>
+            <div id="gamesDiff">
+              <span v-tooltip.bottom-center="{ content: 'Goals For - Goals Against', classes: 'bottom' }">{{ stats.goalsFor }} - {{ stats.goalsAgainst }}</span>
+            </div>
           </div>
           <div class="column is-3 gamesTableCol">
             <table id="gamesTable">

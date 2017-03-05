@@ -4,8 +4,10 @@ import store from './store'
 import router from './router'
 import ECharts from 'vue-echarts'
 import axios from 'axios'
+import VTooltip from 'v-tooltip'
 import './assets/styles/app.scss'
 
+Vue.use(VTooltip)
 Vue.prototype.$http = axios
 Vue.component('echart', ECharts)
 

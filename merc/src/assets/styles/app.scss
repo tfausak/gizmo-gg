@@ -29,6 +29,56 @@
 .text-spacer { display: inline-block; margin-right: 10px; }
 .bg-offwhite { background-color: $white-like!important; }
 
+/* v-tooltip */
+.tooltip {
+  opacity: 0;
+  display: none;
+  pointer-events: none;
+  padding: 0px;
+  z-index: 10000;
+  font-size: 11px;
+  padding-bottom: 5px;
+  position: relative;
+  text-align: center;
+
+  .tooltip-content {
+    background: $dark;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 8px 2px;
+  }
+
+  &.tooltip-open-transitionend {
+    display: block;
+  }
+
+  &.tooltip-after-open {
+    opacity: 1;
+  }
+  &.bottom {
+    padding-bottom: 0;
+    padding-top: 5px;
+  }
+  &:after {
+    border-right: solid 6px transparent;
+    border-left: solid 6px transparent;
+    border-top: solid 6px $dark;
+    transform: translateX(-50%);
+    position: absolute;
+    z-index: -1;
+    content: '';
+    top: calc(100% - 5px);
+    left: 50%;
+    height: 0;
+    width: 0;
+  }
+  &.bottom:after {
+    top: 0;
+    border-top: none;
+    border-bottom: solid 6px $dark;
+  }
+}
+
 /* Panels */
 
 .panel-heading.panel-squish {

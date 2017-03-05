@@ -47,6 +47,9 @@
     <div class="panel-block" v-if="loading">
       <loading-component :loading="true"></loading-component>
     </div>
+    <div class="panel-block" v-if="source && !source['byTemplate']['data'].length">
+      <span class="text-muted text-italic">No results</span>
+    </div>
     <div v-if="source">
       <div class="panel-block mapStats" v-for="map in source['byTemplate']['data']">
         <div class="columns mapStatsLevel">
@@ -61,7 +64,11 @@
           </div>
           <div class="column is-block mapPlayer">
             <div class="score">{{ map.perGame.score }}</div>
-            <div class="text-muted">{{ map.perGame.goals }} / {{ map.perGame.assists }} / {{ map.perGame.saves }} / {{ map.perGame.shots }}</div>
+            <div class="text-muted">
+              <span v-tooltip.bottom-center="{ content: 'Per Game:<br>Goals / Assists / Saves / Shots', classes: 'bottom' }">
+                {{ map.perGame.goals }} / {{ map.perGame.assists }} / {{ map.perGame.saves }} / {{ map.perGame.shots }}
+              </span>
+            </div>
           </div>
           <div class="column is-block mapRecord">
             <div class="recordPct">{{ map.winPct }}%</div>
@@ -76,6 +83,8 @@
 <script>
 import LoadingComponent from '../../components/Loading'
 import { compileMapStats } from '../../../store/scrubber.js'
+
+var _ = require('lodash')
 
 export default {
   beforeMount: function () {
@@ -120,6 +129,9 @@ export default {
         return
       }
       this.source = compileMapStats(this.GET_PLAYER_ARENAS, this.GET_ARENAS)
+      this.source['byTemplate']['data'] = _.filter(this.source['byTemplate']['data'], function (row) {
+        return row.numGames
+      })
     },
     setPlaylist: function (key) {
       this.playlist = key

@@ -64,7 +64,11 @@
           </div>
           <div class="column is-block mapPlayer">
             <div class="score">{{ body.perGame.score }}</div>
-            <div class="text-muted">{{ body.perGame.goals }} / {{ body.perGame.assists }} / {{ body.perGame.saves }} / {{ body.perGame.shots }}</div>
+            <div class="text-muted">
+              <span v-tooltip.bottom-center="{ content: 'Per Game:<br>Goals / Assists / Saves / Shots', classes: 'bottom' }">
+                {{ body.perGame.goals }} / {{ body.perGame.assists }} / {{ body.perGame.saves }} / {{ body.perGame.shots }}
+              </span>
+            </div>
           </div>
           <div class="column is-block mapRecord">
             <div class="recordPct">{{ body.winPct }}%</div>
