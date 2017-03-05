@@ -51,9 +51,8 @@ import ChartBattleCarsComponent from './components/ChartBattleCars'
 import ChartMapsComponent from './components/ChartMaps'
 import ChartTeamWinsComponent from './components/ChartTeamWins'
 import FilterPanelComponent from '../components/FilterPanel'
-import options from '../../store/options.js'
-
-var _ = require('lodash')
+import FilterPlaylistMixin from '../mixins/FilterPlaylistMixin'
+import FilterTimeMixin from '../mixins/FilterTimeMixin'
 
 export default {
   beforeMount: function () {
@@ -68,26 +67,10 @@ export default {
   computed: {
     loading: function () {
       return this.GET_STATS_SUMMARY === null
-    },
-    qPlaylist: function () {
-      return this.$route.query.playlist
-    },
-    qTime: function () {
-      return this.$route.query.time
     }
   },
   data: function () {
-    let playlistOptions = options.playlists()
-    let playlistDefault = _.head(_.keys(playlistOptions))
-    let timeOptions = options.times()
-    let timeDefault = _.head(_.keys(timeOptions))
     return {
-      playlistOptions: playlistOptions,
-      playlistDefault: playlistDefault,
-      playlist: this.qPlaylist || playlistDefault,
-      timeOptions: timeOptions,
-      timeDefault: timeDefault,
-      time: this.qTime || timeDefault,
       GET_STATS_SUMMARY: null
     }
   },
@@ -103,31 +86,6 @@ export default {
       })
     }
   },
-  watch: {
-    playlist: function (val) {
-      let data = Object.assign({}, this.$route.query)
-      data['playlist'] = val
-      this.$router.replace({
-        name: 'stats',
-        query: data
-      })
-    },
-    qPlaylist: function (val) {
-      this.playlist = this.$route.query.playlist || this.playlistDefault
-      this.fetchData()
-    },
-    time: function (val) {
-      let data = Object.assign({}, this.$route.query)
-      data['time'] = val
-      this.$router.replace({
-        name: 'stats',
-        query: data
-      })
-    },
-    qTime: function (val) {
-      this.time = this.$route.query.time || this.timeDefault
-      this.fetchData()
-    }
-  }
+  mixins: [ FilterPlaylistMixin, FilterTimeMixin ]
 }
 </script>
