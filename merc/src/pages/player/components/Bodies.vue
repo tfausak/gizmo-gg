@@ -63,7 +63,11 @@
             <div>{{ body.numGames }} Games</div>
           </div>
           <div class="column is-block mapPlayer">
-            <div class="score">{{ body.perGame.score }}</div>
+            <div class="score">
+              <span v-tooltip.top-center="'Points per Game'">
+                {{ body.perGame.score }}
+              </span>
+            </div>
             <div class="text-muted">
               <span v-tooltip.bottom-center="{ content: 'Per Game:<br>Goals / Assists / Saves / Shots', classes: 'bottom' }">
                 {{ body.perGame.goals }} / {{ body.perGame.assists }} / {{ body.perGame.saves }} / {{ body.perGame.shots }}
