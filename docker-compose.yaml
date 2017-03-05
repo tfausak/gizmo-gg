@@ -48,7 +48,7 @@ services:
       - paladin-server
 
   postgres:
-    image: postgres:9.6
+    image: postgres:9.6-alpine
     ports:
       - 5432
     volumes:
