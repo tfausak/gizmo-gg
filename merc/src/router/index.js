@@ -72,7 +72,8 @@ export default new Router({
             {
               path: '',
               name: 'stats',
-              component: StatsSummaryPage
+              component: StatsSummaryPage,
+              props: true
             },
             {
               path: 'battle-cars',

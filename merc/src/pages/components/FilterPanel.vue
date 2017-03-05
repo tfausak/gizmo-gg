@@ -14,10 +14,10 @@
 
 <script>
 export default {
-  props: [ 'title', 'options', 'value' ],
+  props: [ 'title', 'options', 'sync' ],
   data: function () {
     return {
-      selected: this.value
+      selected: this.sync
     }
   },
   methods: {
@@ -27,6 +27,11 @@ export default {
     },
     isSelected: function (key) {
       return this.selected === key
+    }
+  },
+  watch: {
+    sync: function (val) {
+      this.selected = val
     }
   }
 }
