@@ -43,7 +43,7 @@ export default new Router({
           props: true,
           children: [
             {
-              path: '',
+              path: 'summary',
               name: 'player.summary',
               component: PlayerSummaryPage
             },

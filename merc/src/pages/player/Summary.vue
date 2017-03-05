@@ -4,18 +4,26 @@
 .panel {
   background-color: $white;
 }
+#playlistTabs {
+  margin-top: -1.4rem;
+}
 </style>
 
 <template>
   <div class="container">
+    <div class="tabs is-toggle is-small" id="playlistTabs">
+      <ul>
+        <li v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }"><a>{{ value }}</a></li>
+      </ul>
+    </div>
     <div class="columns">
       <div class="column is-one-third">
         <!-- <ranks-component :playerId="playerId"></ranks-component> -->
-        <maps-component :playerId="playerId"></maps-component>
-        <bodies-component :playerId="playerId"></bodies-component>
+        <maps-component :playerId="playerId" :playlist="playlist"></maps-component>
+        <bodies-component :playerId="playerId" :playlist="playlist"></bodies-component>
       </div>
       <div class="column">
-        <games-component :playerId="playerId"></games-component>
+        <games-component :playerId="playerId" :playlist="playlist"></games-component>
       </div>
     </div>
   </div>
@@ -26,6 +34,7 @@ import GamesComponent from './components/Games'
 import MapsComponent from './components/Maps'
 import BodiesComponent from './components/Bodies'
 import RanksComponent from './components/Ranks'
+import FilterPlaylistMixin from '../mixins/FilterPlaylistMixin'
 
 export default {
   components: {
@@ -34,6 +43,13 @@ export default {
     BodiesComponent,
     RanksComponent
   },
+  methods: {
+    fetchData: function () {},
+    setPlaylist: function (key) {
+      this.playlist = key
+    }
+  },
+  mixins: [ FilterPlaylistMixin ],
   props: [ 'playerId' ]
 }
 </script>

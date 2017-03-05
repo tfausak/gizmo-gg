@@ -44,11 +44,11 @@
     <p class="panel-heading panel-squish">
       <span class="heading">Battle-Cars (this season) - <router-link :to="'/player/' + playerId + '/battle-cars'">More</router-link></span>
     </p>
-    <p class="panel-tabs">
-      <a v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }">{{ value }}</a>
-    </p>
     <div class="panel-block" v-if="loading">
       <loading-component :loading="true"></loading-component>
+    </div>
+    <div class="panel-block" v-if="source && !source.length">
+      <span class="text-muted text-italic">No results</span>
     </div>
     <div v-if="source">
       <div class="panel-block mapStats" v-for="body in source">
@@ -78,7 +78,6 @@
 
 <script>
 import LoadingComponent from '../../components/Loading'
-import options from '../../../store/options.js'
 import slugger from '../../../store/slugger.js'
 import { getPct } from '../../../store/scrubber.js'
 
@@ -97,11 +96,8 @@ export default {
     LoadingComponent
   },
   data: function () {
-    let playlistOptions = options.shortPlaylists()
     return {
       GET_PLAYER_BODIES: null,
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
       source: null
     }
   },
@@ -147,6 +143,10 @@ export default {
         vm.source.push(row)
       })
 
+      vm.source = _.filter(vm.source, function (row) {
+        return row.numGames
+      })
+
       vm.source = _.slice(_.reverse(_.sortBy(vm.source, function (row) {
         return row.numGames
       })), 0, 5)
@@ -155,7 +155,7 @@ export default {
       this.playlist = key
     }
   },
-  props: [ 'playerId' ],
+  props: [ 'playerId', 'playlist' ],
   watch: {
     playlist: function (val) { this.fetchData() }
   }

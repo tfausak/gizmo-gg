@@ -3,7 +3,6 @@
 
 #playerHero {
   li.is-active a {
-    background-color: $white-like!important;
   }
   #playerBody {
     margin-right: 1.5em;
@@ -66,7 +65,7 @@
     </div>
     <div v-else>
       <div>
-        <section class="hero" id="playerHero">
+        <section class="hero bg-offwhite" id="playerHero">
           <div class="hero-body">
             <div class="container">
               <div class="level level-chained">
@@ -100,7 +99,7 @@
               <div class="container">
                 <nav class="tabs is-boxed">
                   <ul>
-                    <router-link :to="'/player/' + id" tag="li" exact><a>Summary</a></router-link>
+                    <router-link :to="{ name: 'player.summary', params: { playerId: id } }" tag="li"><a>Summary</a></router-link>
                     <router-link :to="'/player/' + id + '/battle-cars'" tag="li"><a>Battle-Cars</a></router-link>
                     <router-link :to="'/player/' + id + '/maps'" tag="li"><a>Maps</a></router-link>
                   </ul>
@@ -108,7 +107,7 @@
               </div>
             </div>
         </section>
-        <section class="section bg-offwhite">
+        <section class="section">
           <router-view :playerId="id"></router-view>
         </section>
       </div>

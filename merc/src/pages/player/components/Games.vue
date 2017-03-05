@@ -64,13 +64,6 @@
 <template>
   <div>
     <div class="panel">
-      <div class="panel-block panel-tabs">
-        <div class="tabs">
-          <ul>
-            <li v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }"><a>{{ value }}</a></li>
-          </ul>
-        </div>
-      </div>
       <div class="panel-block is-block" v-if="!loading">
         <div class="columns">
           <div class="column is-2">
@@ -149,7 +142,6 @@
 import ChartWinsComponent from './ChartWins'
 import GameComponent from './Game'
 import LoadingComponent from '../../components/Loading'
-import options from '../../../store/options.js'
 import slugger from '../../../store/slugger.js'
 import { getPct } from '../../../store/scrubber.js'
 
@@ -275,10 +267,7 @@ export default {
     }
   },
   data: function () {
-    let playlistOptions = options.shortPlaylists()
     return {
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
       GET_ARENAS: null,
       GET_PLAYER: null
     }
@@ -293,14 +282,13 @@ export default {
       }).then(function (data) {
         vm.GET_PLAYER = data
       })
-    },
-    setPlaylist: function (key) {
-      this.playlist = key
     }
   },
-  props: [ 'playerId' ],
+  props: [ 'playerId', 'playlist' ],
   watch: {
-    playlist: function (val) { this.fetchData() }
+    playlist: function (val) {
+      this.fetchData()
+    }
   }
 }
 </script>

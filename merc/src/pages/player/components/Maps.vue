@@ -44,9 +44,6 @@
     <p class="panel-heading panel-squish">
       <span class="heading">Maps (this season)  - <router-link :to="'/player/' + playerId + '/maps'">More</router-link></span>
     </p>
-    <p class="panel-tabs">
-      <a v-for="(value, key) in playlistOptions" @click="setPlaylist(key)" :class="{ 'is-active': key === playlist }">{{ value }}</a>
-    </p>
     <div class="panel-block" v-if="loading">
       <loading-component :loading="true"></loading-component>
     </div>
@@ -78,10 +75,7 @@
 
 <script>
 import LoadingComponent from '../../components/Loading'
-import options from '../../../store/options.js'
 import { compileMapStats } from '../../../store/scrubber.js'
-
-var _ = require('lodash')
 
 export default {
   beforeMount: function () {
@@ -101,12 +95,9 @@ export default {
     LoadingComponent
   },
   data: function () {
-    let playlistOptions = options.shortPlaylists()
     return {
       GET_ARENAS: null,
       GET_PLAYER_ARENAS: null,
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
       source: null
     }
   },
@@ -134,7 +125,7 @@ export default {
       this.playlist = key
     }
   },
-  props: [ 'playerId' ],
+  props: [ 'playerId', 'playlist' ],
   watch: {
     playlist: function (val) { this.fetchData() }
   }
