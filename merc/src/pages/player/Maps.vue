@@ -2,10 +2,10 @@
   <div class="container">
     <div class="columns">
       <div class="column is-one-quarter">
-        <filter-panel-component v-model="time" title="Time" :options="timeOptions"></filter-panel-component>
+        <filter-panel-component v-model="time" title="Time" :options="timeOptions" :sync="time"></filter-panel-component>
       </div>
       <div class="column is-one-quarter">
-        <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions"></filter-panel-component>
+        <filter-panel-component v-model="playlist" title="Playlist" :options="playlistOptions" :sync="playlist"></filter-panel-component>
       </div>
     </div>
 
@@ -28,11 +28,10 @@
 import FilterPanelComponent from '../components/FilterPanel'
 import LoadingComponent from '../components/Loading'
 import MapTableComponent from '../stats/components/MapTable'
+import FilterPlaylistMixin from '../mixins/FilterPlaylistMixin'
+import FilterTimeMixin from '../mixins/FilterTimeMixin'
 
-import options from '../../store/options.js'
 import { compileMapStats } from '../../store/scrubber.js'
-
-var _ = require('lodash')
 
 export default {
   beforeMount: function () {
@@ -54,13 +53,7 @@ export default {
     }
   },
   data: function () {
-    let playlistOptions = options.playlists()
-    let timeOptions = options.times()
     return {
-      playlistOptions: playlistOptions,
-      playlist: _.head(_.keys(playlistOptions)),
-      timeOptions: timeOptions,
-      time: _.head(_.keys(timeOptions)),
       GET_PLAYER_ARENAS: null,
       GET_ARENAS: null,
       source: null
@@ -87,10 +80,7 @@ export default {
       this.source = compileMapStats(this.GET_PLAYER_ARENAS, this.GET_ARENAS)
     }
   },
-  props: [ 'playerId' ],
-  watch: {
-    playlist: function (val) { this.fetchData() },
-    time: function (val) { this.fetchData() }
-  }
+  mixins: [ FilterPlaylistMixin, FilterTimeMixin ],
+  props: [ 'playerId' ]
 }
 </script>

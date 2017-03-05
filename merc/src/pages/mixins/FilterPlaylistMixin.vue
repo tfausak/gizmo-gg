@@ -22,7 +22,7 @@ export default {
     playlist: function (val) {
       let data = Object.assign({}, this.$route.query)
       data['playlist'] = val
-      this.$router.push({
+      this.$router.replace({
         name: this.$route.name,
         query: data
       })

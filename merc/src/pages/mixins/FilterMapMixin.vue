@@ -22,7 +22,7 @@ export default {
     map: function (val) {
       let data = Object.assign({}, this.$route.query)
       data['map'] = val
-      this.$router.push({
+      this.$router.replace({
         name: this.$route.name,
         query: data
       })

@@ -22,7 +22,7 @@ export default {
     tier: function (val) {
       let data = Object.assign({}, this.$route.query)
       data['tier'] = val
-      this.$router.push({
+      this.$router.replace({
         name: this.$route.name,
         query: data
       })
