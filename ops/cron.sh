@@ -19,7 +19,7 @@ NEW="$(git rev-parse HEAD)"
 
 if test "$NEW" != "$OLD" -o "$FORCE" = 'true'
 then
-  sh "$REPO_DIR/ops/notify.sh" "$DISCORD_ID" "$DISCORD_TOKEN" 'Deploying `'"${NEW:0:7}"'` ...'
+  sh "$REPO_DIR/ops/notify.sh" "$DISCORD_ID" "$DISCORD_TOKEN" 'Deploying `'"$NEW"'` ...'
   sh "$REPO_DIR/ops/deploy.sh" "$REPO_DIR"
   sh "$REPO_DIR/ops/notify.sh" "$DISCORD_ID" "$DISCORD_TOKEN" 'Finished deploying.'
 else
