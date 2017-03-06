@@ -113,7 +113,9 @@ insertReplay connection uploadId replay = do
           ON CONFLICT DO NOTHING
         |]
         (serverId, serverName)
-    _ -> pure ()
+    Nothing -> Database.execute connection
+      [Sql.sql| insert into servers (name) values (?) |]
+      [serverName]
   let playlist = Analysis.replayAnalysisPlaylist replay
   Database.execute
     connection
