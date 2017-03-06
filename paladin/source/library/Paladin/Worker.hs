@@ -52,7 +52,7 @@ parseUploads config connection = do
         UPDATE uploads
         SET
           started_parsing_at = now(),
-          parser_id = (SELECT id FROM parsers WHERE name = ?)
+          parser_id = (SELECT id FROM parsers WHERE name = ? ORDER BY id ASC LIMIT 1)
         FROM (
           SELECT id AS upload_id
           FROM uploads
@@ -200,13 +200,13 @@ insertReplay connection uploadId replay = do
       )
       VALUES (
         ?,
-        (SELECT id FROM game_types WHERE name = ?),
+        (SELECT id FROM game_types WHERE name = ? ORDER BY id ASC LIMIT 1),
         ?,
         ?,
         ?,
         ?,
         ?,
-        (SELECT id FROM arenas WHERE name = ?),
+        (SELECT id FROM arenas WHERE name = ? ORDER BY id ASC LIMIT 1),
         ?,
         ?,
         ?,
@@ -232,7 +232,7 @@ insertReplay connection uploadId replay = do
         duration,
         game_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, (SELECT id FROM games WHERE hash = ?))
+      VALUES (?, ?, ?, ?, ?, ?, (SELECT id FROM games WHERE hash = ? ORDER BY id ASC LIMIT 1))
     |]
     ( uuid
     , majorVersion
@@ -325,7 +325,7 @@ insertPlayer connection player = do
         local_id
       )
       VALUES (
-        (SELECT id FROM platforms WHERE name = ?),
+        (SELECT id FROM platforms WHERE name = ? ORDER BY id ASC LIMIT 1),
         ?,
         ?
       )
@@ -392,11 +392,11 @@ insertGamePlayer connection hash player = do
         swivel_speed
       )
       VALUES (
-        (SELECT id FROM games WHERE hash = ?),
+        (SELECT id FROM games WHERE hash = ? ORDER BY id ASC LIMIT 1),
         (SELECT id FROM players WHERE
-          platform_id = (SELECT id FROM platforms WHERE name = ?) AND
+          platform_id = (SELECT id FROM platforms WHERE name = ? ORDER BY id ASC LIMIT 1) AND
           remote_id = ? AND
-          local_id = ?),
+          local_id = ? ORDER BY id ASC LIMIT 1),
         ?, -- name
         ?, -- xp
         ?, -- is_blue
@@ -524,7 +524,7 @@ insertError connection uploadId exception = do
       UPDATE uploads
       SET
         finished_parsing_at = now(),
-        parse_error_id = (SELECT id FROM parse_errors WHERE content = ?)
+        parse_error_id = (SELECT id FROM parse_errors WHERE content = ? ORDER BY id ASC LIMIT 1)
       WHERE id = ?
     |]
     (content, uploadId)
