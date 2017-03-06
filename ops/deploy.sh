@@ -16,4 +16,4 @@ env MERC_API_URL="'$API_URL/'" docker-compose build
 # Start the new Docker containers.
 docker-compose up -d postgres
 sleep 5
-env PALADIN_CONNECT="$API_URL" docker-compose up -d --remove-orphans
+env PALADIN_CONNECT="$API_URL" docker-compose up -d --force-recreate --remove-orphans
