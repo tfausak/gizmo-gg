@@ -6,9 +6,12 @@ import qualified Paladin.Config as Config
 import qualified Paladin.Database as Database
 import qualified Paladin.Server as Server
 import qualified Paladin.Worker as Worker
+import qualified System.IO as IO
 
 main :: IO ()
 main = do
+  IO.hSetBuffering IO.stdout IO.LineBuffering
+  IO.hSetBuffering IO.stderr IO.LineBuffering
   config <- Config.getConfig
   print config
   connection <- Database.connect config
