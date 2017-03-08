@@ -180,6 +180,7 @@ insertReplay connection uploadId replay = do
         , insertGameRowOrangeGoals = orangeGoals
         , insertGameRowRecordedAt = recordedAt
         , insertGameRowDuration = duration
+        , insertGameRowBlueWin = blueGoals > orangeGoals
         }
   Database.execute
     connection
@@ -196,7 +197,8 @@ insertReplay connection uploadId replay = do
         blue_goals,
         orange_goals,
         played_at,
-        duration
+        duration,
+        blue_win
       )
       VALUES (
         ?,
@@ -207,6 +209,7 @@ insertReplay connection uploadId replay = do
         ?,
         ?,
         (SELECT id FROM arenas WHERE name = ? ORDER BY id ASC LIMIT 1),
+        ?,
         ?,
         ?,
         ?,
@@ -265,6 +268,7 @@ data InsertGameRow = InsertGameRow
   , insertGameRowOrangeGoals :: Int
   , insertGameRowRecordedAt :: Time.LocalTime
   , insertGameRowDuration :: Int
+  , insertGameRowBlueWin :: Bool
   } deriving (Eq, Entity.Generic, Show)
 
 instance Sql.ToRow InsertGameRow
