@@ -79,14 +79,8 @@ getStatsPlayersBodiesHandler rawPlayerId _config connection request = do
               sum(games_players.shots),
               sum(games.duration),
               count(games.id),
-              count(CASE WHEN games_players.is_blue
-                THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
-                ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
-                END),
-              count(CASE WHEN games_players.is_blue
-                THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
-                ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
-                END)
+              count(case when games_players.did_win then 1 end),
+              count(case when not games_players.did_win then 1 end)
             FROM bodies
             INNER JOIN games_players ON games_players.body_id = bodies.id
             INNER JOIN games ON games.id = games_players.game_id
@@ -199,14 +193,8 @@ getStatsPlayersArenasHandler rawPlayerId _config connection request = do
               sum(games_players.shots),
               sum(games.duration),
               count(games.id),
-              count(CASE WHEN games_players.is_blue
-                THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
-                ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
-                END),
-              count(CASE WHEN games_players.is_blue
-                THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
-                ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
-                END)
+              count(case when games_players.did_win then 1 end),
+              count(case when not games_players.did_win then 1 end)
             FROM games_players
             INNER JOIN games ON games.id = games_players.game_id
             INNER JOIN arenas ON arenas.id = games.arena_id
@@ -377,14 +365,8 @@ getStatsBodiesHandler _config connection request = do
           sum(games_players.saves),
           sum(games_players.shots),
           count(games.id),
-          count(CASE WHEN games_players.is_blue
-            THEN (CASE WHEN games.blue_goals > games.orange_goals THEN 1 END)
-            ELSE (CASE WHEN games.orange_goals > games.blue_goals THEN 1 END)
-            END),
-          count(CASE WHEN games_players.is_blue
-            THEN (CASE WHEN games.blue_goals < games.orange_goals THEN 1 END)
-            ELSE (CASE WHEN games.orange_goals < games.blue_goals THEN 1 END)
-            END)
+          count(case when games_players.did_win then 1 end),
+          count(case when not games_players.did_win then 1 end)
         FROM bodies
         INNER JOIN games_players ON games_players.body_id = bodies.id
         INNER JOIN games ON games.id = games_players.game_id
@@ -889,8 +871,8 @@ getStatsSummaryHandler _config connection request = do
       [Common.sql|
         SELECT
           count(games.id),
-          count(CASE WHEN blue_goals > orange_goals THEN 1 END),
-          count(CASE WHEN blue_goals < orange_goals THEN 1 END)
+          count(CASE WHEN blue_win THEN 1 END),
+          count(CASE WHEN not blue_win THEN 1 END)
         FROM games
         INNER JOIN arenas ON arenas.id = games.arena_id
         INNER JOIN arena_templates ON arena_templates.id = arenas.template_id

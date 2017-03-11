@@ -37,6 +37,7 @@ data GamePlayer = GamePlayer
   , gamePlayerDistance :: Float
   , gamePlayerStiffness :: Float
   , gamePlayerSwivelSpeed :: Float
+  , gamePlayerDidWin :: Bool
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.FromRow GamePlayer
