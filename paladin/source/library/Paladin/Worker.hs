@@ -166,6 +166,7 @@ insertReplay connection uploadId replay = do
           players
   let recordedAt = Analysis.replayAnalysisRecordedAt replay
   let duration = round (Analysis.replayAnalysisDuration replay)
+  let blueWin = blueGoals > orangeGoals
   let insertGameRow =
         InsertGameRow
         { insertGameRowHash = show hash
@@ -180,7 +181,7 @@ insertReplay connection uploadId replay = do
         , insertGameRowOrangeGoals = orangeGoals
         , insertGameRowRecordedAt = recordedAt
         , insertGameRowDuration = duration
-        , insertGameRowBlueWin = blueGoals > orangeGoals
+        , insertGameRowBlueWin = blueWin
         }
   Database.execute
     connection
@@ -218,7 +219,7 @@ insertReplay connection uploadId replay = do
       ON CONFLICT DO NOTHING
     |]
     insertGameRow
-  mapM_ (insertGamePlayer connection hash) players
+  mapM_ (insertGamePlayer connection hash blueWin) players
   let uuid = Analysis.replayAnalysisUuid replay
   let majorVersion = Analysis.replayAnalysisMajorVersion replay
   let minorVersion = Analysis.replayAnalysisMinorVersion replay
@@ -339,9 +340,10 @@ insertPlayer connection player = do
 
 insertGamePlayer :: Sql.Connection
                  -> Hash.Digest Hash.SHA1
+                 -> Bool
                  -> Analysis.PlayerAnalysis
                  -> IO ()
-insertGamePlayer connection hash player = do
+insertGamePlayer connection hash blueWin player = do
   let (platform, remoteId, localId) = getPlayerId player
   mapM_
     (insertRequiredAuxiliary connection player)
@@ -361,6 +363,8 @@ insertGamePlayer connection hash player = do
     [ ("paints", Analysis.playerAnalysisWheelsPaint)
     , ("paints", Analysis.playerAnalysisTopperPaint)
     ]
+  let isBlue = Analysis.playerAnalysisIsBlue player
+  let didWin = if isBlue then blueWin else not blueWin
   Database.execute
     connection
     [Sql.sql|
@@ -393,7 +397,8 @@ insertGamePlayer connection hash player = do
         angle,
         distance,
         stiffness,
-        swivel_speed
+        swivel_speed,
+        did_win
       )
       VALUES (
         (SELECT id FROM games WHERE hash = ? ORDER BY id ASC LIMIT 1),
@@ -427,7 +432,8 @@ insertGamePlayer connection hash player = do
         ?, -- angle
         ?, -- distance
         ?, -- stiffness
-        ? -- swivel_speed
+        ?, -- swivel_speed
+        ? -- did_win
       )
       ON CONFLICT DO NOTHING
     |]
@@ -437,7 +443,7 @@ insertGamePlayer connection hash player = do
     , localId & Sql.toField
     , player & Analysis.playerAnalysisName & Sql.toField
     , player & Analysis.playerAnalysisXp & Sql.toField
-    , player & Analysis.playerAnalysisIsBlue & Sql.toField
+    , isBlue & Sql.toField
     , player & Analysis.playerAnalysisIsPresentAtEnd & Sql.toField
     , player & Analysis.playerAnalysisScore & Sql.toField
     , player & Analysis.playerAnalysisGoals & Sql.toField
@@ -462,6 +468,7 @@ insertGamePlayer connection hash player = do
     , player & Analysis.playerAnalysisDistance & Sql.toField
     , player & Analysis.playerAnalysisStiffness & Sql.toField
     , player & Analysis.playerAnalysisSwivelSpeed & Sql.toField
+    , didWin & Sql.toField
     ]
 
 insertRequiredAuxiliary
