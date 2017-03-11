@@ -86,7 +86,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="gplayer in players" :class="{ 'is-me': gplayer.playerId === playerId }">
+        <tr v-for="gplayer in players" :class="{ 'is-me': gplayer.playerId == playerId }">
           <td class="playerBody">
             <figure class="image is-24x24 is-circle-dark">
               <img :src="'/static/img/bodies/' + gplayer.bodySlug + '.png'">
