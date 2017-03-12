@@ -29,51 +29,70 @@ const store = new Vuex.Store({
   actions: {
     GET_ARENAS: function ({ dispatch }, params) {
       let endpoint = 'arenas'
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
     },
 
     GET_PLAYER: function ({ dispatch }, params) {
       let endpoint = 'stats/players/' + params.id
       delete params.id
       endpoint += getQueryString(params)
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
     },
 
     GET_PLAYER_ARENAS: function ({ dispatch }, params) {
       let endpoint = 'stats/players/' + params.id + '/arenas'
       delete params.id
       endpoint += getQueryString(params)
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
     },
 
     GET_PLAYER_BODIES: function ({ dispatch }, params) {
       let endpoint = 'stats/players/' + params.id + '/bodies'
       delete params.id
       endpoint += getQueryString(params)
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
+    },
+
+    GET_PLAYER_POLL: function ({ dispatch }, params) {
+      let endpoint = 'stats/players/' + params.id + '/poll'
+      delete params.id
+      endpoint += getQueryString(params)
+      return dispatch('GRAB', endpoint)
     },
 
     GET_SEARCH: function ({ dispatch }, params) {
-      let endpoint = `search${getQueryString(params)}`
-      return dispatch('FETCH', { endpoint })
+      let endpoint = 'search' + getQueryString(params)
+      return dispatch('FETCH', endpoint)
     },
 
     GET_STATS_SUMMARY: function ({ dispatch }, params) {
       let endpoint = 'stats/summary' + getQueryString(params)
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
     },
 
     GET_STATS_BODIES: function ({ dispatch }, params) {
       let endpoint = 'stats/bodies' + getQueryString(params)
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
     },
 
     GET_STATS_ARENAS: function ({ dispatch }, params) {
       let endpoint = 'stats/arenas' + getQueryString(params)
-      return dispatch('FETCH', { endpoint })
+      return dispatch('FETCH', endpoint)
     },
 
-    FETCH: function ({ commit, state }, { endpoint }) {
+    CLEAR_ENDPOINT: function ({ commit, state }, endpoint) {
+      commit('CLEAR_CACHE', endpoint)
+    },
+
+    GRAB: function ({ commit, state }, endpoint) {
+      let promise = getResource(endpoint)
+        .then(function (data) {
+          return data
+        })
+      return promise
+    },
+
+    FETCH: function ({ commit, state }, endpoint) {
       if (endpoint in state.cache) {
         return state.cache[endpoint]
       }
@@ -88,6 +107,13 @@ const store = new Vuex.Store({
   mutations: {
     SAVE_CACHE: function (state, { k, v }) {
       state.cache[k] = v
+    },
+    CLEAR_CACHE: function (state, endpoint) {
+      _.each(state.cache, function (value, key) {
+        if (key.includes(endpoint)) {
+          delete state.cache[key]
+        }
+      })
     }
   },
   getters: {}

@@ -117,6 +117,7 @@
 
 <script>
 import slugger from '../store/slugger.js'
+import { EventBus } from '../store/event-bus.js'
 
 var moment = require('moment')
 var _ = require('lodash')
@@ -146,6 +147,16 @@ export default {
       return this.GET_PLAYER === null
     }
   },
+  created: function () {
+    var vm = this
+    setInterval(function () {
+      vm.poll()
+    }, 10000)
+    EventBus.$on('player-updated', function () {
+      vm.$store.dispatch('CLEAR_ENDPOINT', 'stats/players/' + vm.id)
+      vm.fetchData(true)
+    })
+  },
   data: function () {
     return {
       GET_PLAYER: null,
@@ -153,17 +164,32 @@ export default {
     }
   },
   methods: {
-    fetchData: function () {
+    fetchData: function (seamless = false) {
       var vm = this
-      this.GET_PLAYER = null
-      this.missing = false
+      if (!seamless) {
+        this.GET_PLAYER = null
+        this.missing = false
+      }
       vm.$store.dispatch('GET_PLAYER', {
         id: vm.id,
         playlist: 'all'
       }).then(function (data) {
         vm.GET_PLAYER = data
+        if (seamless) {
+          vm.$forceUpdate()
+        }
       }).catch(function () {
         vm.missing = true
+      })
+    },
+    poll: function () {
+      var vm = this
+      vm.$store.dispatch('GET_PLAYER_POLL', {
+        id: vm.id
+      }).then(function (data) {
+        if (data && vm.GET_PLAYER && vm.GET_PLAYER.lastPlayedAt !== data) {
+          EventBus.$emit('player-updated')
+        }
       })
     }
   },

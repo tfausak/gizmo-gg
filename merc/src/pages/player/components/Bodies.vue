@@ -88,6 +88,7 @@
 import LoadingComponent from '../../components/Loading'
 import slugger from '../../../store/slugger.js'
 import { getPct } from '../../../store/scrubber.js'
+import { EventBus } from '../../../store/event-bus.js'
 
 var _ = require('lodash')
 
@@ -102,6 +103,12 @@ export default {
   },
   components: {
     LoadingComponent
+  },
+  created: function () {
+    var vm = this
+    EventBus.$on('player-updated', function () {
+      vm.fetchData(true)
+    })
   },
   data: function () {
     return {

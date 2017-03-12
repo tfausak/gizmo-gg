@@ -85,6 +85,7 @@
 <script>
 import LoadingComponent from '../../components/Loading'
 import { compileMapStats } from '../../../store/scrubber.js'
+import { EventBus } from '../../../store/event-bus.js'
 
 var _ = require('lodash')
 
@@ -104,6 +105,12 @@ export default {
   },
   components: {
     LoadingComponent
+  },
+  created: function () {
+    var vm = this
+    EventBus.$on('player-updated', function () {
+      vm.fetchData()
+    })
   },
   data: function () {
     return {
