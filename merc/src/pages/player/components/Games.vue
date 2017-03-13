@@ -63,6 +63,7 @@
 
 <template>
   <div>
+    <ticker-component></ticker-component>
     <div class="panel">
       <div class="panel-block is-block" v-if="!loading">
         <div class="columns">
@@ -142,6 +143,7 @@
 
 <script>
 import ChartWinsComponent from './ChartWins'
+import TickerComponent from './Ticker'
 import GameComponent from './Game'
 import LoadingComponent from '../../components/Loading'
 import slugger from '../../../store/slugger.js'
@@ -161,7 +163,8 @@ export default {
   components: {
     ChartWinsComponent,
     GameComponent,
-    LoadingComponent
+    LoadingComponent,
+    TickerComponent
   },
   computed: {
     loading: function () {
