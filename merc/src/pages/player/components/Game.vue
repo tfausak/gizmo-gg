@@ -69,6 +69,11 @@
     margin: 0 auto;
   }
 }
+.mapSection-multi {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
 .statsSection {
   text-align: center;
   width: 140px;
@@ -129,10 +134,20 @@
           {{ player.loadout.bodyName }}
         </div>
         <div class="column mapSection is-narrow">
-          <figure class="image is-48x48">
-            <img :src="'/static/img/maps/' + templateSlug + '.jpg'"  class="is-circle-dark">
-          </figure>
-          {{ game.arena.templateName }}
+
+          <div v-if="game.arena.templateName === game.arena.modelName">
+            <figure class="image is-48x48">
+              <img :src="'/static/img/maps/' + templateSlug + '.jpg'"  class="is-circle-dark">
+            </figure>
+            {{ game.arena.templateName }}
+          </div>
+          <div v-else class="mapSection-multi">
+            <figure class="image is-48x48">
+              <img :src="'/static/img/maps/' + modelSlug + '.jpg'"  class="is-circle-dark">
+            </figure>
+            <div>{{ game.arena.templateName }}</div>
+            <div>{{ game.arena.modelName }}</div>
+          </div>
         </div>
         <div class="column statsSection is-narrow">
           <div class="title is-5" style="margin-bottom: 0; font-weight: normal;">{{ player.score }} Points</div>
@@ -260,6 +275,7 @@ export default {
       blueTeam: blueTeam,
       maxPlayers: _.max([orangeTeam.length, blueTeam.length]),
       templateSlug: slugger.slugMap(vm.game.arena.templateName),
+      modelSlug: slugger.slugMapModel(vm.game.arena.modelName),
       playlistSlug: slugger.slugPlaylist(vm.game.playlistName),
       expanded: false,
       maxPerf: maxPerf,

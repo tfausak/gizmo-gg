@@ -9,6 +9,7 @@
     .progress {
       width: 100px;
     }
+    tr.is-me:hover,
     tr.is-me {
       background-color: #fff;
     }
@@ -81,7 +82,6 @@
           <th>Saves</th>
           <th>Shots</th>
           <th>Points</th>
-          <th>Accuracy</th>
           <th class="perfTh">Performance</th>
         </tr>
       </thead>
@@ -102,7 +102,6 @@
           <td>{{ gplayer.saves }}</td>
           <td>{{ gplayer.shots }}</td>
           <td>{{ gplayer.score }}</td>
-          <td>{{ gplayer.accuracy }}%</td>
           <td>
             <div class="level level-chained">
               <div class="level-item">

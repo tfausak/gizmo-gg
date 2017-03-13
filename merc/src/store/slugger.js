@@ -1,6 +1,16 @@
 var _ = require('lodash')
 
+var slug = function (str) {
+  if (!str) {
+    return ''
+  }
+  str = _.toLower(str)
+  str = _.replace(str, /\s+/g, '-')
+  return str
+}
+
 export default {
+  slug: slug,
   slugBody: function (body) {
     if (!body) {
       return null
@@ -22,6 +32,9 @@ export default {
     name = _.toLower(name)
     name = _.replace(name, /\s+/g, '-')
     return name
+  },
+  slugMapModel: function (name) {
+    return slug(name)
   },
   slugPlaylist: function (name) {
     if (!name) {
