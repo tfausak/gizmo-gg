@@ -430,7 +430,8 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       platform <- getPlatform connection playerId
       namesAndTimes <- getNamesAndTimes connection playerId
       (day, playlists, templates) <- getFilters request
-      games <- getGames connection day playlists templates playerId
+      let after = getAfter request
+      games <- getGames connection day playlists templates after playerId
       let gameIds = map playerGameRowGameId games
       gamesPlayers <- getGamesPlayers connection gameIds
       let body =
@@ -442,9 +443,10 @@ getGames :: Sql.Connection
          -> Time.Day
          -> [Int]
          -> [String]
+         -> Time.LocalTime
          -> Int
          -> IO [PlayerGameRow]
-getGames connection day playlists templates player =
+getGames connection day playlists templates after player =
   Database.query
     connection
     [Common.sql|
@@ -473,13 +475,14 @@ getGames connection day playlists templates player =
       INNER JOIN playlists ON playlists.id = games.playlist_id
       WHERE
         games.played_at >= ? AND
+        games.played_at < ? AND
         playlists.id IN ? AND
         arena_templates.name IN ? AND
         games_players.player_id = ?
       ORDER BY games.played_at DESC
       LIMIT 40
     |]
-    (day, Common.In playlists, Common.In templates, player)
+    (day, after, Common.In playlists, Common.In templates, player)
 
 data PlayerGameRow = PlayerGameRow
   { playerGameRowGameId :: Int
@@ -963,6 +966,19 @@ getFilters request = do
   let playlists = getPlaylists query
   let templates = getTemplates query
   pure (day, playlists, templates)
+
+getAfter :: Wai.Request -> Time.LocalTime
+getAfter request =
+  let query = Wai.queryString request
+      whitespace = False
+      locale = Time.defaultTimeLocale
+      format = "%Y-%m-%dT%H:%M:%S"
+      future = Time.LocalTime (Time.fromGregorian 3000 1 1) Time.midnight
+  in case Common.getParam "after" query of
+    Just input -> case Time.parseTimeM whitespace locale format input of
+      Just after -> after
+      _ -> future
+    _ -> future
 
 getDay :: Common.Query -> IO Time.Day
 getDay query = do
