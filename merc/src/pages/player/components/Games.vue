@@ -59,6 +59,18 @@
 .groupRecord {
   font-size: 11px;
 }
+.loadMore {
+  width: 100%;
+  background-color: $white-ter;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  text-align: center;
+  padding: 1em;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+}
 </style>
 
 <template>
@@ -137,6 +149,14 @@
     </div>
     <div v-else>
       <game-component v-for="game in GET_PLAYER.games" :game="game" :playerId="playerId"></game-component>
+      <div v-if="allowMore" class="loadMore" @click="loadMore">
+        <div v-if="loadingMore">
+          <i class="fa fa-circle-o-notch fa-spin"></i>
+        </div>
+        <div v-else>
+          Load More
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -281,7 +301,9 @@ export default {
   data: function () {
     return {
       GET_ARENAS: null,
-      GET_PLAYER: null
+      GET_PLAYER: null,
+      loadingMore: false,
+      allowMore: true
     }
   },
   methods: {
@@ -293,6 +315,32 @@ export default {
         playlist: vm.playlist
       }).then(function (data) {
         vm.GET_PLAYER = data
+      })
+    },
+    loadMore: function () {
+      let vm = this
+      console.log('loadMore')
+      if (vm.loading) {
+        return
+      }
+      if (!vm.allowMore) {
+        return
+      }
+      vm.loadingMore = true
+      after = null
+      let lastGame = _.last(vm.GET_PLAYER.games)
+      let after = lastGame.playedAt
+      vm.$store.dispatch('GET_PLAYER', {
+        id: vm.playerId,
+        playlist: vm.playlist,
+        after: after
+      }).then(function (data) {
+        if (data.games.length) {
+          vm.GET_PLAYER.games = _.concat(vm.GET_PLAYER.games, data.games)
+        } else {
+          vm.allowMore = false
+        }
+        vm.loadingMore = false
       })
     }
   },
