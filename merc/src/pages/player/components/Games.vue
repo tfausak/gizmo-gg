@@ -310,6 +310,7 @@ export default {
     fetchData: function () {
       let vm = this
       vm.GET_PLAYER = null
+      vm.allowMore = true
       vm.$store.dispatch('GET_PLAYER', {
         id: vm.playerId,
         playlist: vm.playlist
