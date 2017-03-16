@@ -8,4 +8,7 @@ gizmo.gg is split into a few services:
 
 Check out the [ops](./ops) directory for how those services are managed.
 
+There is a separate desktop app. It's called [gizmo-gg-uploader][].
+
 [gizmo.gg]: http://gizmo.gg
+[gizmo-gg-uploader]:  https://github.com/tfausak/gizmo-gg-uploader
