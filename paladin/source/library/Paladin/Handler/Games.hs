@@ -28,21 +28,21 @@ getGame :: Sql.Connection -> Common.GameId -> IO (Maybe Common.Upload)
 getGame connection gameId = do
   games <- Database.query connection [Common.sql|
     select
-    id,
-    created_at,
-    hash,
-    game_type_id,
-    playlist_id,
-    server_id,
-    game_mode_id,
-    team_size,
-    is_fair,
-    arena_id,
-    blue_goals,
-    orange_goals,
-    played_at,
-    duration,
-    blue_win,
+      id,
+      created_at,
+      hash,
+      game_type_id,
+      playlist_id,
+      server_id,
+      game_mode_id,
+      team_size,
+      is_fair,
+      arena_id,
+      blue_goals,
+      orange_goals,
+      played_at,
+      duration,
+      blue_win
     from games
     where id = ?
   |] [gameId]
