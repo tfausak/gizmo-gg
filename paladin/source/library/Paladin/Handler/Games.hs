@@ -1,6 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Paladin.Handler.Games where
+module Paladin.Handler.Games
+  ( getGameHandler
+  ) where
 
 import Data.Function ((&))
 
