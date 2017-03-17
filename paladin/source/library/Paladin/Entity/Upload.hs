@@ -7,8 +7,10 @@ import qualified Paladin.Entity.ParseError as ParseError
 import qualified Paladin.Entity.Parser as Parser
 import qualified Paladin.Entity.Replay as Replay
 
+type UploadId = Common.Tagged Upload Int
+
 data Upload = Upload
-  { uploadId :: Common.Tagged Upload Int
+  { uploadId :: UploadId
   , uploadCreatedAt :: Common.UTCTime
   , uploadName :: Common.Text
   , uploadSize :: Int

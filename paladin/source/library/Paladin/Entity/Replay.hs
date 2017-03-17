@@ -5,8 +5,10 @@ module Paladin.Entity.Replay where
 import qualified Paladin.Entity.Common as Common
 import qualified Paladin.Entity.Game as Game
 
+type ReplayId = Common.Tagged Replay Common.Guid
+
 data Replay = Replay
-  { replayId :: Common.Tagged Replay Common.Guid
+  { replayId :: ReplayId
   , replayCreatedAt :: Common.UTCTime
   , replayMajorVersion :: Int
   , replayMinorVersion :: Int

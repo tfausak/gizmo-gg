@@ -12,7 +12,7 @@ import Data.Text as Export (Text)
 import Data.Time as Export (LocalTime, UTCTime)
 import Database.PostgreSQL.Simple as Export (FromRow)
 import GHC.Generics as Export (Generic)
-import Paladin.Utility as Export (Guid, Tagged)
+import Paladin.Utility as Export (Guid(..), Tagged(..))
 
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Casing as Casing

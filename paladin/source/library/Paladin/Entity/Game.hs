@@ -9,8 +9,10 @@ import qualified Paladin.Entity.GameType as GameType
 import qualified Paladin.Entity.Playlist as Playlist
 import qualified Paladin.Entity.Server as Server
 
+type GameId = Common.Tagged Game Int
+
 data Game = Game
-  { gameId :: Common.Tagged Game Int
+  { gameId :: GameId
   , gameCreatedAt :: Common.UTCTime
   , gameHash :: Common.Tagged Common.SHA1 String
   , gameGameTypeId :: Common.Tagged GameType.GameType Int

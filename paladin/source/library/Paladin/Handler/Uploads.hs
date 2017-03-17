@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Paladin.Handler.Uploads where
@@ -9,6 +10,7 @@ import qualified Crypto.Hash as Hash
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
+import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Network.HTTP.Types as Http
@@ -87,31 +89,82 @@ insertUpload connection name digest contents = do
   pure uploadId
 
 getUploadHandler :: Common.Text -> Common.Handler
-getUploadHandler rawUploadId _config connection _request =
-  case rawUploadId & Text.unpack & Read.readMaybe of
-    Nothing -> pure (Common.jsonResponse Http.status400 [] Aeson.Null)
+getUploadHandler rawUploadId config connection _request =
+  let notFound = Common.jsonResponse Http.status404 [] Aeson.Null
+  in case rawUploadId & Text.unpack & Read.readMaybe & fmap Common.Tagged of
+    Nothing -> pure notFound
     Just uploadId -> do
-      uploads <-
-        Database.query
-          connection
-          [Common.sql|
-            SELECT
-              id,
-              created_at,
-              name,
-              size,
-              hash,
-              started_parsing_at,
-              parser_id,
-              finished_parsing_at,
-              parse_error_id,
-              replay_id
-            FROM uploads
-            WHERE id = ?
-          |]
-          [uploadId :: Int]
-      case uploads of
-        [upload] ->
-          pure
-            (Common.jsonResponse Http.status200 [] (upload :: Common.Upload))
-        _ -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+      maybeUpload <- getUpload connection uploadId
+      case maybeUpload of
+        Nothing -> pure notFound
+        Just upload -> do
+          maybeReplay <- case Common.uploadReplayId upload of
+            Nothing -> pure Nothing
+            Just replayId -> getReplay connection replayId
+          let uploadInfo = makeUploadInfo config upload maybeReplay
+          pure (Common.jsonResponse Http.status200 [] uploadInfo)
+
+data UploadInfo = UploadInfo
+  { uploadInfoState :: String
+  , uploadInfoGame :: Maybe String
+  } deriving (Common.Generic)
+
+instance Common.ToJSON UploadInfo where
+  toJSON = Common.genericToJSON "uploadInfo"
+
+makeUploadInfo
+  :: Common.Config
+  -> Common.Upload
+  -> Maybe Common.Replay
+  -> UploadInfo
+makeUploadInfo config upload maybeReplay =
+  case maybeReplay of
+    Just replay -> UploadInfo
+      { uploadInfoState = "success"
+      , uploadInfoGame = Just (Common.makeUrl config ("/games/" ++ show (Common.tagValue (Common.replayGameId replay))))
+      }
+    Nothing -> UploadInfo
+      { uploadInfoState = case Common.uploadFinishedParsingAt upload of
+        Just _ -> "failure"
+        Nothing -> "pending"
+      , uploadInfoGame = Nothing
+      }
+
+getUpload :: Sql.Connection -> Common.UploadId -> IO (Maybe Common.Upload)
+getUpload connection uploadId = do
+  uploads <- Database.query connection [Common.sql|
+    select
+      id,
+      created_at,
+      name,
+      size,
+      hash,
+      started_parsing_at,
+      parser_id,
+      finished_parsing_at,
+      parse_error_id,
+      replay_id
+    from uploads
+    where id = ?
+  |] [uploadId]
+  pure (Maybe.listToMaybe uploads)
+
+getReplay
+  :: Sql.Connection
+  -> Common.ReplayId
+  -> IO (Maybe Common.Replay)
+getReplay connection replayId = do
+  replays <- Database.query connection [Common.sql|
+    select
+      id,
+      created_at,
+      major_version,
+      minor_version,
+      recorded_at,
+      custom_name,
+      duration,
+      game_id
+    from replays
+    where id = ?
+  |] [replayId]
+  pure (Maybe.listToMaybe replays)

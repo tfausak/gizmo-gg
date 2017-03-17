@@ -4,6 +4,7 @@ module Paladin.Handler
 
 import Paladin.Handler.Arenas as Export
 import Paladin.Handler.Common as Export
+import Paladin.Handler.Games as Export
 import Paladin.Handler.Search as Export
 import Paladin.Handler.Stats as Export
 import Paladin.Handler.Uploads as Export

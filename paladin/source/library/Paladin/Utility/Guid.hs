@@ -3,6 +3,7 @@ module Paladin.Utility.Guid where
 import qualified Data.Aeson as Aeson
 import qualified Data.UUID as Uuid
 import qualified Database.PostgreSQL.Simple.FromField as Sql
+import qualified Database.PostgreSQL.Simple.ToField as Sql
 import qualified Database.PostgreSQL.Simple.TypeInfo.Static as Sql
 
 newtype Guid = Guid
@@ -21,6 +22,11 @@ instance Sql.FromField Guid where
                  Just uuid ->
                    let guid = Guid uuid
                    in pure guid
+
+instance Sql.ToField Guid where
+  toField guid =
+    let value = guidValue guid
+    in Sql.toField value
 
 instance Aeson.ToJSON Guid where
   toJSON guid =
