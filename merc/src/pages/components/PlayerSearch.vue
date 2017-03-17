@@ -44,44 +44,93 @@ aside > ul {
   border: 0;
   box-shadow: none;
 }
+.search-container {
+  position: relative;
+  display: flex;
+}
+.search-history {
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  background-color: lighten($primary, 20%);
+  z-index: 999;
+}
+.search-history-heading {
+  z-index: 999;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.5em 1em;
+  color: rgba(0, 0, 0, 0.4);
+  .icon {
+    vertical-align: 0px;
+  }
+}
+.search-history-content {
+  .search-item a {
+    padding: 5px 10px;
+    font-size: 12px;
+    display: block;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
 </style>
 
 <template>
   <form @submit.prevent="submit" role="form">
-    <p class="control has-addons has-addons-centered">
-      <span class="platform button is-medium" @click="toggleDropdown">
-        <span class="icon is-small">
-          <i :class="selected_platform.icon"></i>
-        </span>
-        <span class="text-smaller">{{ selected_platform.text }}</span>
-        <span class="angle icon is-small">
-          <i class="fa" :class="{ 'fa-angle-down': show_dropdown, 'fa-angle-right': !show_dropdown }"></i>
-        </span>
-        <div class="dropdown has-text-left" v-show="show_dropdown">
-          <aside class="menu">
-            <p class="menu-label">
-              Choose Platform
-            </p>
-            <ul class="menu-list" v-for="p in platforms">
-              <li>
-                <a @click="choosePlatform(p)">
-                  <span class="icon is-small">
-                    <i :class="p.icon"></i>
-                  </span>
-                  <span>{{ p.text }}</span>
-                </a>
+    <div class="control has-addons has-addons-centered">
+      <div class="search-container">
+        <div class="search-history" v-if="showRecent && anyRecent()">
+          <div class="search-history-heading">
+            <span class="icon is-small">
+              <i class="fa fa-clock-o"></i>
+            </span>
+            <span>Recent</span>
+          </div>
+          <div class="search-history-content">
+            <ul>
+              <li v-for="item in recent" class="search-item">
+                <router-link :to="'/player/' + item.id + '/summary'">
+                  {{ item.name }}
+                </router-link>
               </li>
             </ul>
-          </aside>
+          </div>
         </div>
-      </span>
-      <input v-model="mysearch" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" :placeholder="selected_platform.placeholder">
-      <button type="submit" class="button is-medium">
-        <span class="icon is-small">
-          <i class="fa fa-search"></i>
+        <span class="platform button is-medium" @click="toggleDropdown">
+          <span class="icon is-small">
+            <i :class="selected_platform.icon"></i>
+          </span>
+          <span class="text-smaller">{{ selected_platform.text }}</span>
+          <span class="angle icon is-small">
+            <i class="fa" :class="{ 'fa-angle-down': show_dropdown, 'fa-angle-right': !show_dropdown }"></i>
+          </span>
+          <div class="dropdown has-text-left" v-show="show_dropdown">
+            <aside class="menu">
+              <p class="menu-label">
+                Choose Platform
+              </p>
+              <ul class="menu-list" v-for="p in platforms">
+                <li>
+                  <a @click="choosePlatform(p)">
+                    <span class="icon is-small">
+                      <i :class="p.icon"></i>
+                    </span>
+                    <span>{{ p.text }}</span>
+                  </a>
+                </li>
+              </ul>
+            </aside>
+          </div>
         </span>
-      </button>
-    </p>
+        <input v-model="mysearch" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" :placeholder="selected_platform.placeholder" @click="toggleRecent">
+        <button type="submit" class="button is-medium">
+          <span class="icon is-small">
+            <i class="fa fa-search"></i>
+          </span>
+        </button>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -94,12 +143,19 @@ export default {
   props: [ 'platform', 'search' ],
   directives: { focus: focus },
   data: function () {
+    let recent = []
+    let cookie = this.$cookie.get('recent')
+    if (cookie) {
+      recent = JSON.parse(cookie)
+    }
     return {
       focused: true,
       show_dropdown: false,
       selected_platform: platforms[0],
       platforms: platforms,
-      mysearch: this.search
+      mysearch: this.search,
+      showRecent: false,
+      recent: recent
     }
   },
   beforeMount: function () {
@@ -117,6 +173,14 @@ export default {
           search: this.mysearch
         }
       })
+    },
+
+    toggleRecent: function () {
+      this.showRecent = !this.showRecent
+    },
+
+    anyRecent: function () {
+      return _.size(this.recent)
     },
 
     focusInput: function () {

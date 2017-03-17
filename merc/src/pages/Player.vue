@@ -175,6 +175,24 @@ export default {
         playlist: 'all'
       }).then(function (data) {
         vm.GET_PLAYER = data
+        let recent = []
+        let cookie = vm.$cookie.get('recent')
+        if (cookie) {
+          recent = JSON.parse(cookie)
+        }
+        let newRecent = []
+        newRecent.push({
+          id: vm.id,
+          name: vm.GET_PLAYER.name
+        })
+        _.each(recent, function (value) {
+          if (value.id === vm.id) {
+            return
+          }
+          newRecent.push(value)
+        })
+        newRecent = _.slice(newRecent, 0, 5)
+        vm.$cookie.set('recent', JSON.stringify(newRecent))
         if (seamless) {
           vm.$forceUpdate()
         }
