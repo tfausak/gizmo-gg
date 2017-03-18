@@ -8,6 +8,7 @@ import Paladin.Database as Export
 import Paladin.Entity as Export
 import Paladin.Handler as Export
 import Paladin.Main as Export
+import Paladin.Rank as Export
 import Paladin.Router as Export
 import Paladin.Server as Export
 import Paladin.Storage as Export

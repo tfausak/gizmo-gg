@@ -23,15 +23,18 @@ import qualified Data.Version as Version
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Database.PostgreSQL.Simple.SqlQQ as Sql
 import qualified Database.PostgreSQL.Simple.ToField as Sql
+import qualified Network.HTTP.Client as Client
+import qualified Network.HTTP.Client.TLS as TLS
 import qualified Paladin.Analysis as Analysis
 import qualified Paladin.Config as Config
 import qualified Paladin.Database as Database
 import qualified Paladin.Entity as Entity
+import qualified Paladin.Rank as Rank
 import qualified Paladin.Storage as Storage
 import qualified Paladin.Utility as Utility
 import qualified Rattletrap
 
-startWorker :: Config.Config -> Sql.Connection -> IO Concurrent.ThreadId
+startWorker :: Config.Config -> Sql.Connection -> IO ()
 startWorker config connection = do
   Database.execute
     connection
@@ -41,7 +44,11 @@ startWorker config connection = do
       ON CONFLICT DO NOTHING
     |]
     [parser]
-  Concurrent.forkIO (parseUploads config connection)
+  manager <- Client.newManager TLS.tlsManagerSettings
+  let sessionId = Config.configSessionId config
+  _ <- Concurrent.forkIO (Rank.keepSessionAlive manager sessionId)
+  _ <- Concurrent.forkIO (parseUploads config connection)
+  pure ()
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
 parseUploads config connection = do
