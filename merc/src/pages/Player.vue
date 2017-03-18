@@ -1,11 +1,52 @@
 <style scoped lang="scss">
 @import "~styles/vars.scss";
 
+$data_bg: #fff;
+
 #playerHero {
-  li.is-active a {
-  }
+  background-color: #eee;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   #playerBody {
-    margin-right: 1.5em;
+    margin-right: 0.5em;
+  }
+}
+#playerData {
+  background-color: $data_bg;
+}
+.playerTabs {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  li {
+    display: block;
+    padding: 0;
+    margin: 0;
+  }
+  li > a {
+    background-color: #f4f4f4;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-left: 0;
+    margin-bottom: -1px;
+    padding: 0.2em 1em;
+    display: block;
+    color: #444;
+    &:hover {
+      background-color: #eee;
+    }
+  }
+  li:first-child a {
+    border-left: 1px solid rgba(0, 0, 0, 0.2);
+    border-top-left-radius: 3px;
+  }
+  li:last-child a {
+    border-top-right-radius: 3px;
+  }
+  li.is-active > a {
+    color: $primary;
+    z-index: 999;
+    position: relative;
+    border-bottom: 1px solid transparent;
+    background-color: $data_bg;
   }
 }
 
@@ -17,9 +58,12 @@
   line-height: 90px;
   color: $grey-light;
 }
-.playerActions {
-  margin-top: 10px;
-  margin-bottom: -38px;
+.platformIcon {
+  font-size: 30px;
+  width: 40px;
+  .icon-xbox {
+    font-size: 20px;
+  }
 }
 </style>
 
@@ -65,7 +109,7 @@
     </div>
     <div v-else>
       <div>
-        <section class="hero bg-offwhite" id="playerHero">
+        <section class="hero" id="playerHero">
           <div class="hero-body">
             <div class="container">
               <div class="level level-chained">
@@ -75,10 +119,10 @@
                     <i class="fa fa-question noBodyIcon" v-else></i>
                   </figure>
                 </div>
-                <div class="level-item">
-                  <span class="icon is-medium">
-                    <i class="fa fa-steam"></i>
-                  </span>
+                <div class="level-item platformIcon">
+                  <i class="fa fa-steam" v-if="isPlatform('Steam')"></i>
+                  <i class="icon-playstation" v-if="isPlatform('PlayStation')"></i>
+                  <i class="icon-xbox" v-if="isPlatform('Xbox')"></i>
                 </div>
                 <div class="level-item">
                   <div class="is-block">
@@ -88,8 +132,6 @@
                     <h2 class="subtitle no-margin-top">
                       last played {{ lastUpdated }}
                     </h2>
-                    <div class="playerActions">
-                    </div>
                   </div>
                 </div>
               </div>
@@ -97,17 +139,15 @@
           </div>
           <div class="hero-foot">
               <div class="container">
-                <nav class="tabs is-boxed">
-                  <ul>
-                    <router-link :to="{ name: 'player.summary', params: { playerId: id } }" tag="li"><a>Summary</a></router-link>
-                    <router-link :to="'/player/' + id + '/battle-cars'" tag="li"><a>Battle-Cars</a></router-link>
-                    <router-link :to="'/player/' + id + '/maps'" tag="li"><a>Maps</a></router-link>
-                  </ul>
-                </nav>
+                <ul class="playerTabs">
+                  <router-link :to="{ name: 'player.summary', params: { playerId: id } }" tag="li"><a>Summary</a></router-link>
+                  <router-link :to="'/player/' + id + '/battle-cars'" tag="li"><a>Battle-Cars</a></router-link>
+                  <router-link :to="'/player/' + id + '/maps'" tag="li"><a>Maps</a></router-link>
+                </ul>
               </div>
             </div>
         </section>
-        <section class="section">
+        <section class="section" id="playerData">
           <router-view :playerId="id"></router-view>
         </section>
       </div>
@@ -164,6 +204,9 @@ export default {
     }
   },
   methods: {
+    isPlatform: function (platform) {
+      return this.GET_PLAYER && this.GET_PLAYER.platform.name === platform
+    },
     fetchData: function (seamless = false) {
       var vm = this
       if (!seamless) {
@@ -179,14 +222,16 @@ export default {
         let cookie = vm.$cookie.get('recent')
         if (cookie) {
           recent = JSON.parse(cookie)
+          console.log(recent)
         }
         let newRecent = []
+        let myId = vm.id
         newRecent.push({
-          id: parseInt(vm.id),
+          id: myId,
           name: vm.GET_PLAYER.name
         })
         _.each(recent, function (value) {
-          if (value.id === vm.id) {
+          if (value.id === myId) {
             return
           }
           newRecent.push(value)

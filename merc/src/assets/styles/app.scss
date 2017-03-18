@@ -23,6 +23,7 @@
 .text-dark { color: $dark; }
 .text-small { font-size: 12px; }
 .text-muted { color: $grey; }
+.text-muted2 { color: lighten($grey, 15%); }
 .text-right { text-align: right!important; }
 .text-left { text-align: left!important; }
 .text-italic, .text-italics { font-style: italic; }

@@ -6,6 +6,19 @@
 }
 #playlistTabs {
   margin-top: -1.4rem;
+  li {
+    background-color: #fff;
+  }
+}
+.playerStatPanel {
+  & > .panel-heading {
+    border-bottom: 0;
+    & > .heading {
+      color: rgba(0, 0, 0, 0.5)!important;
+      font-weight: normal;
+      letter-spacing: 0;
+    }
+  }
 }
 </style>
 

@@ -3,6 +3,12 @@
 
 .mapStats {
   padding: 0;
+  &:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.025);
+  }
+  &:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
 }
 .mapStatsLevel {
   font-size: 13px;
@@ -25,6 +31,7 @@
   .mapDesc {
     padding-top: 6px;
     .heading {
+      font-weight: bold;
       margin-bottom: 0;
     }
   }
@@ -40,7 +47,7 @@
 </style>
 
 <template>
-  <div class="panel">
+  <div class="panel playerStatPanel">
     <p class="panel-heading panel-squish">
       <span class="heading">Maps (this season)  - <router-link :to="'/player/' + playerId + '/maps'">More</router-link></span>
     </p>
@@ -60,13 +67,13 @@
           </div>
           <div class="column is-block mapDesc">
             <div class="heading">{{ map.displayName }}</div>
-            <div>{{ map.numGames }} Games</div>
+            <div class="text-muted2">{{ map.numGames }} Games</div>
           </div>
           <div class="column is-block mapPlayer">
             <div class="score">
               <span v-tooltip.top-center="'Points per Game'">{{ map.perGame.score }}</span>
             </div>
-            <div class="text-muted">
+            <div class="text-muted2">
               <span v-tooltip.bottom-center="{ content: 'Per Game:<br>Goals / Assists / Saves / Shots', classes: 'bottom' }">
                 {{ map.perGame.goals }} / {{ map.perGame.assists }} / {{ map.perGame.saves }} / {{ map.perGame.shots }}
               </span>
@@ -74,7 +81,7 @@
           </div>
           <div class="column is-block mapRecord">
             <div class="recordPct">{{ map.winPct }}%</div>
-            <div class="text-muted">{{ map.numWins }}W {{ map.numLosses }}L</div>
+            <div class="text-muted2">{{ map.numWins }}W {{ map.numLosses }}L</div>
           </div>
         </div>
       </div>
