@@ -40,7 +40,7 @@
       <div class="level topnav">
         <div class="level-left">
           <div class="level-item">
-            <router-link to="/" class="nav-item brand">gizmo.gg</router-link>
+            <router-link to="/" class="nav-item brand">gizmo.gg beta</router-link>
           </div>
         </div>
         <div class="level-right">
