@@ -10,7 +10,7 @@
               </h1>
             </div>
             <div class="level-item">
-              <player-search-component :platform="platform" :search="search"></player-search-component>
+              <player-search-component :search="search"></player-search-component>
             </div>
           </div>
         </div>

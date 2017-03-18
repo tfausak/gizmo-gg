@@ -1,32 +1,6 @@
 <style scoped lang="scss">
 @import "~styles/vars.scss";
 
-.dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  z-index: 999;
-}
-.platform {
-  text-align: right;
-  min-width: 140px;
-}
-.angle {
-  flex-grow: 2;
-  text-align: right!important;
-}
-.input {
-  min-width: 210px;
-}
-aside > .menu-label {
-  padding: 10px 20px;
-  margin: 0;
-}
-aside > ul {
-  padding: 0;
-}
 #player:focus {
   border-color: $grey-light;
 }
@@ -35,28 +9,42 @@ aside > ul {
 }
 .button {
   border: 0;
+  border-top-right-radius: 3px!important;
+  border-bottom-right-radius: 3px!important;
 }
 .input {
-  font-size: 14px!important;
-  padding: 4px 10px 4px 10px;
+  min-width: 210px;
   box-sizing: content-box;
-  border-radius: 0!important;
   border: 0;
   box-shadow: none;
+  font-size: 14px!important;
+  height: auto;
+}
+.search-small {
+  .input {
+    font-size: 12px!important;
+    padding: 0px 15px;
+    min-width: 90px;
+  }
+  .button {
+    font-size: 12px;
+  }
 }
 .search-container {
   position: relative;
   display: flex;
+  z-index: 9999;
+  border-radius: 0!important;
+  margin: 1px 3px;
 }
 .search-history {
   position: absolute;
   top: 100%;
   width: 100%;
   background-color: lighten($primary, 20%);
-  z-index: 999;
+  z-index: 99999;
 }
 .search-history-heading {
-  z-index: 999;
   background-color: rgba(0, 0, 0, 0.05);
   padding: 0.5em 1em;
   color: rgba(0, 0, 0, 0.4);
@@ -66,9 +54,10 @@ aside > ul {
 }
 .search-history-content {
   .search-item a {
-    padding: 5px 10px;
+    padding: 3px 10px;
     font-size: 12px;
     display: block;
+    color: #fff;
     &:hover {
       text-decoration: underline;
     }
@@ -77,9 +66,15 @@ aside > ul {
 </style>
 
 <template>
-  <form @submit.prevent="submit" role="form">
+  <form @submit.prevent="submit" role="form" >
     <div class="control has-addons has-addons-centered">
-      <div class="search-container">
+      <div class="search-container" :class="{ 'search-small': small }">
+        <input v-model="mysearch" id="player" class="input" :class="{ 'is-small': small, 'is-medium': !small }" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" @click="toggleRecent" placeholder="Search by in-game name">
+        <button type="submit" class="button" :class="{ 'is-small': small, 'is-medium': !small }">
+          <span class="icon is-small">
+            <i class="fa fa-search"></i>
+          </span>
+        </button>
         <div class="search-history" v-if="showRecent && anyRecent()">
           <div class="search-history-heading">
             <span class="icon is-small">
@@ -97,86 +92,63 @@ aside > ul {
             </ul>
           </div>
         </div>
-        <span class="platform button is-medium" @click="toggleDropdown">
-          <span class="icon is-small">
-            <i :class="selected_platform.icon"></i>
-          </span>
-          <span class="text-smaller">{{ selected_platform.text }}</span>
-          <span class="angle icon is-small">
-            <i class="fa" :class="{ 'fa-angle-down': show_dropdown, 'fa-angle-right': !show_dropdown }"></i>
-          </span>
-          <div class="dropdown has-text-left" v-show="show_dropdown">
-            <aside class="menu">
-              <p class="menu-label">
-                Choose Platform
-              </p>
-              <ul class="menu-list" v-for="p in platforms">
-                <li>
-                  <a @click="choosePlatform(p)">
-                    <span class="icon is-small">
-                      <i :class="p.icon"></i>
-                    </span>
-                    <span>{{ p.text }}</span>
-                  </a>
-                </li>
-              </ul>
-            </aside>
-          </div>
-        </span>
-        <input v-model="mysearch" id="player" class="input is-medium" type="text" v-focus="focused" @focus="focused = true" @blur="focused = false" :placeholder="selected_platform.placeholder" @click="toggleRecent">
-        <button type="submit" class="button is-medium">
-          <span class="icon is-small">
-            <i class="fa fa-search"></i>
-          </span>
-        </button>
       </div>
     </div>
   </form>
 </template>
 
 <script>
-import platforms from '../../store/platforms.js'
+import { EventBus } from '../../store/event-bus.js'
 import { focus } from 'vue-focus'
 var _ = require('lodash')
 
 export default {
-  props: [ 'platform', 'search' ],
+  props: [ 'search', 'small' ],
+  created: function () {
+    var vm = this
+    EventBus.$on('recent-updated', function () {
+      vm.recent = vm.getRecent()
+    })
+  },
   directives: { focus: focus },
   data: function () {
-    let recent = []
-    let cookie = this.$cookie.get('recent')
-    if (cookie) {
-      recent = JSON.parse(cookie)
-    }
     return {
       focused: true,
-      show_dropdown: false,
-      selected_platform: platforms[0],
-      platforms: platforms,
+      showDropdown: false,
       mysearch: this.search,
       showRecent: false,
-      recent: recent
-    }
-  },
-  beforeMount: function () {
-    let result = _.find(this.platforms, [ 'slug', this.platform ])
-    if (result) {
-      this.selected_platform = result
+      recent: this.getRecent()
     }
   },
   methods: {
+    getRecent: function () {
+      let tmp = []
+      let cookie = this.$cookie.get('recent')
+      if (cookie) {
+        tmp = JSON.parse(cookie)
+      }
+      return tmp
+    },
+
     submit: function () {
       this.$router.push({
         name: 'search',
         query: {
-          platform: this.selected_platform.slug,
           search: this.mysearch
         }
       })
     },
 
     toggleRecent: function () {
-      this.showRecent = !this.showRecent
+      var vm = this
+      vm.showRecent = !vm.showRecent
+      if (vm.showRecent) {
+        setTimeout(function () {
+          document.addEventListener('click', vm.toggleRecent)
+        }, 0)
+      } else {
+        document.removeEventListener('click', vm.toggleRecent)
+      }
     },
 
     anyRecent: function () {
@@ -184,24 +156,6 @@ export default {
     },
 
     focusInput: function () {
-      this.focused = true
-    },
-
-    toggleDropdown: function () {
-      var vm = this
-      this.show_dropdown = !this.show_dropdown
-      if (this.show_dropdown) {
-        setTimeout(function () {
-          document.addEventListener('click', vm.toggleDropdown)
-        }, 0)
-      } else {
-        document.removeEventListener('click', vm.toggleDropdown)
-        this.focused = true
-      }
-    },
-
-    choosePlatform: function (p) {
-      this.selected_platform = p
       this.focused = true
     }
   }

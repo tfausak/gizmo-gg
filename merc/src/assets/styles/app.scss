@@ -28,6 +28,7 @@
 .text-italic, .text-italics { font-style: italic; }
 .text-spacer { display: inline-block; margin-right: 10px; }
 .bg-offwhite { background-color: $white-like!important; }
+.high-zindex { position: relative; z-index: 9999; }
 
 /* v-tooltip */
 .tooltip {

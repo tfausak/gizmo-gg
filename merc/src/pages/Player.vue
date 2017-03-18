@@ -182,7 +182,7 @@ export default {
         }
         let newRecent = []
         newRecent.push({
-          id: vm.id,
+          id: parseInt(vm.id),
           name: vm.GET_PLAYER.name
         })
         _.each(recent, function (value) {
@@ -193,6 +193,7 @@ export default {
         })
         newRecent = _.slice(newRecent, 0, 5)
         vm.$cookie.set('recent', JSON.stringify(newRecent))
+        EventBus.$emit('recent-updated')
         if (seamless) {
           vm.$forceUpdate()
         }
