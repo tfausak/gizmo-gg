@@ -9,10 +9,12 @@ import Data.Function ((&))
 import qualified Data.Aeson as Aeson
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
+import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Network.HTTP.Types as Http
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
+import qualified Paladin.Handler.Stats as Stats
 import qualified Text.Read as Read
 
 getGameHandler :: Common.Text -> Common.Handler
@@ -21,31 +23,50 @@ getGameHandler rawGameId _config connection _request =
   in case rawGameId & Text.unpack & Read.readMaybe & fmap Common.Tagged of
     Nothing -> pure notFound
     Just gameId -> do
-      maybeGame <- getGame connection gameId
-      case maybeGame of
+      maybePlayerGameRow <- getPlayerGameRow connection gameId
+      case maybePlayerGameRow of
         Nothing -> pure notFound
-        Just game -> pure (Common.jsonResponse Http.status200 [] game)
+        Just playerGameRow -> do
+          gamePlayerRows <- Stats.getGamesPlayers connection [Common.tagValue gameId]
+          let maybePlayerOutput = Stats.makePlayerOutput
+                Nothing
+                [ ( Text.pack ""
+                  , Time.LocalTime (Time.fromGregorian 1970 1 1) Time.midnight
+                  )
+                ]
+                [playerGameRow]
+                gamePlayerRows
+          let body = Aeson.toJSON maybePlayerOutput
+          pure (Common.jsonResponse Http.status200 [] body)
 
-getGame :: Sql.Connection -> Common.GameId -> IO (Maybe Common.Upload)
-getGame connection gameId = do
-  games <- Database.query connection [Common.sql|
+getPlayerGameRow
+  :: Sql.Connection
+  -> Common.GameId
+  -> IO (Maybe Stats.PlayerGameRow)
+getPlayerGameRow connection gameId = do
+  playerGameRows <- Database.query connection [Common.sql|
     select
-      id,
-      created_at,
-      hash,
-      game_type_id,
-      playlist_id,
-      server_id,
-      game_mode_id,
-      team_size,
-      is_fair,
-      arena_id,
-      blue_goals,
-      orange_goals,
-      played_at,
-      duration,
-      blue_win
+      games.id,
+      playlists.id,
+      playlists.name,
+      arenas.id,
+      arenas.name,
+      arena_skins.id,
+      arena_skins.name,
+      arena_models.id,
+      arena_models.name,
+      arena_templates.id,
+      arena_templates.name,
+      games.played_at,
+      games.duration,
+      games.blue_goals,
+      games.orange_goals
     from games
-    where id = ?
+    inner join arenas on arenas.id = games.arena_id
+    left outer join arena_skins on arena_skins.id = arenas.skin_id
+    inner join arena_models on arena_models.id = arenas.model_id
+    inner join arena_templates on arena_templates.id = arenas.template_id
+    inner join playlists on playlists.id = games.playlist_id
+    where games.id = ?
   |] [gameId]
-  pure (Maybe.listToMaybe games)
+  pure (Maybe.listToMaybe playerGameRows)

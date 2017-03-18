@@ -9,6 +9,9 @@ module Paladin.Handler.Stats
   , getStatsPlayersHandler
   , getStatsPlayersPollHandler
   , getStatsSummaryHandler
+  , PlayerGameRow(..)
+  , getGamesPlayers
+  , makePlayerOutput
   ) where
 
 import Data.Function ((&))
