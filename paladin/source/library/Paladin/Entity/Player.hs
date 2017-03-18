@@ -10,7 +10,7 @@ type PlayerId = Common.Tagged Player Int
 data Player = Player
   { playerId :: PlayerId
   , playerCreatedAt :: Common.UTCTime
-  , playerPlatformId :: Common.Tagged Platform.Platform Int
+  , playerPlatformId :: Platform.PlatformId
   , playerRemoteId :: Common.Text
   , playerLocalId :: Int
   } deriving (Eq, Common.Generic, Show)

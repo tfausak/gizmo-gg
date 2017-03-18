@@ -11,6 +11,7 @@ import Data.Function ((&))
 
 import qualified Control.Concurrent as Concurrent
 import qualified Control.Exception as Exception
+import qualified Control.Monad as Monad
 import qualified Control.Monad.Fail as Fail
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Char8 as ByteString
@@ -47,8 +48,124 @@ startWorker config connection = do
   manager <- Client.newManager TLS.tlsManagerSettings
   let sessionId = Config.configSessionId config
   _ <- Concurrent.forkIO (Rank.keepSessionAlive manager sessionId)
+  _ <- Concurrent.forkIO (updatePlayerSkills connection manager sessionId)
   _ <- Concurrent.forkIO (parseUploads config connection)
   pure ()
+
+updatePlayerSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
+updatePlayerSkills connection manager sessionId = Monad.forever (do
+  maybePlayerWithPlatform <- getOldestPlayerWithPlatform connection
+  case maybePlayerWithPlatform of
+    Nothing -> pure ()
+    Just (player, platform) -> do
+      let platformName = platform & Entity.platformName & show
+      let playerId = player & Entity.playerRemoteId & Text.unpack
+      skills <- Rank.getPlayerSkills manager sessionId platformName playerId
+      mapM_ (createPlayerSkill connection player) skills
+  Concurrent.threadDelay 5000000)
+
+createPlayerSkill :: Sql.Connection -> Entity.Player -> Rank.Skill -> IO ()
+createPlayerSkill connection player skill = Database.execute connection
+  [Sql.sql|
+    insert into player_skills (
+      player_id,
+      playlist_id,
+      matches_played,
+      division,
+      tier,
+      mmr,
+      mu,
+      sigma
+    ) values ( ?, ?, ?, ?, ?, ?, ?, ? )
+  |]
+  [ player & Entity.playerId & Sql.toField
+  , skill & Rank.skillPlaylist & Entity.Tagged & Sql.toField
+  , skill & Rank.skillMatchesPlayed & Sql.toField
+  , skill & Rank.skillDivision & Sql.toField
+  , skill & Rank.skillTier & Sql.toField
+  , skill & Rank.skillMmr & Sql.toField
+  , skill & Rank.skillMu & Sql.toField
+  , skill & Rank.skillSigma & Sql.toField
+  ]
+
+getOldestPlayerWithPlatform
+  :: Sql.Connection -> IO (Maybe (Entity.Player, Entity.Platform))
+getOldestPlayerWithPlatform connection = do
+  maybePlayerId <- getOldestPlayerId connection
+  case maybePlayerId of
+    Nothing -> pure Nothing
+    Just playerId -> getPlayerWithPlatform connection playerId
+
+getPlayerWithPlatform
+  :: Sql.Connection
+  -> Entity.PlayerId
+  -> IO (Maybe (Entity.Player, Entity.Platform))
+getPlayerWithPlatform connection playerId = do
+  maybePlayer <- getPlayer connection playerId
+  case maybePlayer of
+    Nothing -> pure Nothing
+    Just player -> do
+      let platformId = Entity.playerPlatformId player
+      maybePlatform <- getPlatform connection platformId
+      case maybePlatform of
+        Nothing -> pure Nothing
+        Just platform -> pure (Just (player, platform))
+
+getPlayer :: Sql.Connection -> Entity.PlayerId -> IO (Maybe Entity.Player)
+getPlayer connection playerId = do
+  maybePlayer <- Database.query connection [Sql.sql|
+    select id, created_at, platform_id, remote_id, local_id
+    from players
+    where id = ?
+  |] [playerId]
+  case maybePlayer of
+    [player] -> pure (Just player)
+    _ -> pure Nothing
+
+getPlatform :: Sql.Connection -> Entity.PlatformId -> IO (Maybe Entity.Platform)
+getPlatform connection platformId = do
+  maybePlatform <- Database.query connection [Sql.sql|
+    select id, name
+    from platforms
+    where id = ?
+  |] [platformId]
+  case maybePlatform of
+    [platform] -> pure (Just platform)
+    _ -> pure Nothing
+
+getOldestPlayerId :: Sql.Connection -> IO (Maybe Entity.PlayerId)
+getOldestPlayerId connection = do
+  maybePlayerId <- getOldestPlayerIdWithoutSkill connection
+  case maybePlayerId of
+    Just playerId -> pure (Just playerId)
+    Nothing -> getOldestPlayerIdWithSkill connection
+
+getOldestPlayerIdWithoutSkill :: Sql.Connection -> IO (Maybe Entity.PlayerId)
+getOldestPlayerIdWithoutSkill connection = do
+  playerIds <- Database.query_ connection [Sql.sql|
+    select players.id
+    from players
+    left join player_skills on player_skills.player_id = players.id
+    where player_skills.player_id is null
+    order by players.created_at asc
+    limit 1
+  |]
+  case playerIds of
+    [[playerId]] -> pure (Just playerId)
+    _ -> pure Nothing
+
+getOldestPlayerIdWithSkill :: Sql.Connection -> IO (Maybe Entity.PlayerId)
+getOldestPlayerIdWithSkill connection = do
+  playerIds <- Database.query_ connection [Sql.sql|
+    select player_id
+    from player_skills
+    group by player_id
+    order by max(created_at) asc
+    limit 1
+  |]
+  case playerIds of
+    [[playerId]] -> pure (Just playerId)
+    _ -> pure Nothing
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
 parseUploads config connection = do

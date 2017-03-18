@@ -33,8 +33,10 @@ instance Sql.ToField PlatformName where
 instance Common.ToJSON PlatformName where
   toJSON name = Common.toJSON (show name)
 
+type PlatformId = Common.Tagged Platform Int
+
 data Platform = Platform
-  { platformId :: Common.Tagged Platform Int
+  { platformId :: PlatformId
   , platformName :: PlatformName
   } deriving (Eq, Common.Generic, Show)
 
