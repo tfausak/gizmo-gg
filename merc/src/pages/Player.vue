@@ -189,7 +189,7 @@ export default {
   },
   created: function () {
     var vm = this
-    setInterval(function () {
+    vm.pollInterval = setInterval(function () {
       vm.poll()
     }, 10000)
     EventBus.$on('player-updated', function () {
@@ -197,10 +197,16 @@ export default {
       vm.fetchData(true)
     })
   },
+  destroyed: function () {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval)
+    }
+  },
   data: function () {
     return {
       GET_PLAYER: null,
-      missing: false
+      missing: false,
+      pollInterval: null
     }
   },
   methods: {
@@ -222,7 +228,6 @@ export default {
         let cookie = vm.$cookie.get('recent')
         if (cookie) {
           recent = JSON.parse(cookie)
-          console.log(recent)
         }
         let newRecent = []
         let myId = vm.id
