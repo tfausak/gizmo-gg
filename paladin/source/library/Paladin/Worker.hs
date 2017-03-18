@@ -64,7 +64,17 @@ updatePlayerSkills connection manager sessionId = Monad.forever (do
             _ -> "Steam"
       let playerId = player & Entity.playerRemoteId & Text.unpack
       skills <- Rank.getPlayerSkills manager sessionId platformName playerId
-      mapM_ (createPlayerSkill connection player) skills
+      if null skills
+        then createPlayerSkill connection player Rank.Skill
+          { Rank.skillDivision = 0
+          , Rank.skillMmr = 0
+          , Rank.skillMatchesPlayed = 0
+          , Rank.skillMu = 0
+          , Rank.skillPlaylist = 1 -- unranked 1v1
+          , Rank.skillSigma = 0
+          , Rank.skillTier = 0
+          }
+        else mapM_ (createPlayerSkill connection player) skills
   Concurrent.threadDelay 5000000)
 
 createPlayerSkill :: Sql.Connection -> Entity.Player -> Rank.Skill -> IO ()
