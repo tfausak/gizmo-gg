@@ -471,8 +471,8 @@ addSkillToPlayer connection playlistId playedAt player = do
     where
       playlist_id = ? and
       player_id = ? and
-      created_at > ? - interval '1 week' and
-      created_at < ? + interval '1 week'
+      created_at > timestamp ? - interval '1 week' and
+      created_at < timestamp ? + interval '1 week'
     order by abs(extract(epoch from created_at - ?)) asc
     limit 1
   |] (playlistId, playerId, playedAt, playedAt, playedAt)
