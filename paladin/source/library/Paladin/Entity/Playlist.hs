@@ -4,8 +4,10 @@ module Paladin.Entity.Playlist where
 
 import qualified Paladin.Entity.Common as Common
 
+type PlaylistId = Common.Tagged Playlist Int
+
 data Playlist = Playlist
-  { playlistId :: Common.Tagged Playlist Int
+  { playlistId :: PlaylistId
   , playlistName :: Maybe Common.Text
   } deriving (Eq, Common.Generic, Show)
 

@@ -5,8 +5,10 @@ module Paladin.Entity.Player where
 import qualified Paladin.Entity.Common as Common
 import qualified Paladin.Entity.Platform as Platform
 
+type PlayerId = Common.Tagged Player Int
+
 data Player = Player
-  { playerId :: Common.Tagged Player Int
+  { playerId :: PlayerId
   , playerCreatedAt :: Common.UTCTime
   , playerPlatformId :: Common.Tagged Platform.Platform Int
   , playerRemoteId :: Common.Text
