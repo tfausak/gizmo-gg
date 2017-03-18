@@ -58,7 +58,10 @@ updatePlayerSkills connection manager sessionId = Monad.forever (do
   case maybePlayerWithPlatform of
     Nothing -> pure ()
     Just (player, platform) -> do
-      let platformName = platform & Entity.platformName & show
+      let platformName = case Entity.platformName platform of
+            Entity.PlayStation -> "PS4"
+            Entity.Xbox -> "XboxOne"
+            _ -> "Steam"
       let playerId = player & Entity.playerRemoteId & Text.unpack
       skills <- Rank.getPlayerSkills manager sessionId platformName playerId
       mapM_ (createPlayerSkill connection player) skills
