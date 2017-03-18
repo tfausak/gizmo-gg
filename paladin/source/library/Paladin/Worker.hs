@@ -75,7 +75,7 @@ updatePlayerSkills connection manager sessionId = Monad.forever (do
           , Rank.skillTier = 0
           }
         else mapM_ (createPlayerSkill connection player) skills
-  Concurrent.threadDelay 5000000)
+  Utility.sleep 5)
 
 createPlayerSkill :: Sql.Connection -> Entity.Player -> Rank.Skill -> IO ()
 createPlayerSkill connection player skill = Database.execute connection
@@ -202,7 +202,7 @@ parseUploads config connection = do
       |]
       [parser]
   case uploads of
-    [] -> sleep 1
+    [] -> Utility.sleep 1
     _ -> mapM_ (parseUpload config connection) uploads
   parseUploads config connection
 
@@ -651,9 +651,6 @@ toRemoteId remoteId =
     Rattletrap.SplitscreenId x -> x & show & Text.pack
     Rattletrap.SteamId x -> x & Rattletrap.word64Value & show & Text.pack
     Rattletrap.XboxId x -> x & Rattletrap.word64Value & show & Text.pack
-
-sleep :: Int -> IO ()
-sleep seconds = Concurrent.threadDelay (seconds * 1000000)
 
 insertError :: Sql.Connection -> Int -> Exception.SomeException -> IO ()
 insertError connection uploadId exception = do

@@ -6,7 +6,6 @@ module Paladin.Rank
 
 import Data.Function ((&))
 
-import qualified Control.Concurrent as Concurrent
 import qualified Control.Monad as Monad
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
@@ -16,6 +15,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Network.HTTP.Client as Client
+import qualified Paladin.Utility as Utility
 import qualified Text.Read as Read
 
 getPlayerSkills :: Client.Manager -> String -> String -> String -> IO [Skill]
@@ -49,7 +49,7 @@ keepSessionAlive manager sessionId = do
   Monad.forever (do
     response <- Client.httpLbs request manager
     print response
-    Concurrent.threadDelay 60000000)
+    Utility.sleep 60)
 
 data Skill = Skill
   { skillDivision :: Int
