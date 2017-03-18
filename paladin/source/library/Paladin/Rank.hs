@@ -26,6 +26,7 @@ getPlayerSkills manager sessionId platform player = do
         , Client.requestBody = Client.RequestBodyBS (bs (concat ["&Proc[]=GetPlayerSkill", platform, "&P0P[]=", player]))
         }
   response <- Client.httpLbs request manager
+  print response
   response
     & Client.responseBody
     & LazyByteString.toStrict
@@ -47,7 +48,7 @@ keepSessionAlive manager sessionId = do
         }
   Monad.forever (do
     response <- Client.httpLbs request manager
-    putStrLn ("Psyonix API session keep alive response status: " ++ show (Client.responseStatus response))
+    print response
     Concurrent.threadDelay 60000000)
 
 data Skill = Skill
@@ -58,7 +59,7 @@ data Skill = Skill
   , skillPlaylist :: Int
   , skillSigma :: Double
   , skillTier :: Int
-  }
+  } deriving Show
 
 toSkill :: Map.Map Text.Text Text.Text -> Maybe Skill
 toSkill m = Skill
