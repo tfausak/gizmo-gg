@@ -46,7 +46,8 @@ keepSessionAlive manager sessionId = do
         , Client.requestBody = Client.RequestBodyBS (bs "&PlaylistID=0&NumLocalPlayers=1")
         }
   Monad.forever (do
-    Monad.void (Client.httpLbs request manager)
+    response <- Client.httpLbs request manager
+    putStrLn ("Psyonix API session keep alive response status: " ++ show (Client.responseStatus response))
     Concurrent.threadDelay 60000000)
 
 data Skill = Skill
