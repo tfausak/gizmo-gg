@@ -24,18 +24,21 @@ data Config = Config
   } deriving (Eq, Show)
 
 instance Envy.DefConfig Config where
-  defConfig =
-    let port = 8080
-    in Config
-       { configDatabase = ByteString.pack ""
-       , configDirectory = "data"
-       , configMigrate = True
-       , configPort = port
-       , configServer = True
-       , configSessionId = "72e8c9618e763a035ba28d36fecfdf2b4"
-       , configUrl = "http://localhost:" ++ show port
-       , configWorker = True
-       }
+  defConfig = defaultConfig
+
+defaultConfig :: Config
+defaultConfig =
+  let port = 8080
+  in Config
+    { configDatabase = ByteString.pack ""
+    , configDirectory = "data"
+    , configMigrate = True
+    , configPort = port
+    , configServer = True
+    , configSessionId = "5b6af166947164c30e5b96757f36dc04d"
+    , configUrl = "http://localhost:" ++ show port
+    , configWorker = True
+    }
 
 instance Envy.FromEnv Config where
   fromEnv = do
