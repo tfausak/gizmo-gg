@@ -437,10 +437,54 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       games <- getGames connection day playlists templates after playerId
       let gameIds = map playerGameRowGameId games
       gamesPlayers <- getGamesPlayers connection gameIds
-      let body =
-            Aeson.toJSON
-              (makePlayerOutput platform namesAndTimes games gamesPlayers)
-      pure (Common.jsonResponse Http.status200 [] body)
+      case makePlayerOutput platform namesAndTimes games gamesPlayers of
+        Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
+        Just playerOutput -> do
+          playerOutputWithSkill <- addSkillToPlayerOutput connection playerOutput
+          let body = Aeson.toJSON playerOutputWithSkill
+          pure (Common.jsonResponse Http.status200 [] body)
+
+addSkillToPlayerOutput :: Sql.Connection -> PlayerOutput -> IO PlayerOutput
+addSkillToPlayerOutput connection output = do
+  games <- addSkillToGames connection (playerOutputGames output)
+  pure output { playerOutputGames = games }
+
+addSkillToGames :: Sql.Connection -> [GameOutput] -> IO [GameOutput]
+addSkillToGames connection games =  mapM (addSkillToGame connection) games
+
+addSkillToGame :: Sql.Connection -> GameOutput -> IO GameOutput
+addSkillToGame connection game = do
+  let playlistId = gameOutputPlaylistId game
+  let playedAt = gameOutputPlayedAt game
+  players <- addSkillToPlayers connection playlistId playedAt (gameOutputPlayers game)
+  pure game { gameOutputPlayers = players }
+
+addSkillToPlayers :: Sql.Connection -> Common.PlaylistId -> Common.LocalTime -> [GamePlayerOutput] -> IO [GamePlayerOutput]
+addSkillToPlayers connection playlistId playedAt players = mapM (addSkillToPlayer connection playlistId playedAt) players
+
+addSkillToPlayer :: Sql.Connection -> Common.PlaylistId -> Common.LocalTime -> GamePlayerOutput -> IO GamePlayerOutput
+addSkillToPlayer connection playlistId playedAt player = do
+  let playerId = gamePlayerOutputPlayerId player
+  skills <- Database.query connection [Common.sql|
+    select matches_played, division, tier, mmr
+    from player_skills
+    where
+      playlist_id = ? and
+      player_id = ? and
+      created_at > ? - interval '1 week' and
+      created_at < ? + interval '1 week'
+    order by abs(extract(epoch from created_at - ?)) asc
+    limit 1
+  |] (playlistId, playerId, playedAt, playedAt, playedAt)
+  let skill = case skills of
+        (matchesPlayed, division, tier, mmr) : _ -> Just SkillOutput
+          { skillOutputMatchesPlayed = matchesPlayed
+          , skillOutputDivision = division
+          , skillOutputTier = tier
+          , skillOutputMmr = mmr
+          }
+        _ -> Nothing
+  pure player { gamePlayerOutputSkill = skill }
 
 getGames :: Sql.Connection
          -> Time.Day
@@ -489,7 +533,7 @@ getGames connection day playlists templates after player =
 
 data PlayerGameRow = PlayerGameRow
   { playerGameRowGameId :: Int
-  , playerGameRowPlaylistId :: Int
+  , playerGameRowPlaylistId :: Common.PlaylistId
   , playerGameRowPlaylistName :: Maybe Common.Text
   , playerGameRowArenaId :: Int
   , playerGameRowArenaName :: Maybe Common.Text
@@ -570,7 +614,7 @@ getGamesPlayers connection gameIds =
 data GamePlayerRow = GamePlayerRow
   { _gamePlayerRowId :: Int
   , gamePlayerRowGameId :: Int
-  , gamePlayerRowPlayerId :: Int
+  , gamePlayerRowPlayerId :: Common.PlayerId
   , gamePlayerRowPlatformId :: Int
   , gamePlayerRowPlatformName :: Common.Text
   , gamePlayerRowRemoteId :: Common.Text
@@ -673,7 +717,7 @@ getPlatform connection playerId = do
 
 data GameOutput = GameOutput
   { gameOutputId :: Int
-  , gameOutputPlaylistId :: Int
+  , gameOutputPlaylistId :: Common.PlaylistId
   , gameOutputPlaylistName :: Maybe Common.Text
   , gameOutputArena :: ArenaOutput
   , gameOutputPlayedAt :: Time.LocalTime
@@ -728,7 +772,7 @@ makeArenaOutput game =
   }
 
 data GamePlayerOutput = GamePlayerOutput
-  { gamePlayerOutputPlayerId :: Int
+  { gamePlayerOutputPlayerId :: Common.PlayerId
   , gamePlayerOutputPlatformId :: Int
   , gamePlayerOutputPlatformName :: Common.Text
   , gamePlayerOutputRemoteId :: Common.Text
@@ -744,6 +788,7 @@ data GamePlayerOutput = GamePlayerOutput
   , gamePlayerOutputShots :: Int
   , gamePlayerOutputLoadout :: LoadoutOutput
   , gamePlayerOutputCamera :: CameraOutput
+  , gamePlayerOutputSkill :: Maybe SkillOutput
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.ToJSON GamePlayerOutput where
@@ -768,7 +813,18 @@ makeGamePlayerOutput player =
   , gamePlayerOutputShots = gamePlayerRowShots player
   , gamePlayerOutputLoadout = makeLoadoutOutput player
   , gamePlayerOutputCamera = makeCameraOutput player
+  , gamePlayerOutputSkill = Nothing
   }
+
+data SkillOutput = SkillOutput
+  { skillOutputMatchesPlayed :: Int
+  , skillOutputDivision :: Int
+  , skillOutputTier :: Int
+  , skillOutputMmr :: Double
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON SkillOutput where
+  toJSON = Common.genericToJSON "skillOutput"
 
 data LoadoutOutput = LoadoutOutput
   { loadoutOutputBodyId :: Int
