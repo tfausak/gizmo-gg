@@ -51,6 +51,7 @@
             <router-link :to="{ name: 'stats' }" class="nav-item is-tab">Statistics</router-link>
             <router-link to="/desktop-app" class="nav-item is-tab">Desktop App</router-link>
             <router-link to="/upload" class="nav-item is-tab">Upload Replay</router-link>
+            <a href="https://www.patreon.com/gizmogg" class="nav-item">Patreon</a>
           </div>
         </div>
       </div>
