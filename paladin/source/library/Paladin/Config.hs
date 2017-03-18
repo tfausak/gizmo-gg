@@ -32,7 +32,7 @@ instance Envy.DefConfig Config where
        , configMigrate = True
        , configPort = port
        , configServer = True
-       , configSessionId = ""
+       , configSessionId = "72e8c9618e763a035ba28d36fecfdf2b4"
        , configUrl = "http://localhost:" ++ show port
        , configWorker = True
        }
