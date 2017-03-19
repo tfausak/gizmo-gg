@@ -6,6 +6,7 @@ module Paladin.Rank
 
 import Data.Function ((&))
 
+import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
@@ -25,19 +26,24 @@ getPlayerSkills manager sessionId platform player = do
         { Client.requestHeaders = [(ci "SessionID", bs sessionId)]
         , Client.requestBody = Client.RequestBodyBS (bs (concat ["&Proc[]=GetPlayerSkill", platform, "&P0P[]=", player]))
         }
-  response <- Client.httpLbs request manager
-  print response
-  response
-    & Client.responseBody
-    & LazyByteString.toStrict
-    & Encoding.decodeUtf8
-    & Text.splitOn (t "\r\n")
-    & map (Text.splitOn (t "&"))
-    & map (map (Text.splitOn (t "=")))
-    & map (Maybe.mapMaybe listToTuple)
-    & map Map.fromList
-    & Maybe.mapMaybe toSkill
-    & pure
+  Exception.catch
+    (do
+      response <- Client.httpLbs request manager
+      print response
+      response
+        & Client.responseBody
+        & LazyByteString.toStrict
+        & Encoding.decodeUtf8
+        & Text.splitOn (t "\r\n")
+        & map (Text.splitOn (t "&"))
+        & map (map (Text.splitOn (t "=")))
+        & map (Maybe.mapMaybe listToTuple)
+        & map Map.fromList
+        & Maybe.mapMaybe toSkill
+        & pure)
+    (\e -> do
+      print (e :: Exception.SomeException)
+      pure [])
 
 keepSessionAlive :: Client.Manager -> String -> IO ()
 keepSessionAlive manager sessionId = do
@@ -47,8 +53,11 @@ keepSessionAlive manager sessionId = do
         , Client.requestBody = Client.RequestBodyBS (bs "&PlaylistID=0&NumLocalPlayers=1")
         }
   Monad.forever (do
-    response <- Client.httpLbs request manager
-    print response
+    Exception.catch
+      (do
+        response <- Client.httpLbs request manager
+        print response)
+      (\e -> print (e :: Exception.SomeException))
     Utility.sleep 60)
 
 data Skill = Skill
