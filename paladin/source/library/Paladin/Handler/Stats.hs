@@ -13,6 +13,7 @@ module Paladin.Handler.Stats
   , PlayerGameRow(..)
   , getGamesPlayers
   , makePlayerOutputWithSkill
+  , getStatsPlayersHistoryHandler
   ) where
 
 import Data.Function ((&))
@@ -29,6 +30,55 @@ import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
+
+getStatsPlayersHistoryHandler :: Common.Text -> Common.Handler
+getStatsPlayersHistoryHandler rawPlayerId _config connection request = do
+  maybePlayerId <- getPlayerId connection rawPlayerId
+  case maybePlayerId of
+    Nothing -> pure notFound
+    Just playerId -> do
+      (day, playlists, templates) <- getFilters request
+      results <- Database.query connection
+        [Common.sql|
+          select
+            games.played_at,
+            case when games_players.is_blue
+              then games.blue_goals else games.orange_goals end,
+            case when games_players.is_blue
+              then games.orange_goals else games.blue_goals end
+          from games_players
+          inner join games on games.id = games_players.game_id
+          inner join arenas on arenas.id = games.arena_id
+          inner join arena_templates on arena_templates.id = arenas.template_id
+          where
+            games_players.player_id = ? and
+            games_players.is_present_at_end = true and
+            games.played_at >= ? and
+            games.playlist_id in ? and
+            arena_templates.name in ?
+          order by games.played_at desc
+        |]
+        (playerId, day, Common.In playlists, Common.In templates)
+      let output = flip map results (\(playedAt, myGoals, theirGoals) ->
+            HistoryOutput
+              { historyOutputAt = playedAt
+              , historyOutputMyGoals = myGoals
+              , historyOutputTheirGoals = theirGoals
+              })
+      let body = Aeson.toJSON output
+      pure (Common.jsonResponse Http.status200 [] body)
+
+data HistoryOutput = HistoryOutput
+  { historyOutputAt :: Common.LocalTime
+  , historyOutputMyGoals :: Int
+  , historyOutputTheirGoals :: Int
+  } deriving (Common.Generic)
+
+instance Common.ToJSON HistoryOutput where
+  toJSON = Common.genericToJSON "historyOutput"
+
+notFound :: Wai.Response
+notFound = Common.jsonResponse Http.status404 [] Aeson.Null
 
 getStatsPlayersPollHandler :: Common.Text -> Common.Handler
 getStatsPlayersPollHandler rawPlayerId _config connection _request = do
