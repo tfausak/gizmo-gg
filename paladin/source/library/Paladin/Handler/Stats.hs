@@ -11,7 +11,7 @@ module Paladin.Handler.Stats
   , getStatsSummaryHandler
   , PlayerGameRow(..)
   , getGamesPlayers
-  , makePlayerOutput
+  , makePlayerOutputWithSkill
   ) where
 
 import Data.Function ((&))
@@ -437,12 +437,23 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       games <- getGames connection day playlists templates after playerId
       let gameIds = map playerGameRowGameId games
       gamesPlayers <- getGamesPlayers connection gameIds
-      case makePlayerOutput platform namesAndTimes games gamesPlayers of
-        Nothing -> pure (Common.jsonResponse Http.status404 [] Aeson.Null)
-        Just playerOutput -> do
-          playerOutputWithSkill <- addSkillToPlayerOutput connection playerOutput
-          let body = Aeson.toJSON playerOutputWithSkill
-          pure (Common.jsonResponse Http.status200 [] body)
+      maybePlayerOutputWithSkill <- makePlayerOutputWithSkill connection platform namesAndTimes games gamesPlayers
+      let body = Aeson.toJSON maybePlayerOutputWithSkill
+      pure (Common.jsonResponse Http.status200 [] body)
+
+makePlayerOutputWithSkill
+  :: Sql.Connection
+  -> Maybe Common.Platform
+  -> [(Common.Text, Common.LocalTime)]
+  -> [PlayerGameRow]
+  -> [GamePlayerRow]
+  -> IO (Maybe PlayerOutput)
+makePlayerOutputWithSkill connection platform namesAndTimes games gamesPlayers =
+  case makePlayerOutput platform namesAndTimes games gamesPlayers of
+    Nothing -> pure Nothing
+    Just playerOutput -> do
+      playerOutputWithSkill <- addSkillToPlayerOutput connection playerOutput
+      pure (Just playerOutputWithSkill)
 
 addSkillToPlayerOutput :: Sql.Connection -> PlayerOutput -> IO PlayerOutput
 addSkillToPlayerOutput connection output = do

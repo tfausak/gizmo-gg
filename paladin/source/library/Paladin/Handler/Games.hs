@@ -28,15 +28,16 @@ getGameHandler rawGameId _config connection _request =
         Nothing -> pure notFound
         Just playerGameRow -> do
           gamePlayerRows <- Stats.getGamesPlayers connection [Common.tagValue gameId]
-          let maybePlayerOutput = Stats.makePlayerOutput
-                (Just (Common.Platform (Common.Tagged 0) Common.Splitscreen))
-                [ ( Text.pack ""
-                  , Time.LocalTime (Time.fromGregorian 1970 1 1) Time.midnight
-                  )
-                ]
-                [playerGameRow]
-                gamePlayerRows
-          let body = Aeson.toJSON maybePlayerOutput
+          maybePlayerOutputWithSkill <- Stats.makePlayerOutputWithSkill
+            connection
+            (Just (Common.Platform (Common.Tagged 0) Common.Splitscreen))
+            [ ( Text.pack ""
+              , Time.LocalTime (Time.fromGregorian 1970 1 1) Time.midnight
+              )
+            ]
+            [playerGameRow]
+            gamePlayerRows
+          let body = Aeson.toJSON maybePlayerOutputWithSkill
           pure (Common.jsonResponse Http.status200 [] body)
 
 getPlayerGameRow
