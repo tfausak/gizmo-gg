@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Paladin.Handler.Stats
   ( getStatsArenasHandler
@@ -437,28 +438,58 @@ getStatsPlayersHandler rawPlayerId _config connection request = do
       games <- getGames connection day playlists templates after playerId
       let gameIds = map playerGameRowGameId games
       gamesPlayers <- getGamesPlayers connection gameIds
-      maybePlayerOutputWithSkill <- makePlayerOutputWithSkill connection platform namesAndTimes games gamesPlayers
+      maybePlayerOutputWithSkill <- makePlayerOutputWithSkill connection playerId platform namesAndTimes games gamesPlayers
       let body = Aeson.toJSON maybePlayerOutputWithSkill
       pure (Common.jsonResponse Http.status200 [] body)
 
 makePlayerOutputWithSkill
   :: Sql.Connection
+  -> Common.PlayerId
   -> Maybe Common.Platform
   -> [(Common.Text, Common.LocalTime)]
   -> [PlayerGameRow]
   -> [GamePlayerRow]
   -> IO (Maybe PlayerOutput)
-makePlayerOutputWithSkill connection platform namesAndTimes games gamesPlayers =
+makePlayerOutputWithSkill connection playerId platform namesAndTimes games gamesPlayers =
   case makePlayerOutput platform namesAndTimes games gamesPlayers of
     Nothing -> pure Nothing
     Just playerOutput -> do
-      playerOutputWithSkill <- addSkillToPlayerOutput connection playerOutput
+      playerOutputWithSkill <- addSkillToPlayerOutput connection playerId playerOutput
       pure (Just playerOutputWithSkill)
 
-addSkillToPlayerOutput :: Sql.Connection -> PlayerOutput -> IO PlayerOutput
-addSkillToPlayerOutput connection output = do
+addSkillToPlayerOutput :: Sql.Connection -> Common.PlayerId -> PlayerOutput -> IO PlayerOutput
+addSkillToPlayerOutput connection playerId output = do
+  results <- Database.query connection
+    [Common.sql|
+      select distinct on (playlists.id)
+        playlists.id,
+        playlists.name,
+        player_skills.matches_played,
+        player_skills.division,
+        player_skills.tier,
+        player_skills.mmr
+      from player_skills
+      inner join playlists on playlists.id = player_skills.playlist_id
+      where
+        player_skills.player_id = ? and
+        playlists.id in ?
+      order by playlists.id asc, player_skills.created_at desc
+    |] (playerId, Common.In competitivePlaylists)
+  let skills = foldr
+        (\(_ :: Common.PlaylistId, playlistName, matchesPlayed, division, tier, mmr) ->
+          Map.insert playlistName SkillOutput
+            { skillOutputMatchesPlayed = matchesPlayed
+            , skillOutputDivision = division
+            , skillOutputTier = tier
+            , skillOutputMmr = mmr
+            })
+          Map.empty
+        results
   games <- addSkillToGames connection (playerOutputGames output)
-  pure output { playerOutputGames = games }
+  pure output
+    { playerOutputGames = games
+    , playerOutputSkills = skills
+    }
 
 addSkillToGames :: Sql.Connection -> [GameOutput] -> IO [GameOutput]
 addSkillToGames connection games =  mapM (addSkillToGame connection) games
@@ -502,7 +533,7 @@ getGames :: Sql.Connection
          -> [Int]
          -> [String]
          -> Time.LocalTime
-         -> Int
+         -> Common.PlayerId
          -> IO [PlayerGameRow]
 getGames connection day playlists templates after player =
   Database.query
@@ -673,6 +704,7 @@ data PlayerOutput = PlayerOutput
   , playerOutputLastPlayedAt :: Common.LocalTime
   , playerOutputPlatform :: Common.Platform
   , playerOutputGames :: [GameOutput]
+  , playerOutputSkills :: Map.Map Text.Text SkillOutput
   } deriving (Eq, Common.Generic, Show)
 
 instance Common.ToJSON PlayerOutput where
@@ -708,9 +740,10 @@ makePlayerOutput maybePlatform namesAndTimes games players = do
     , playerOutputLastPlayedAt = lastPlayedAt
     , playerOutputPlatform = platform
     , playerOutputGames = map makeGameOutput gamesWithPlayers
+    , playerOutputSkills = Map.empty
     }
 
-getPlatform :: Sql.Connection -> Int -> IO (Maybe Common.Platform)
+getPlatform :: Sql.Connection -> Common.PlayerId -> IO (Maybe Common.Platform)
 getPlatform connection playerId = do
   result <-
     Database.query
@@ -908,7 +941,7 @@ makeCameraOutput player =
   }
 
 getNamesAndTimes :: Sql.Connection
-                 -> Int
+                 -> Common.PlayerId
                  -> IO [(Common.Text, Common.LocalTime)]
 getNamesAndTimes connection playerId =
   Database.query
@@ -923,7 +956,7 @@ getNamesAndTimes connection playerId =
     |]
     [playerId]
 
-getPlayerId :: Sql.Connection -> Common.Text -> IO (Maybe Int)
+getPlayerId :: Sql.Connection -> Common.Text -> IO (Maybe Common.PlayerId)
 getPlayerId connection rawPlayerId = do
   let maybePlayerId = Read.readMaybe (Text.unpack rawPlayerId)
   rows <-

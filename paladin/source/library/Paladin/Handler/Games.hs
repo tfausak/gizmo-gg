@@ -30,6 +30,7 @@ getGameHandler rawGameId _config connection _request =
           gamePlayerRows <- Stats.getGamesPlayers connection [Common.tagValue gameId]
           maybePlayerOutputWithSkill <- Stats.makePlayerOutputWithSkill
             connection
+            (Common.Tagged 0)
             (Just (Common.Platform (Common.Tagged 0) Common.Splitscreen))
             [ ( Text.pack ""
               , Time.LocalTime (Time.fromGregorian 1970 1 1) Time.midnight
