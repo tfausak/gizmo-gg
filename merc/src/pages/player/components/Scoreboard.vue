@@ -94,7 +94,7 @@
           </td>
           <td class="playerName">
             <router-link :to="'/player/' + gplayer.playerId + '/summary'">
-              {{ gplayer.skill ? gplayer.skill.tier : '' }}
+              <img alt="" class="tier" :src="'/static/img/tiers/' + (gplayer.skill ? gplayer.skill.tier : 0) + '.png'">
               {{ gplayer.name }}
             </router-link>
           </td>
