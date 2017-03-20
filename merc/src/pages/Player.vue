@@ -240,7 +240,7 @@ export default {
       var vm = this
       if (!seamless) {
         vm.GET_PLAYER = null
-        vm.skills = vm.baseSkills
+        vm.skills = _.clone(vm.baseSkills)
         vm.missing = false
       }
       vm.$store.dispatch('GET_PLAYER', {
