@@ -65,6 +65,37 @@ $data_bg: #fff;
     font-size: 20px;
   }
 }
+.rankBoxes {
+  flex-grow: 1!important;
+  justify-content: flex-end!important;
+}
+.rankBox {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-right: 0;
+  width: 100px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.rankBox:last-child {
+  border-right: 1px solid #ddd;
+}
+.rankPlaylist {
+  background-color: #f4f4f4;
+  padding: 0.4em 1.5em;
+  font-size: 12px;
+  font-weight: bold;
+}
+.rankImage {
+  padding: 0.5em;
+}
+.rankImage img {
+  width: 30px;
+}
+.rankGames {
+  padding-bottom: 0.5em;
+}
 </style>
 
 <template>
@@ -132,6 +163,24 @@ $data_bg: #fff;
                     <h2 class="subtitle no-margin-top">
                       last played {{ lastUpdated }}
                     </h2>
+                  </div>
+                </div>
+                <div class="level-item rankBoxes">
+                  <div class="rankBox" v-for="(skill, key) in skills">
+                    <div class="rankPlaylist">{{ key }}</div>
+                    <div v-if="skill">
+                      <div class="rankImage">
+                        <img :src="'/static/img/tiers/' + skill.tier + '.png'">
+                      </div>
+                      <div class="rankDivision">DIV {{ skill.division + 1 }}</div>
+                      <div class="rankGames">{{ skill.matchesPlayed }} Games</div>
+                    </div>
+                    <div v-else>
+                      <div class="rankImage">
+                        <i class="fa fa-question"></i>
+                      </div>
+                      <div class="rankGames">Unknown</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -206,12 +255,24 @@ export default {
     return {
       GET_PLAYER: null,
       missing: false,
-      pollInterval: null
+      pollInterval: null,
+      skills: {
+        '1v1': null,
+        '2v2': null,
+        '3v3': null,
+        '3v3 Solo': null
+      }
     }
   },
   methods: {
     isPlatform: function (platform) {
       return this.GET_PLAYER && this.GET_PLAYER.platform.name === platform
+    },
+    compileData: function () {
+      var vm = this
+      _.each(vm.GET_PLAYER.skills, function (value, key) {
+        vm.skills[slugger.slugPlaylist(key)] = value
+      })
     },
     fetchData: function (seamless = false) {
       var vm = this
@@ -224,6 +285,7 @@ export default {
         playlist: 'all'
       }).then(function (data) {
         vm.GET_PLAYER = data
+        // add this player to the recent players stored in a cookie
         let recent = []
         let cookie = vm.$cookie.get('recent')
         if (cookie) {
@@ -244,6 +306,38 @@ export default {
         newRecent = _.slice(newRecent, 0, 5)
         vm.$cookie.set('recent', JSON.stringify(newRecent))
         EventBus.$emit('recent-updated')
+
+        /*
+        vm.GET_PLAYER['skills'] = {
+          'Competitive Standard': {
+            'mmr': 40.1759,
+            'tier': 12,
+            'matchesPlayed': 201,
+            'division': 0
+          },
+          'Competitive Solo Duel': {
+            'mmr': 38.2419,
+            'tier': 11,
+            'matchesPlayed': 168,
+            'division': 2
+          },
+          'Competitive Solo Standard': {
+            'mmr': 34.6353,
+            'tier': 11,
+            'matchesPlayed': 105,
+            'division': 0
+          },
+          'Competitive Doubles': {
+            'mmr': 50.5203,
+            'tier': 14,
+            'matchesPlayed': 2368,
+            'division': 2
+          }
+        }
+        */
+
+        vm.compileData()
+
         if (seamless) {
           vm.$forceUpdate()
         }

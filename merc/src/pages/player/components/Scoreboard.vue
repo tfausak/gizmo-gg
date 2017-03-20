@@ -94,7 +94,12 @@
           </td>
           <td class="playerName">
             <router-link :to="'/player/' + gplayer.playerId + '/summary'">
-              <img alt="" class="tier" :src="'/static/img/tiers/' + (gplayer.skill ? gplayer.skill.tier : 0) + '.png'">
+              <span v-if="gplayer.skill">
+                <img alt="" class="tier" :src="'/static/img/tiers/' + gplayer.skill.tier + '.png'">
+              </span>
+              <span v-else>
+                <i class="fa fa-question fa-inline"></i>
+              </span>
               {{ gplayer.name }}
             </router-link>
           </td>

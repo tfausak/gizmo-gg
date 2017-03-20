@@ -169,7 +169,9 @@
                 <td v-if="i <= blueTeam.length">
                   <span class="playerName">
                     <router-link :to="'/player/' + blueTeam[i - 1].playerId + '/summary'">
-                      <img alt="" class="tier" :src="'/static/img/tiers/' + (blueTeam[i - 1].skill ? blueTeam[i - 1].skill.tier : 0) + '.png'">
+                      <span v-if="blueTeam[i - 1].skill">
+                        <img alt="" class="tier" :src="'/static/img/tiers/' + blueTeam[i - 1].skill.tier + '.png'">
+                      </span>
                       {{ blueTeam[i - 1].name }}
                     </router-link>
                   </span>
@@ -177,7 +179,9 @@
                 <td v-if="i <= orangeTeam.length">
                   <span class="playerName">
                     <router-link :to="'/player/' + orangeTeam[i - 1].playerId + '/summary'">
-                      <img alt="" class="tier" :src="'/static/img/tiers/' + (orangeTeam[i - 1].skill ? orangeTeam[i - 1].skill.tier : 0) + '.png'">
+                      <span v-if="orangeTeam[i - 1].skill">
+                        <img alt="" class="tier" :src="'/static/img/tiers/' + orangeTeam[i - 1].skill.tier + '.png'">
+                      </span>
                       {{ orangeTeam[i - 1].name }}
                     </router-link>
                   </span>

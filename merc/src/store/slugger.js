@@ -46,11 +46,11 @@ export default {
     if (name.match(/solo duel/i)) {
       return '1v1'
     }
-    if (name.match(/standard/i)) {
-      return '3v3'
-    }
     if (name.match(/solo standard/i)) {
       return '3v3 Solo'
+    }
+    if (name.match(/standard/i)) {
+      return '3v3'
     }
     return _.toLower(name)
   }
