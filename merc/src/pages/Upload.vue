@@ -251,7 +251,18 @@ export default {
                 }
               }
               if (commit) {
-                vm.$cookie.set('uploaded', JSON.stringify(vm.uploaded))
+                let tmpUploaded = []
+                let cookie = vm.$cookie.get('uploaded')
+                if (cookie) {
+                  tmpUploaded = JSON.parse(cookie)
+                }
+                _.each(tmpUploaded, function (tmpUpload, key) {
+                  if (tmpUpload.fileName === upload.fileName) {
+                    tmpUploaded[key].gameId = upload.gameId
+                    tmpUploaded[key].status = upload.status
+                  }
+                })
+                vm.$cookie.set('uploaded', JSON.stringify(tmpUploaded))
               }
               return data
             })
