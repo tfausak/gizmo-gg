@@ -97,7 +97,7 @@
               <span v-if="gplayer.skill">
                 <img alt="" class="tier" :src="'/static/img/tiers/' + gplayer.skill.tier + '.png'">
               </span>
-              <span v-else>
+              <span v-else class="text-alpha">
                 <i class="fa fa-question fa-inline"></i>
               </span>
               {{ gplayer.name }}

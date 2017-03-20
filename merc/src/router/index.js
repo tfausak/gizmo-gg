@@ -17,6 +17,7 @@ import StatsSummaryPage from '../pages/stats/Summary'
 import StatsBattleCarsPage from '../pages/stats/BattleCars'
 import StatsMapsPage from '../pages/stats/Maps'
 import UploadPage from '../pages/Upload'
+import UploadStatusPage from '../pages/UploadStatus'
 
 Vue.use(Router)
 
@@ -112,6 +113,11 @@ export default new Router({
           path: 'upload',
           name: 'upload',
           component: UploadPage
+        },
+        {
+          path: 'upload/status/:id',
+          name: 'upload-status',
+          component: UploadStatusPage
         }
       ]
     },

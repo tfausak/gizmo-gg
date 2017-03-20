@@ -38,16 +38,22 @@ $upload_width: 300px;
 #uploadResultsPanel .panel-block {
   border-left-width: 3px;
 }
-.response-fail {
+.upload-failed {
   border-left: 3px solid $danger;
   .fa {
     color: $danger;
   }
 }
-.response-ok {
-  border-left: 3px solid $success;
+.upload-processing {
+  border-left: 3px solid $solarized_yellow;
   .fa {
-    color: $success;
+    color: $solarized_yellow;
+  }
+}
+.upload-success {
+  border-left: 3px solid $solarized_green;
+  .fa {
+    color: $solarized_green;
   }
 }
 #startUploadButton {
@@ -132,14 +138,22 @@ $upload_width: 300px;
                   <div class="level-item">Uploading..</div>
                 </div>
               </div>
-              <div class="panel-block" v-for="upload in uploaded" :class="{ 'response-ok': upload.response.ok, 'response-fail': !upload.response.ok}">
+              <div class="panel-block" v-for="upload in uploaded" :class="'upload-' + upload.status">
                 <span class="panel-icon">
-                  <i class="is-success fa fa-check-circle-o" v-if="upload.response.ok"></i>
-                  <i class="is-danger fa fa-times-circle-o" v-if="!upload.response.ok"></i>
+                  <i class="is-success fa fa-cog fa-spin" v-if="upload.status === 'processing'"></i>
+                  <i class="is-danger fa fa-times-circle-o" v-if="upload.status === 'failed'"></i>
+                  <i class="is-danger fa fa-check-circle-o" v-if="upload.status === 'success'"></i>
                 </span>
                 <div class="level level-stacked">
-                  <div class="level-item">{{ upload.file.name }}</div>
-                  <div class="level-item">{{ upload.response.statusText }}</div>
+                  <div class="level-item" v-if="upload.gameId">
+                    <router-link :to="'/game/' + upload.gameId">
+                      {{ upload.fileName }}
+                    </router-link>
+                  </div>
+                  <div class="level-item" v-else>
+                    {{ upload.fileName }}
+                  </div>
+                  <div class="level-item">{{ upload.status }}</div>
                 </div>
               </div>
             </div>
@@ -153,15 +167,33 @@ $upload_width: 300px;
 </template>
 
 <script>
-import { getEndpointUrl } from '../store/api'
+import { getRaw, getEndpointUrl } from '../store/api'
+var _ = require('lodash')
 
 export default {
+  created: function () {
+    var vm = this
+    vm.pollUploaded = setInterval(function () {
+      vm.poll()
+    }, 2500)
+  },
   data: function () {
+    let uploaded = []
+    let cookie = this.$cookie.get('uploaded')
+    if (cookie) {
+      uploaded = JSON.parse(cookie)
+    }
     return {
+      pollUploaded: null,
       pending: [], // array of File, copied from input when form is submitted
       uploading: null, // the file we are currently uploading
-      uploaded: [], // all the files we have uploaded in an array of [{file: File, response: Response}, ..]
+      uploaded: uploaded, // all the files we have uploaded in an array of [{file: File, response: Response}, ..]
       files: null // FileList, from the input on the page
+    }
+  },
+  destroyed: function () {
+    if (this.pollUploaded) {
+      clearInterval(this.pollUploaded)
     }
   },
   methods: {
@@ -198,6 +230,35 @@ export default {
       this.uploadFile(0)
     },
 
+    poll: function () {
+      let vm = this
+      _.each(vm.uploaded, function (upload) {
+        if (upload.url && upload.status === 'processing') {
+          getRaw(upload.url)
+            .then(function (data) {
+              let commit = false
+              if (data) {
+                if (data.state === 'success') {
+                  let m = data.game.match(/games\/(\d+)/)
+                  if (m && m.length > 1) {
+                    upload.gameId = m[1]
+                    upload.status = 'success'
+                    commit = true
+                  }
+                } else if (data.state === 'failure') {
+                  upload.status = 'processing-failure'
+                  commit = true
+                }
+              }
+              if (commit) {
+                vm.$cookie.set('uploaded', JSON.stringify(vm.uploaded))
+              }
+              return data
+            })
+        }
+      })
+    },
+
     uploadFile: function () {
       // Don't allow a file upload if we have a current upload
       if (this.uploading !== null) {
@@ -213,9 +274,13 @@ export default {
       var vm = this
       let handler = function (response) {
         vm.uploaded.unshift({
-          'file': vm.uploading,
-          'response': response
+          'gameId': null,
+          'url': response.request.responseURL,
+          'status': response.ok ? 'processing' : 'failed',
+          'fileName': vm.uploading.name
         })
+        vm.uploaded = _.slice(vm.uploaded, 0, 100)
+        vm.$cookie.set('uploaded', JSON.stringify(vm.uploaded))
         vm.uploading = null
         vm.uploadFile()
       }

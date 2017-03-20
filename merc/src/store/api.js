@@ -2,6 +2,10 @@ import axios from 'axios'
 
 export function getResource (endpoint) {
   var url = getEndpointUrl(endpoint)
+  return getRaw(url)
+}
+
+export function getRaw (url) {
   var delay = process.env.API_DELAY_MS
   return new Promise(function (resolve, reject) {
     axios.get(url)
