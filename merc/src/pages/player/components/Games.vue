@@ -174,11 +174,7 @@ var _ = require('lodash')
 
 export default {
   beforeMount: function () {
-    let vm = this
-    vm.fetchData()
-    vm.$store.dispatch('GET_ARENAS').then(function (data) {
-      vm.GET_ARENAS = data
-    })
+    this.fetchData()
   },
   components: {
     ChartWinsComponent,
@@ -188,7 +184,7 @@ export default {
   },
   computed: {
     loading: function () {
-      return this.GET_ARENAS === null || this.GET_PLAYER === null
+      return this.GET_PLAYER === null
     },
     stats: function () {
       let vm = this
@@ -300,7 +296,6 @@ export default {
   },
   data: function () {
     return {
-      GET_ARENAS: null,
       GET_PLAYER: null,
       loadingMore: false,
       allowMore: true
@@ -320,7 +315,6 @@ export default {
     },
     loadMore: function () {
       let vm = this
-      console.log('loadMore')
       if (vm.loading) {
         return
       }

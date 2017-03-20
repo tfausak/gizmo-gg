@@ -4,6 +4,8 @@ import Router from 'vue-router'
 import DefaultPage from '../pages/templates/Default'
 
 import DesktopAppPage from '../pages/DesktopApp'
+import GamePage from '../pages/Game'
+import GameSummaryPage from '../pages/game/Summary'
 import IndexPage from '../pages/Index'
 import PlayerPage from '../pages/Player'
 import PlayerSummaryPage from '../pages/player/Summary'
@@ -60,6 +62,22 @@ export default new Router({
               path: 'maps',
               name: 'player.maps',
               component: PlayerMapsPage
+            }
+          ]
+        },
+        {
+          path: '/game/:id',
+          component: GamePage,
+          props: true,
+          children: [
+            {
+              path: '',
+              redirect: 'summary'
+            },
+            {
+              path: 'summary',
+              name: 'game.summary',
+              component: GameSummaryPage
             }
           ]
         },

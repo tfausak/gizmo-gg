@@ -1,8 +1,6 @@
 <style scoped lang="scss">
 @import "~styles/vars.scss";
 
-$data_bg: #fff;
-
 #playerHero {
   background-color: #eee;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
@@ -11,43 +9,7 @@ $data_bg: #fff;
   }
 }
 #playerData {
-  background-color: $data_bg;
-}
-.playerTabs {
-  padding: 0;
-  margin: 0;
-  display: flex;
-  li {
-    display: block;
-    padding: 0;
-    margin: 0;
-  }
-  li > a {
-    background-color: #f4f4f4;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-left: 0;
-    margin-bottom: -1px;
-    padding: 0.2em 1em;
-    display: block;
-    color: #444;
-    &:hover {
-      background-color: #eee;
-    }
-  }
-  li:first-child a {
-    border-left: 1px solid rgba(0, 0, 0, 0.2);
-    border-top-left-radius: 3px;
-  }
-  li:last-child a {
-    border-top-right-radius: 3px;
-  }
-  li.is-active > a {
-    color: $primary;
-    z-index: 999;
-    position: relative;
-    border-bottom: 1px solid transparent;
-    background-color: $data_bg;
-  }
+  background-color: #fff;
 }
 
 .noBodyIcon {
@@ -114,7 +76,7 @@ $data_bg: #fff;
               Loading..
             </h1>
             <h2 class="subtitle">
-              for player ID#{{ id }}
+              player ID#{{ id }}
             </h2>
           </div>
 
@@ -139,67 +101,65 @@ $data_bg: #fff;
       </section>
     </div>
     <div v-else>
-      <div>
-        <section class="hero" id="playerHero">
-          <div class="hero-body">
-            <div class="container">
-              <div class="level level-chained">
-                <div class="level-item" id="playerBody">
-                  <figure class="image is-96x96 is-circle-dark">
-                    <img :src="'/static/img/bodies/' + bodyName + '.png'" v-if="bodyName">
-                    <i class="fa fa-question noBodyIcon" v-else></i>
-                  </figure>
+      <section class="hero" id="playerHero">
+        <div class="hero-body">
+          <div class="container">
+            <div class="level level-chained">
+              <div class="level-item" id="playerBody">
+                <figure class="image is-96x96 is-circle-dark">
+                  <img :src="'/static/img/bodies/' + bodyName + '.png'" v-if="bodyName">
+                  <i class="fa fa-question noBodyIcon" v-else></i>
+                </figure>
+              </div>
+              <div class="level-item platformIcon">
+                <i class="fa fa-steam" v-if="isPlatform('Steam')"></i>
+                <i class="icon-playstation" v-if="isPlatform('PlayStation')"></i>
+                <i class="icon-xbox" v-if="isPlatform('Xbox')"></i>
+              </div>
+              <div class="level-item">
+                <div class="is-block">
+                  <h1 class="title no-margin-top">
+                    {{ GET_PLAYER.name }}
+                  </h1>
+                  <h2 class="subtitle no-margin-top">
+                    last played {{ lastUpdated }}
+                  </h2>
                 </div>
-                <div class="level-item platformIcon">
-                  <i class="fa fa-steam" v-if="isPlatform('Steam')"></i>
-                  <i class="icon-playstation" v-if="isPlatform('PlayStation')"></i>
-                  <i class="icon-xbox" v-if="isPlatform('Xbox')"></i>
-                </div>
-                <div class="level-item">
-                  <div class="is-block">
-                    <h1 class="title no-margin-top">
-                      {{ GET_PLAYER.name }}
-                    </h1>
-                    <h2 class="subtitle no-margin-top">
-                      last played {{ lastUpdated }}
-                    </h2>
+              </div>
+              <div class="level-item rankBoxes">
+                <div class="rankBox" v-for="(skill, key) in skills">
+                  <div class="rankPlaylist">{{ key }}</div>
+                  <div v-if="skill">
+                    <div class="rankImage">
+                      <img :src="'/static/img/tiers/' + skill.tier + '.png'">
+                    </div>
+                    <div class="rankDivision">DIV {{ skill.division + 1 }}</div>
+                    <div class="rankGames">{{ skill.matchesPlayed }} Games</div>
                   </div>
-                </div>
-                <div class="level-item rankBoxes">
-                  <div class="rankBox" v-for="(skill, key) in skills">
-                    <div class="rankPlaylist">{{ key }}</div>
-                    <div v-if="skill">
-                      <div class="rankImage">
-                        <img :src="'/static/img/tiers/' + skill.tier + '.png'">
-                      </div>
-                      <div class="rankDivision">DIV {{ skill.division + 1 }}</div>
-                      <div class="rankGames">{{ skill.matchesPlayed }} Games</div>
+                  <div v-else>
+                    <div class="rankImage">
+                      <i class="fa fa-question"></i>
                     </div>
-                    <div v-else>
-                      <div class="rankImage">
-                        <i class="fa fa-question"></i>
-                      </div>
-                      <div class="rankGames">Unknown</div>
-                    </div>
+                    <div class="rankGames">Unknown</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="hero-foot">
-              <div class="container">
-                <ul class="playerTabs">
-                  <router-link :to="{ name: 'player.summary', params: { playerId: id } }" tag="li"><a>Summary</a></router-link>
-                  <router-link :to="'/player/' + id + '/battle-cars'" tag="li"><a>Battle-Cars</a></router-link>
-                  <router-link :to="'/player/' + id + '/maps'" tag="li"><a>Maps</a></router-link>
-                </ul>
-              </div>
-            </div>
-        </section>
-        <section class="section" id="playerData">
-          <router-view :playerId="id"></router-view>
-        </section>
-      </div>
+        </div>
+        <div class="hero-foot">
+          <div class="container">
+            <ul class="playerTabs">
+              <router-link :to="{ name: 'player.summary', params: { playerId: id } }" tag="li"><a>Summary</a></router-link>
+              <router-link :to="'/player/' + id + '/battle-cars'" tag="li"><a>Battle-Cars</a></router-link>
+              <router-link :to="'/player/' + id + '/maps'" tag="li"><a>Maps</a></router-link>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <section class="section" id="playerData">
+        <router-view :playerId="id"></router-view>
+      </section>
     </div>
   </div>
 </template>
@@ -279,9 +239,9 @@ export default {
     fetchData: function (seamless = false) {
       var vm = this
       if (!seamless) {
-        this.GET_PLAYER = null
-        this.skills = this.baseSkills
-        this.missing = false
+        vm.GET_PLAYER = null
+        vm.skills = vm.baseSkills
+        vm.missing = false
       }
       vm.$store.dispatch('GET_PLAYER', {
         id: vm.id,

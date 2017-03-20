@@ -31,6 +31,44 @@
 .bg-offwhite { background-color: $white-like!important; }
 .high-zindex { position: relative; z-index: 9999; }
 
+/* player tabs */
+.playerTabs {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  li {
+    display: block;
+    padding: 0;
+    margin: 0;
+  }
+  li > a {
+    background-color: #f4f4f4;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-left: 0;
+    margin-bottom: -1px;
+    padding: 0.2em 1em;
+    display: block;
+    color: #444;
+    &:hover {
+      background-color: #eee;
+    }
+  }
+  li:first-child a {
+    border-left: 1px solid rgba(0, 0, 0, 0.2);
+    border-top-left-radius: 3px;
+  }
+  li:last-child a {
+    border-top-right-radius: 3px;
+  }
+  li.is-active > a {
+    color: $primary;
+    z-index: 999;
+    position: relative;
+    border-bottom: 1px solid transparent;
+    background-color: #fff;
+  }
+}
+
 /* v-tooltip */
 .tooltip {
   opacity: 0;
