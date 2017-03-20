@@ -252,16 +252,18 @@ export default {
     }
   },
   data: function () {
+    let skills = {
+      '1v1': null,
+      '2v2': null,
+      '3v3': null,
+      '3v3 Solo': null
+    }
     return {
       GET_PLAYER: null,
       missing: false,
       pollInterval: null,
-      skills: {
-        '1v1': null,
-        '2v2': null,
-        '3v3': null,
-        '3v3 Solo': null
-      }
+      baseSkills: _.clone(skills),
+      skills: skills
     }
   },
   methods: {
@@ -278,6 +280,7 @@ export default {
       var vm = this
       if (!seamless) {
         this.GET_PLAYER = null
+        this.skills = this.baseSkills
         this.missing = false
       }
       vm.$store.dispatch('GET_PLAYER', {
