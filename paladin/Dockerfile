@@ -14,7 +14,7 @@ RUN stack setup
 
 # Install dependencies.
 COPY package.yaml /project
-RUN stack build --only-dependencies
+RUN stack build --jobs 1 --only-dependencies
 
 # Build project.
 COPY . /project
