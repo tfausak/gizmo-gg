@@ -84,16 +84,10 @@ getPlayerSkills manager sessionId platform player = do
       |])
       }
   response <- Client.httpLbs request manager
-  print response
   let body = Client.responseBody response
-  print body
   case Aeson.decode body of
-    Nothing -> do
-      putStrLn "could not decode body"
-      pure []
-    Just apiResponse -> do
-      print apiResponse
-      pure (toSkills apiResponse)
+    Nothing -> pure []
+    Just apiResponse -> pure (toSkills apiResponse)
 
 keepSessionAlive :: Client.Manager -> String -> IO ()
 keepSessionAlive manager sessionId = do
