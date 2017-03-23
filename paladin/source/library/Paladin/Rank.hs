@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Paladin.Rank
   ( Skill(..)
   , getPlayerSkills
@@ -8,6 +10,8 @@ import Data.Function ((&))
 
 import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.QQ as QQ
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.CaseInsensitive as CaseInsensitive
@@ -47,10 +51,30 @@ getPlayerSkills manager sessionId platform player = do
 
 keepSessionAlive :: Client.Manager -> String -> IO ()
 keepSessionAlive manager sessionId = do
-  initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/Population/UpdatePlayerCurrentGame/"
+  initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/Services"
   let request = initialRequest
-        { Client.requestHeaders = [(ci "SessionID", bs sessionId)]
-        , Client.requestBody = Client.RequestBodyBS (bs "&PlaylistID=0&NumLocalPlayers=1")
+        { Client.requestHeaders =
+          [ (ci "BuildID", bs "-1677331153")
+          , (ci "Cache-Control", bs "no-cache")
+          , (ci "Content-Type", bs "application/x-www-form-urlencoded")
+          , (ci "Environment", bs "Prod")
+          , (ci "PsySig", bs "bLHDwyZg0cj4ekeMDnacS8use3eY49HsJnbIhek3cZg=")
+          , (ci "SessionID", bs sessionId)
+          , (ci "User-Agent", bs "RL Win/170316.47017.154572 gzip")
+          ]
+        , Client.requestBody = Client.RequestBodyLBS (Aeson.encode [QQ.aesonQQ|
+          [
+            {
+              "Service": "Population/UpdatePlayerPlaylist",
+              "Version": 1,
+              "ID": 30,
+              "Params": {
+                "Playlist": 0,
+                "NumLocalPlayers": 1
+              }
+            }
+          ]
+        |])
         }
   Monad.forever (do
     Exception.catch
