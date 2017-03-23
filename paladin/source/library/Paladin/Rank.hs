@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Paladin.Rank
@@ -6,61 +9,104 @@ module Paladin.Rank
   , keepSessionAlive
   ) where
 
-import Data.Function ((&))
-
 import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Casing as Casing
 import qualified Data.Aeson.QQ as QQ
+import qualified Data.Aeson.Types as Aeson
 import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Lazy as LazyByteString
-import qualified Data.CaseInsensitive as CaseInsensitive
-import qualified Data.Map as Map
+import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Maybe as Maybe
+import qualified Data.Scientific as Scientific
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
+import qualified GHC.Generics as Generics
 import qualified Network.HTTP.Client as Client
 import qualified Paladin.Utility as Utility
-import qualified Text.Read as Read
 
 getPlayerSkills :: Client.Manager -> String -> String -> String -> IO [Skill]
 getPlayerSkills manager sessionId platform player = do
-  initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/callproc105/"
-  let request = initialRequest
-        { Client.requestHeaders = [(ci "SessionID", bs sessionId)]
-        , Client.requestBody = Client.RequestBodyBS (bs (concat ["&Proc[]=GetPlayerSkill", platform, "&P0P[]=", player]))
-        }
-  Exception.catch
-    (do
-      response <- Client.httpLbs request manager
-      print response
-      response
-        & Client.responseBody
-        & LazyByteString.toStrict
-        & Encoding.decodeUtf8
-        & Text.splitOn (t "\r\n")
-        & map (Text.splitOn (t "&"))
-        & map (map (Text.splitOn (t "=")))
-        & map (Maybe.mapMaybe listToTuple)
-        & map Map.fromList
-        & Maybe.mapMaybe toSkill
-        & pure)
-    (\e -> do
-      print (e :: Exception.SomeException)
-      pure [])
+  initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/Services"
+  let
+    playerId = concat [platform, "|", player, "|", "0"]
+    request = initialRequest
+      { Client.requestHeaders =
+        [ ("BuildID", "-1677331153")
+        , ("Cache-Control", "no-cache")
+        , ("Content-Type", "application/x-www-form-urlencoded")
+        , ("Environment", "Prod")
+        -- This value is likely incorrect because it was part of a request
+        -- for a different player.
+        , ("PsySig", "l/R4TlCv7/XPyrRY9p9RzpMiayYP5FgLLXWGjUyLFAA=")
+        , ("SessionID", bs sessionId)
+        , ("User-Agent", "RL Win/170316.47017.154572 gzip")
+        ]
+      , Client.requestBody = Client.RequestBodyLBS (Aeson.encode [QQ.aesonQQ|
+        [
+          {
+            "Service": "Skills/GetSkillLeaderboardValueForUser",
+            "Version": 1,
+            "ID": 1,
+            "Params": {
+              "Playlist": 10,
+              "PlayerID": #{playerId}
+            }
+          },
+          {
+            "Service": "Skills/GetSkillLeaderboardValueForUser",
+            "Version": 1,
+            "ID": 2,
+            "Params": {
+              "Playlist": 11,
+              "PlayerID": #{playerId}
+            }
+          },
+          {
+            "Service": "Skills/GetSkillLeaderboardValueForUser",
+            "Version": 1,
+            "ID": 3,
+            "Params": {
+              "Playlist": 12,
+              "PlayerID": #{playerId}
+            }
+          },
+          {
+            "Service": "Skills/GetSkillLeaderboardValueForUser",
+            "Version": 1,
+            "ID": 4,
+            "Params": {
+              "Playlist": 13,
+              "PlayerID": #{playerId}
+            }
+          }
+        ]
+      |])
+      }
+  response <- Client.httpLbs request manager
+  print response
+  let body = Client.responseBody response
+  print body
+  case Aeson.decode body of
+    Nothing -> do
+      putStrLn "could not decode body"
+      pure []
+    Just apiResponse -> do
+      print apiResponse
+      pure (toSkills apiResponse)
 
 keepSessionAlive :: Client.Manager -> String -> IO ()
 keepSessionAlive manager sessionId = do
   initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/Services"
   let request = initialRequest
         { Client.requestHeaders =
-          [ (ci "BuildID", bs "-1677331153")
-          , (ci "Cache-Control", bs "no-cache")
-          , (ci "Content-Type", bs "application/x-www-form-urlencoded")
-          , (ci "Environment", bs "Prod")
-          , (ci "PsySig", bs "bLHDwyZg0cj4ekeMDnacS8use3eY49HsJnbIhek3cZg=")
-          , (ci "SessionID", bs sessionId)
-          , (ci "User-Agent", bs "RL Win/170316.47017.154572 gzip")
+          [ ("BuildID", "-1677331153")
+          , ("Cache-Control", "no-cache")
+          , ("Content-Type", "application/x-www-form-urlencoded")
+          , ("Environment", "Prod")
+          , ("PsySig", "bLHDwyZg0cj4ekeMDnacS8use3eY49HsJnbIhek3cZg=")
+          , ("SessionID", bs sessionId)
+          , ("User-Agent", "RL Win/170316.47017.154572 gzip")
           ]
         , Client.requestBody = Client.RequestBodyLBS (Aeson.encode [QQ.aesonQQ|
           [
@@ -84,6 +130,41 @@ keepSessionAlive manager sessionId = do
       (\e -> print (e :: Exception.SomeException))
     Utility.sleep 60)
 
+toSkills :: ApiResponse -> [Skill]
+toSkills apiResponse = Maybe.mapMaybe toSkill (apiResponseResponses apiResponse)
+
+toSkill :: ServiceResponse -> Maybe Skill
+toSkill serviceResponse = toSkill' (_serviceResponseResult serviceResponse)
+
+toSkill' :: Aeson.Object -> Maybe Skill
+toSkill' object = do
+  rawPlaylist <- HashMap.lookup "LeaderboardID" object
+  rawMmr <- HashMap.lookup "MMR" object
+  rawTier <- HashMap.lookup "Value" object
+
+  playlist <- case rawPlaylist of
+    Aeson.String "Skill10" -> Just 10
+    Aeson.String "Skill11" -> Just 11
+    Aeson.String "Skill12" -> Just 12
+    Aeson.String "Skill13" -> Just 13
+    _ -> Nothing
+  mmr <- case rawMmr of
+    Aeson.Number number -> rightToMaybe (Scientific.toBoundedRealFloat number)
+    _ -> Nothing
+  tier <- case rawTier of
+    Aeson.Number number -> Scientific.toBoundedInteger number
+    _ -> Nothing
+
+  pure Skill
+    { skillDivision = 0
+    , skillMmr = mmr
+    , skillMatchesPlayed = 0
+    , skillMu = 0
+    , skillPlaylist = playlist
+    , skillSigma = 0
+    , skillTier = tier
+    }
+
 data Skill = Skill
   { skillDivision :: Int
   , skillMmr :: Double
@@ -94,25 +175,28 @@ data Skill = Skill
   , skillTier :: Int
   } deriving Show
 
-toSkill :: Map.Map Text.Text Text.Text -> Maybe Skill
-toSkill m = Skill
-  <$> lookupAndRead m "Division"
-  <*> lookupAndRead m "MMR"
-  <*> lookupAndRead m "MatchesPlayed"
-  <*> lookupAndRead m "Mu"
-  <*> lookupAndRead m "Playlist"
-  <*> lookupAndRead m "Sigma"
-  <*> lookupAndRead m "Tier"
+data ApiResponse = ApiResponse
+  { apiResponseResponses :: [ServiceResponse]
+  } deriving (Generics.Generic, Show)
 
-lookupAndRead :: Read a => Map.Map Text.Text Text.Text -> String -> Maybe a
-lookupAndRead m k = do
-  v <- Map.lookup (t k) m
-  Read.readMaybe (Text.unpack v)
+instance Aeson.FromJSON ApiResponse where
+  parseJSON = genericParseJSON "apiResponse"
 
-listToTuple :: [a] -> Maybe (a, a)
-listToTuple xs = case xs of
-  [x, y] -> Just (x, y)
-  _ -> Nothing
+data ServiceResponse = ServiceResponse
+  { _serviceResponseID :: Int
+  , _serviceResponseResult :: Aeson.Object
+  } deriving (Generics.Generic, Show)
+
+instance Aeson.FromJSON ServiceResponse where
+  parseJSON = genericParseJSON "_serviceResponse"
+
+genericParseJSON
+  :: (Aeson.GFromJSON Aeson.Zero (Generics.Rep a), Generics.Generic a)
+  => String -> Aeson.Value -> Aeson.Parser a
+genericParseJSON prefix =
+  let toDrop = length prefix
+      options = Casing.aesonDrop toDrop Casing.pascalCase
+  in Aeson.genericParseJSON options
 
 t :: String -> Text.Text
 t = Text.pack
@@ -120,5 +204,7 @@ t = Text.pack
 bs :: String -> ByteString.ByteString
 bs = Encoding.encodeUtf8 . t
 
-ci :: String -> CaseInsensitive.CI ByteString.ByteString
-ci = CaseInsensitive.mk . bs
+rightToMaybe :: Either a b -> Maybe b
+rightToMaybe e = case e of
+  Left _ -> Nothing
+  Right r -> Just r

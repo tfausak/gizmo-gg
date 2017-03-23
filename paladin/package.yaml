@@ -23,7 +23,6 @@ library:
     - aeson-qq
     - base
     - bytestring
-    - case-insensitive
     - containers
     - cryptonite
     - directory
@@ -36,8 +35,10 @@ library:
     - postgresql-simple
     - postgresql-simple-migration
     - rattletrap
+    - scientific
     - text
     - time
+    - unordered-containers
     - uuid
     - wai
     - wai-cors
