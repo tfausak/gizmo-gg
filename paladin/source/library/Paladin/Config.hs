@@ -35,7 +35,7 @@ defaultConfig =
     , configMigrate = True
     , configPort = port
     , configServer = True
-    , configSessionId = "c78883d28fcb16057081ca5fde2549929"
+    , configSessionId = "10266c15481882f4d48d865eba5c24487"
     , configUrl = "http://localhost:" ++ show port
     , configWorker = True
     }
