@@ -1,5 +1,8 @@
 resolver: lts-8.0
 
+extra-deps:
+  - rattletrap-2.2.0
+
 allow-different-user: true
 install-ghc: true
 pvp-bounds: both
