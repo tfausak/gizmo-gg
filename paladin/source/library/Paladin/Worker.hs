@@ -11,7 +11,6 @@ import Data.Function ((&))
 
 import qualified Control.Concurrent as Concurrent
 import qualified Control.Exception as Exception
-import qualified Control.Monad as Monad
 import qualified Control.Monad.Fail as Fail
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Char8 as ByteString
@@ -52,31 +51,46 @@ startWorker config connection = do
   pure ()
 
 updatePlayerSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
-updatePlayerSkills connection manager sessionId = Monad.forever (do
+updatePlayerSkills connection manager sessionId = do
   maybePlayerWithPlatform <- getOldestPlayerWithPlatform connection
   case maybePlayerWithPlatform of
-    Nothing -> pure ()
+    Nothing -> do
+      -- Could not find any players, so no skills to look up. Wait a second and
+      -- try again.
+      Utility.sleep 1
+      updatePlayerSkills connection manager sessionId
     Just (player, platform) -> do
       let platformName = case Entity.platformName platform of
             Entity.PlayStation -> "PS4"
             Entity.Xbox -> "XboxOne"
             _ -> "Steam"
       let playerId = player & Entity.playerRemoteId & Text.unpack
-      skills <- Rank.getPlayerSkills manager sessionId platformName playerId
-      if null skills
-        then do
-          createPlayerSkill connection player Rank.Skill
-            { Rank.skillDivision = 0
-            , Rank.skillMmr = 0
-            , Rank.skillMatchesPlayed = 0
-            , Rank.skillMu = 0
-            , Rank.skillPlaylist = 1 -- unranked 1v1
-            , Rank.skillSigma = 0
-            , Rank.skillTier = 0
-            }
-          Utility.sleep 15
-        else mapM_ (createPlayerSkill connection player) skills
-  Utility.sleep 1)
+      result <- Rank.getPlayerSkills manager sessionId platformName playerId
+      case result of
+        Left body -> do
+          -- The request failed for some reason. Typically this means the
+          -- session ID is no longer active.
+          putStrLn "Skills/GetSkillLeaderboardValueForUser request failed!"
+          print body
+          -- Stop looping.
+        Right skills -> do
+          if null skills
+            -- The player doesn't have any skills. We need to insert a row into
+            -- our skill table otherwise we'll try to get them again on the
+            -- next iteration. Janky, but keeps us from having to have a queue.
+            then createPlayerSkill connection player Rank.Skill
+              { Rank.skillDivision = 0
+              , Rank.skillMmr = 0
+              , Rank.skillMatchesPlayed = 0
+              , Rank.skillMu = 0
+              , Rank.skillPlaylist = 1 -- unranked 1v1
+              , Rank.skillSigma = 0
+              , Rank.skillTier = 0
+              }
+            -- The player did have skills, so save them.
+            else mapM_ (createPlayerSkill connection player) skills
+          Utility.sleep 1
+          updatePlayerSkills connection manager sessionId
 
 createPlayerSkill :: Sql.Connection -> Entity.Player -> Rank.Skill -> IO ()
 createPlayerSkill connection player skill = Database.execute connection

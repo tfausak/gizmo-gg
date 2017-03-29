@@ -13,6 +13,7 @@ import qualified Data.Aeson.Casing as Casing
 import qualified Data.Aeson.QQ as QQ
 import qualified Data.Aeson.Types as Aeson
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Maybe as Maybe
 import qualified Data.Scientific as Scientific
@@ -21,7 +22,12 @@ import qualified Data.Text.Encoding as Encoding
 import qualified GHC.Generics as Generics
 import qualified Network.HTTP.Client as Client
 
-getPlayerSkills :: Client.Manager -> String -> String -> String -> IO [Skill]
+getPlayerSkills
+  :: Client.Manager
+  -> String
+  -> String
+  -> String
+  -> IO (Either LazyByteString.ByteString [Skill])
 getPlayerSkills manager sessionId platform player = do
   initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/Services"
   let
@@ -82,8 +88,8 @@ getPlayerSkills manager sessionId platform player = do
   response <- Client.httpLbs request manager
   let body = Client.responseBody response
   case Aeson.decode body of
-    Nothing -> pure []
-    Just apiResponse -> pure (toSkills apiResponse)
+    Nothing -> pure (Left body)
+    Just apiResponse -> pure (Right (toSkills apiResponse))
 
 toSkills :: ApiResponse -> [Skill]
 toSkills apiResponse = Maybe.mapMaybe toSkill (apiResponseResponses apiResponse)
