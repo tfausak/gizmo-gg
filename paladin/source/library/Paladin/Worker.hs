@@ -47,7 +47,6 @@ startWorker config connection = do
     [parser]
   manager <- Client.newManager TLS.tlsManagerSettings
   let sessionId = Config.configSessionId config
-  _ <- Concurrent.forkIO (Rank.keepSessionAlive manager sessionId)
   _ <- Concurrent.forkIO (updatePlayerSkills connection manager sessionId)
   _ <- Concurrent.forkIO (parseUploads config connection)
   pure ()

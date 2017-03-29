@@ -6,11 +6,8 @@
 module Paladin.Rank
   ( Skill(..)
   , getPlayerSkills
-  , keepSessionAlive
   ) where
 
-import qualified Control.Exception as Exception
-import qualified Control.Monad as Monad
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Casing as Casing
 import qualified Data.Aeson.QQ as QQ
@@ -23,7 +20,6 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified GHC.Generics as Generics
 import qualified Network.HTTP.Client as Client
-import qualified Paladin.Utility as Utility
 
 getPlayerSkills :: Client.Manager -> String -> String -> String -> IO [Skill]
 getPlayerSkills manager sessionId platform player = do
@@ -88,41 +84,6 @@ getPlayerSkills manager sessionId platform player = do
   case Aeson.decode body of
     Nothing -> pure []
     Just apiResponse -> pure (toSkills apiResponse)
-
-keepSessionAlive :: Client.Manager -> String -> IO ()
-keepSessionAlive manager sessionId = do
-  initialRequest <- Client.parseUrlThrow "POST https://psyonix-rl.appspot.com/Services"
-  let request = initialRequest
-        { Client.requestHeaders =
-          [ ("BuildID", "-1677331153")
-          , ("Cache-Control", "no-cache")
-          , ("Content-Type", "application/x-www-form-urlencoded")
-          , ("Environment", "Prod")
-          , ("PsySig", "bLHDwyZg0cj4ekeMDnacS8use3eY49HsJnbIhek3cZg=")
-          , ("SessionID", bs sessionId)
-          , ("User-Agent", "RL Win/170316.47017.154572 gzip")
-          ]
-        , Client.requestBody = Client.RequestBodyLBS (Aeson.encode [QQ.aesonQQ|
-          [
-            {
-              "Service": "Population/UpdatePlayerPlaylist",
-              "Version": 1,
-              "ID": 30,
-              "Params": {
-                "Playlist": 0,
-                "NumLocalPlayers": 1
-              }
-            }
-          ]
-        |])
-        }
-  Monad.forever (do
-    Exception.catch
-      (do
-        response <- Client.httpLbs request manager
-        print response)
-      (\e -> print (e :: Exception.SomeException))
-    Utility.sleep 60)
 
 toSkills :: ApiResponse -> [Skill]
 toSkills apiResponse = Maybe.mapMaybe toSkill (apiResponseResponses apiResponse)
