@@ -29,8 +29,6 @@ library:
     - envy
     - exceptions
     - filepath
-    - http-client
-    - http-client-tls
     - http-types
     - postgresql-simple
     - postgresql-simple-migration
