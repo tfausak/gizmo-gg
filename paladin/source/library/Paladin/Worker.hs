@@ -45,52 +45,53 @@ startWorker config connection = do
     |]
     [parser]
   manager <- Client.newManager TLS.tlsManagerSettings
-  let sessionId = Config.configSessionId config
-  _ <- Concurrent.forkIO (updatePlayerSkills connection manager sessionId)
+  let apiToken = Config.configApiToken config
+  _ <- Concurrent.forkIO (updatePlayerSkills connection manager apiToken)
   _ <- Concurrent.forkIO (parseUploads config connection)
   pure ()
 
 updatePlayerSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
-updatePlayerSkills connection manager sessionId = do
+updatePlayerSkills connection manager apiToken = do
   maybePlayerWithPlatform <- getOldestPlayerWithPlatform connection
   case maybePlayerWithPlatform of
     Nothing -> do
       -- Could not find any players, so no skills to look up. Wait a second and
       -- try again.
       Utility.sleep 1
-      updatePlayerSkills connection manager sessionId
+      updatePlayerSkills connection manager apiToken
     Just (player, platform) -> do
       let platformName = case Entity.platformName platform of
-            Entity.PlayStation -> "PS4"
-            Entity.Xbox -> "XboxOne"
-            _ -> "Steam"
-      let playerId = player & Entity.playerRemoteId & Text.unpack
-      result <- Rank.getPlayerSkills manager sessionId platformName playerId
+            Entity.PlayStation -> "ps4"
+            Entity.Splitscreen -> "unknown-platform" -- FIXME
+            Entity.Steam -> "steam"
+            Entity.Xbox -> "xboxone"
+      maybePlayerName <- getPlayerName connection player
+      let playerId = case Entity.platformName platform of
+            Entity.Steam -> player & Entity.playerRemoteId & Text.unpack
+            _ -> maybe "unknown-player" Text.unpack maybePlayerName -- FIXME
+      result <- Rank.getPlayerSkills manager apiToken platformName playerId
+      let emptySkill = Rank.Skill
+            { Rank.skillDivision = 0
+            , Rank.skillMatchesPlayed = 0
+            , Rank.skillPlaylist = 1 -- unranked 1v1
+            , Rank.skillSkill = 0
+            , Rank.skillTier = 0
+            , Rank.skillTierMax = 0
+            }
       case result of
-        Left body -> do
-          -- The request failed for some reason. Typically this means the
-          -- session ID is no longer active.
-          putStrLn "Skills/GetSkillLeaderboardValueForUser request failed!"
-          print body
-          -- Stop looping.
-        Right skills -> do
+        Left message -> do
+          putStrLn ("updatePlayerSkills: request failed! " ++ message)
+          createPlayerSkill connection player emptySkill
+        Right (Rank.Single (Rank.Skills skills)) -> do
           if null skills
             -- The player doesn't have any skills. We need to insert a row into
             -- our skill table otherwise we'll try to get them again on the
             -- next iteration. Janky, but keeps us from having to have a queue.
-            then createPlayerSkill connection player Rank.Skill
-              { Rank.skillDivision = 0
-              , Rank.skillMmr = 0
-              , Rank.skillMatchesPlayed = 0
-              , Rank.skillMu = 0
-              , Rank.skillPlaylist = 1 -- unranked 1v1
-              , Rank.skillSigma = 0
-              , Rank.skillTier = 0
-              }
+            then createPlayerSkill connection player emptySkill
             -- The player did have skills, so save them.
             else mapM_ (createPlayerSkill connection player) skills
-          Utility.sleep 1
-          updatePlayerSkills connection manager sessionId
+      Utility.sleep 1
+      updatePlayerSkills connection manager apiToken
 
 createPlayerSkill :: Sql.Connection -> Entity.Player -> Rank.Skill -> IO ()
 createPlayerSkill connection player skill = Database.execute connection
@@ -111,10 +112,19 @@ createPlayerSkill connection player skill = Database.execute connection
   , skill & Rank.skillMatchesPlayed & Sql.toField
   , skill & Rank.skillDivision & Sql.toField
   , skill & Rank.skillTier & Sql.toField
-  , skill & Rank.skillMmr & Sql.toField
-  , skill & Rank.skillMu & Sql.toField
-  , skill & Rank.skillSigma & Sql.toField
+  , skill & Rank.skillSkill & Sql.toField
+  , (0 :: Int) & Sql.toField -- mu
+  , (0 :: Int) & Sql.toField -- sigma
   ]
+
+getPlayerName :: Sql.Connection -> Entity.Player -> IO (Maybe Text.Text)
+getPlayerName connection player = do
+  rows <- Database.query connection
+    [Sql.sql| select name from games_players where player_id = ? |]
+    [Entity.playerId player]
+  case rows of
+    [[name]] -> pure (Just name)
+    _ -> pure Nothing
 
 getOldestPlayerWithPlatform
   :: Sql.Connection -> IO (Maybe (Entity.Player, Entity.Platform))
