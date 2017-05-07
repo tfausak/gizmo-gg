@@ -1142,11 +1142,14 @@ getDay query = do
           Just "month" -> Time.addDays (-28) today
           Just "week" -> Time.addDays (-7) today
           Just "day" -> Time.addDays (-1) today
-          _ -> startOfSeason3
+          _ -> startOfSeason4
   pure day
 
-startOfSeason3 :: Time.Day
-startOfSeason3 = Time.fromGregorian 2016 6 20
+startOfSeason4 :: Time.Day
+startOfSeason4 = Time.fromGregorian 2017 3 22
+
+_startOfSeason3 :: Time.Day
+_startOfSeason3 = Time.fromGregorian 2016 6 20
 
 getPlaylists :: Common.Query -> [Int]
 getPlaylists query =
