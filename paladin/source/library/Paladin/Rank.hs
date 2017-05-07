@@ -28,9 +28,7 @@ getPlayerSkills manager apiToken platform player = do
   let url = concat ["https://api.rocketleaguegame.com/api/v1/" , platform , "/playerskills/" , player , "/"]
   initialRequest <- Client.parseRequest url
   let request = initialRequest { Client.requestHeaders = [(HTTP.hAuthorization, bs ("Token " ++ apiToken))] }
-  print request
   response <- Client.httpLbs request manager
-  print response
   let body = Client.responseBody response
   pure (Aeson.eitherDecode body)
 
