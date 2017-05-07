@@ -18,6 +18,7 @@ data Config = Config
   , configMigrate :: Bool
   , configPort :: Warp.Port
   , configServer :: Bool
+  , configSessionId :: String
   , configUrl :: String
   , configWorker :: Bool
   } deriving (Eq, Show)
@@ -34,6 +35,7 @@ defaultConfig =
     , configMigrate = True
     , configPort = port
     , configServer = True
+    , configSessionId = "95fa33e1515fe854a937b2c1220d50f27"
     , configUrl = "http://localhost:" ++ show port
     , configWorker = True
     }
@@ -47,6 +49,7 @@ instance Envy.FromEnv Config where
     maybeMigrate <- envMaybe "MIGRATE"
     maybePort <- envMaybe "PORT"
     maybeServer <- envMaybe "SERVER"
+    maybeSessionId <- envMaybe "SESSION_ID"
     maybeUrl <- envMaybe "CONNECT"
     maybeWorker <- envMaybe "WORKER"
     let withDefault field = Maybe.fromMaybe (field Envy.defConfig)
@@ -57,6 +60,7 @@ instance Envy.FromEnv Config where
       , configMigrate = withDefault configMigrate maybeMigrate
       , configPort = withDefault configPort maybePort
       , configServer = withDefault configServer maybeServer
+      , configSessionId = withDefault configSessionId maybeSessionId
       , configUrl = withDefault configUrl maybeUrl
       , configWorker = withDefault configWorker maybeWorker
       }

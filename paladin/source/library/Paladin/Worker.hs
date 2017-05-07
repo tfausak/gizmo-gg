@@ -23,10 +23,13 @@ import qualified Data.Version as Version
 import qualified Database.PostgreSQL.Simple as Sql
 import qualified Database.PostgreSQL.Simple.SqlQQ as Sql
 import qualified Database.PostgreSQL.Simple.ToField as Sql
+import qualified Network.HTTP.Client as Client
+import qualified Network.HTTP.Client.TLS as TLS
 import qualified Paladin.Analysis as Analysis
 import qualified Paladin.Config as Config
 import qualified Paladin.Database as Database
 import qualified Paladin.Entity as Entity
+import qualified Paladin.Rank as Rank
 import qualified Paladin.Storage as Storage
 import qualified Paladin.Utility as Utility
 import qualified Rattletrap
@@ -41,8 +44,156 @@ startWorker config connection = do
       ON CONFLICT DO NOTHING
     |]
     [parser]
+  manager <- Client.newManager TLS.tlsManagerSettings
+  let sessionId = Config.configSessionId config
+  _ <- Concurrent.forkIO (updatePlayerSkills connection manager sessionId)
   _ <- Concurrent.forkIO (parseUploads config connection)
   pure ()
+
+updatePlayerSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
+updatePlayerSkills connection manager sessionId = do
+  maybePlayerWithPlatform <- getOldestPlayerWithPlatform connection
+  case maybePlayerWithPlatform of
+    Nothing -> do
+      -- Could not find any players, so no skills to look up. Wait a second and
+      -- try again.
+      Utility.sleep 1
+      updatePlayerSkills connection manager sessionId
+    Just (player, platform) -> do
+      let platformName = case Entity.platformName platform of
+            Entity.PlayStation -> "PS4"
+            Entity.Xbox -> "XboxOne"
+            _ -> "Steam"
+      let playerId = player & Entity.playerRemoteId & Text.unpack
+      result <- Rank.getPlayerSkills manager sessionId platformName playerId
+      case result of
+        Left body -> do
+          -- The request failed for some reason. Typically this means the
+          -- session ID is no longer active.
+          putStrLn "Skills/GetSkillLeaderboardValueForUser request failed!"
+          print body
+          -- Stop looping.
+        Right skills -> do
+          if null skills
+            -- The player doesn't have any skills. We need to insert a row into
+            -- our skill table otherwise we'll try to get them again on the
+            -- next iteration. Janky, but keeps us from having to have a queue.
+            then createPlayerSkill connection player Rank.Skill
+              { Rank.skillDivision = 0
+              , Rank.skillMmr = 0
+              , Rank.skillMatchesPlayed = 0
+              , Rank.skillMu = 0
+              , Rank.skillPlaylist = 1 -- unranked 1v1
+              , Rank.skillSigma = 0
+              , Rank.skillTier = 0
+              }
+            -- The player did have skills, so save them.
+            else mapM_ (createPlayerSkill connection player) skills
+          Utility.sleep 1
+          updatePlayerSkills connection manager sessionId
+
+createPlayerSkill :: Sql.Connection -> Entity.Player -> Rank.Skill -> IO ()
+createPlayerSkill connection player skill = Database.execute connection
+  [Sql.sql|
+    insert into player_skills (
+      player_id,
+      playlist_id,
+      matches_played,
+      division,
+      tier,
+      mmr,
+      mu,
+      sigma
+    ) values ( ?, ?, ?, ?, ?, ?, ?, ? )
+  |]
+  [ player & Entity.playerId & Sql.toField
+  , skill & Rank.skillPlaylist & Entity.Tagged & Sql.toField
+  , skill & Rank.skillMatchesPlayed & Sql.toField
+  , skill & Rank.skillDivision & Sql.toField
+  , skill & Rank.skillTier & Sql.toField
+  , skill & Rank.skillMmr & Sql.toField
+  , skill & Rank.skillMu & Sql.toField
+  , skill & Rank.skillSigma & Sql.toField
+  ]
+
+getOldestPlayerWithPlatform
+  :: Sql.Connection -> IO (Maybe (Entity.Player, Entity.Platform))
+getOldestPlayerWithPlatform connection = do
+  maybePlayerId <- getOldestPlayerId connection
+  case maybePlayerId of
+    Nothing -> pure Nothing
+    Just playerId -> getPlayerWithPlatform connection playerId
+
+getPlayerWithPlatform
+  :: Sql.Connection
+  -> Entity.PlayerId
+  -> IO (Maybe (Entity.Player, Entity.Platform))
+getPlayerWithPlatform connection playerId = do
+  maybePlayer <- getPlayer connection playerId
+  case maybePlayer of
+    Nothing -> pure Nothing
+    Just player -> do
+      let platformId = Entity.playerPlatformId player
+      maybePlatform <- getPlatform connection platformId
+      case maybePlatform of
+        Nothing -> pure Nothing
+        Just platform -> pure (Just (player, platform))
+
+getPlayer :: Sql.Connection -> Entity.PlayerId -> IO (Maybe Entity.Player)
+getPlayer connection playerId = do
+  maybePlayer <- Database.query connection [Sql.sql|
+    select id, created_at, platform_id, remote_id, local_id
+    from players
+    where id = ?
+  |] [playerId]
+  case maybePlayer of
+    [player] -> pure (Just player)
+    _ -> pure Nothing
+
+getPlatform :: Sql.Connection -> Entity.PlatformId -> IO (Maybe Entity.Platform)
+getPlatform connection platformId = do
+  maybePlatform <- Database.query connection [Sql.sql|
+    select id, name
+    from platforms
+    where id = ?
+  |] [platformId]
+  case maybePlatform of
+    [platform] -> pure (Just platform)
+    _ -> pure Nothing
+
+getOldestPlayerId :: Sql.Connection -> IO (Maybe Entity.PlayerId)
+getOldestPlayerId connection = do
+  maybePlayerId <- getOldestPlayerIdWithoutSkill connection
+  case maybePlayerId of
+    Just playerId -> pure (Just playerId)
+    Nothing -> getOldestPlayerIdWithSkill connection
+
+getOldestPlayerIdWithoutSkill :: Sql.Connection -> IO (Maybe Entity.PlayerId)
+getOldestPlayerIdWithoutSkill connection = do
+  playerIds <- Database.query_ connection [Sql.sql|
+    select players.id
+    from players
+    left join player_skills on player_skills.player_id = players.id
+    where player_skills.player_id is null
+    order by players.created_at asc
+    limit 1
+  |]
+  case playerIds of
+    [[playerId]] -> pure (Just playerId)
+    _ -> pure Nothing
+
+getOldestPlayerIdWithSkill :: Sql.Connection -> IO (Maybe Entity.PlayerId)
+getOldestPlayerIdWithSkill connection = do
+  playerIds <- Database.query_ connection [Sql.sql|
+    select player_id
+    from player_skills
+    group by player_id
+    order by max(created_at) asc
+    limit 1
+  |]
+  case playerIds of
+    [[playerId]] -> pure (Just playerId)
+    _ -> pure Nothing
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
 parseUploads config connection = do
