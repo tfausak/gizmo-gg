@@ -1185,16 +1185,12 @@ getTemplates query =
   case Common.getParam "map" query of
     Just "arc" -> [starbaseArcTemplate]
     Just "standard" -> [standardTemplate]
-    Just "tokyo" -> [neoTokyoTemplate]
     Just "wasteland" -> [wastelandTemplate]
     _ -> competitiveTemplates
 
 competitiveTemplates :: [String]
 competitiveTemplates =
-  [neoTokyoTemplate, standardTemplate, starbaseArcTemplate, wastelandTemplate]
-
-neoTokyoTemplate :: String
-neoTokyoTemplate = "Neo Tokyo"
+  [standardTemplate, starbaseArcTemplate, wastelandTemplate]
 
 standardTemplate :: String
 standardTemplate = "Standard"

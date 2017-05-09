@@ -12,9 +12,6 @@ export default {
     ],
     'arc': [
       'Starbase ARC'
-    ],
-    'tokyo': [
-      'Neo Tokyo'
     ]
   }
 }
