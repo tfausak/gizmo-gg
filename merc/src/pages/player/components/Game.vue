@@ -94,7 +94,7 @@
   display: block;
 }
 .expander {
-  height: 75px;
+  height: 90px;
   text-align: center;
   display: flex;
   justify-content: center;

@@ -9,6 +9,7 @@ import GameSummaryPage from '../pages/game/Summary'
 import IndexPage from '../pages/Index'
 import PlayerPage from '../pages/Player'
 import PlayerSummaryPage from '../pages/player/Summary'
+import PlayerRankPage from '../pages/player/Rank'
 import PlayerBattleCarsPage from '../pages/player/BattleCars'
 import PlayerMapsPage from '../pages/player/Maps'
 import SearchPage from '../pages/Search'
@@ -53,6 +54,11 @@ export default new Router({
               path: 'summary',
               name: 'player.summary',
               component: PlayerSummaryPage
+            },
+            {
+              path: 'rank',
+              name: 'player.rank',
+              component: PlayerRankPage
             },
             {
               path: 'battle-cars',

@@ -151,6 +151,7 @@
           <div class="container">
             <ul class="playerTabs">
               <router-link :to="{ name: 'player.summary', params: { playerId: id } }" tag="li"><a>Summary</a></router-link>
+              <router-link :to="'/player/' + id + '/rank'" tag="li"><a>Rank</a></router-link>
               <router-link :to="'/player/' + id + '/battle-cars'" tag="li"><a>Battle-Cars</a></router-link>
               <router-link :to="'/player/' + id + '/maps'" tag="li"><a>Maps</a></router-link>
             </ul>
@@ -269,35 +270,6 @@ export default {
         newRecent = _.slice(newRecent, 0, 5)
         vm.$cookie.set('recent', JSON.stringify(newRecent))
         EventBus.$emit('recent-updated')
-
-        /*
-        vm.GET_PLAYER['skills'] = {
-          'Competitive Standard': {
-            'mmr': 40.1759,
-            'tier': 12,
-            'matchesPlayed': 201,
-            'division': 0
-          },
-          'Competitive Solo Duel': {
-            'mmr': 38.2419,
-            'tier': 11,
-            'matchesPlayed': 168,
-            'division': 2
-          },
-          'Competitive Solo Standard': {
-            'mmr': 34.6353,
-            'tier': 11,
-            'matchesPlayed': 105,
-            'division': 0
-          },
-          'Competitive Doubles': {
-            'mmr': 50.5203,
-            'tier': 14,
-            'matchesPlayed': 2368,
-            'division': 2
-          }
-        }
-        */
 
         vm.compileData()
 
