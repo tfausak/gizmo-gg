@@ -41,7 +41,7 @@
         <div class="rankPlaylist">{{ key }}</div>
         <div v-if="skill">
           <div class="rankImage">
-            <img :src="'/static/img/tiers/' + skill.tier + '.png'">
+            <rank-icon :rank="skill.tier"></rank-icon>
           </div>
           <div class="rankDivision">DIV {{ skill.division + 1 }}</div>
           <div class="rankGames">{{ skill.matchesPlayed }} Games</div>
@@ -59,6 +59,7 @@
 
 <script>
 import LoadingComponent from '../components/Loading'
+import RankIcon from '../components/RankIcon'
 import slugger from '../../store/slugger.js'
 
 var _ = require('lodash')
@@ -68,7 +69,8 @@ export default {
     this.fetchData()
   },
   components: {
-    LoadingComponent
+    LoadingComponent,
+    RankIcon
   },
   computed: {
     loading: function () {

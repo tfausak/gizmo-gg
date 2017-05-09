@@ -170,7 +170,7 @@
                   <span class="playerName">
                     <router-link :to="'/player/' + blueTeam[i - 1].playerId + '/summary'">
                       <span v-if="blueTeam[i - 1].skill">
-                        <img alt="" class="tier" :src="'/static/img/tiers/' + blueTeam[i - 1].skill.tier + '.png'">
+                        <rank-icon :rank="blueTeam[i - 1].skill.tier"></rank-icon>
                       </span>
                       {{ blueTeam[i - 1].name }}
                     </router-link>
@@ -180,7 +180,7 @@
                   <span class="playerName">
                     <router-link :to="'/player/' + orangeTeam[i - 1].playerId + '/summary'">
                       <span v-if="orangeTeam[i - 1].skill">
-                        <img alt="" class="tier" :src="'/static/img/tiers/' + orangeTeam[i - 1].skill.tier + '.png'">
+                        <rank-icon :rank="orangeTeam[i - 1].skill.tier"></rank-icon>
                       </span>
                       {{ orangeTeam[i - 1].name }}
                     </router-link>
@@ -206,6 +206,7 @@
 </template>
 
 <script>
+import RankIcon from '../../components/RankIcon'
 import { getPct, getTeamSize } from '../../../store/scrubber.js'
 import slugger from '../../../store/slugger.js'
 import ScoreboardComponent from './Scoreboard'
@@ -215,6 +216,7 @@ var _ = require('lodash')
 
 export default {
   components: {
+    RankIcon,
     ScoreboardComponent
   },
   data: function () {

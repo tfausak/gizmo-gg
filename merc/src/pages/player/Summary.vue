@@ -31,7 +31,6 @@
     </div>
     <div class="columns">
       <div class="column is-one-third">
-        <!-- <ranks-component :playerId="playerId"></ranks-component> -->
         <maps-component :playerId="playerId" :playlist="playlist"></maps-component>
         <bodies-component :playerId="playerId" :playlist="playlist"></bodies-component>
       </div>
@@ -46,15 +45,13 @@
 import GamesComponent from './components/Games'
 import MapsComponent from './components/Maps'
 import BodiesComponent from './components/Bodies'
-import RanksComponent from './components/Ranks'
 import FilterPlaylistMixin from '../mixins/FilterPlaylistMixin'
 
 export default {
   components: {
     GamesComponent,
     MapsComponent,
-    BodiesComponent,
-    RanksComponent
+    BodiesComponent
   },
   methods: {
     fetchData: function () {},

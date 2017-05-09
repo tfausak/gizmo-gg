@@ -52,8 +52,8 @@
 .rankImage {
   padding: 0.5em;
 }
-.rankImage img {
-  width: 30px;
+.rankImage .rank-icon {
+  height: 64px;
 }
 .rankGames {
   padding-bottom: 0.5em;
@@ -131,7 +131,7 @@
                   <div class="rankPlaylist">{{ key }}</div>
                   <div v-if="skill">
                     <div class="rankImage">
-                      <img :src="'/static/img/tiers/' + skill.tier + '.png'">
+                      <rank-icon :rank="skill.tier"></rank-icon>
                     </div>
                     <div class="rankDivision">DIV {{ skill.division + 1 }}</div>
                     <div class="rankGames">{{ skill.matchesPlayed }} Games</div>
@@ -166,6 +166,7 @@
 </template>
 
 <script>
+import RankIcon from './components/RankIcon'
 import slugger from '../store/slugger.js'
 import { EventBus } from '../store/event-bus.js'
 
@@ -175,6 +176,9 @@ var _ = require('lodash')
 export default {
   beforeMount: function () {
     this.fetchData()
+  },
+  components: {
+    RankIcon
   },
   computed: {
     bodyName: function () {

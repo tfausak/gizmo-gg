@@ -95,7 +95,7 @@
           <td class="playerName">
             <router-link :to="'/player/' + gplayer.playerId + '/summary'">
               <span v-if="gplayer.skill">
-                <img alt="" class="tier" :src="'/static/img/tiers/' + gplayer.skill.tier + '.png'">
+                <rank-icon :rank="gplayer.skill.tier"></rank-icon>
               </span>
               <span v-else class="text-alpha">
                 <i class="fa fa-question fa-inline"></i>
@@ -125,11 +125,15 @@
 </template>
 
 <script>
+import RankIcon from '../../components/RankIcon'
 import { getPct } from '../../../store/scrubber.js'
 
 var _ = require('lodash')
 
 export default {
+  components: {
+    RankIcon
+  },
   data: function () {
     let vm = this
     let accuracy = 0
