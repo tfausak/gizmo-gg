@@ -1,3 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1381 1381">
-  <path d="M452.64 1115.75c-.77-1.24-54.83-94.9-120.12-208.14-105.17-182.4-118.58-206.12-117.57-208 .62-1.15 54.58-95.02 119.9-208.6l118.77-206.5H939.3l119.83 208c65.9 114.4 119.84 208.52 119.85 209.15 0 .63-53.67 94.46-119.3 208.5L940.4 1117.5l-243.17.25-243.15.25-1.4-2.25zm213.55-68.07c47.42-81.44 297.05-506.26 297.58-506.44.84-.28 58.58 100.63 58.5 102.25-.03.54-52.13 91.68-115.8 202.5-63.65 110.83-115.95 202.06-116.2 202.75-.4 1 10.8 1.25 53.86 1.24l54.36-.02L998 877.35c54.73-94.95 99.35-173.14 99.17-173.75-.18-.6-44.94-78.62-99.45-173.35L898.6 358l-202.05.04-202.05.05-99.3 173-99.27 173.04L395.7 877.2l99.8 173.1 85-.73c63.47-.54 85.17-1 85.7-1.9z"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   id="svg11784"
+   viewBox="0 0 240 240"
+   height="240"
+   width="240">
+  <defs
+     id="defs11786" />
+  <metadata
+     id="metadata11789">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,-812.36216)"
+     id="layer1">
+    <path
+       id="path4330"
+       d="m 168.71484,847.15611 -98.2871,0.3535 -49.17188,85.5019 48.81836,84.55669 98.99414,-0.3535 49.67578,-84.49999 -50.0293,-85.5586 z m -89.80078,15.0254 81.49414,0 40.64063,70.3945 -41.00391,71.02149 -21.20508,0 47.79883,-82.78909 -12.23633,-21.1933 -59.89648,103.74409 -35.41602,0 -40.70117,-70.49809 40.52539,-70.6796 z"
+       style="display:inline;fill:#babdb6;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+  </g>
 </svg>
