@@ -201,6 +201,11 @@
     <div class="panel-block gameDetails" v-if="expanded">
       <scoreboard-component :players="blueTeam" :team="'Blue'" :goals="game.blueGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize" :playerId="playerId"></scoreboard-component>
       <scoreboard-component :players="orangeTeam" :team="'Orange'" :goals="game.orangeGoals" :maxPerf="maxPerf" :totalScore="totalScore" :teamSize="teamSize" :playerId="playerId"></scoreboard-component>
+      <div class="text-center">
+        <router-link :to="'/game/' + game.id">
+          View full game details &raquo;
+        </router-link>
+      </div>
     </div>
   </div>
 </template>

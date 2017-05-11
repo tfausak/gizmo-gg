@@ -49,9 +49,6 @@
   font-size: 12px;
   font-weight: bold;
 }
-.rankImage {
-  padding: 0.5em;
-}
 .rankImage .rank-icon {
   height: 64px;
 }
@@ -138,9 +135,10 @@
                   </div>
                   <div v-else>
                     <div class="rankImage">
-                      <i class="fa fa-question"></i>
+                      <rank-icon :rank="0"></rank-icon>
                     </div>
-                    <div class="rankGames">Unknown</div>
+                    <div class="rankDivision">Unranked</div>
+                    <div class="rankGames">0 Games</div>
                   </div>
                 </div>
               </div>

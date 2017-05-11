@@ -129,6 +129,7 @@
           <div class="container">
             <ul class="playerTabs">
               <router-link :to="{ name: 'game.summary', params: { gameId: id } }" tag="li"><a>Summary</a></router-link>
+              <router-link :to="{ name: 'game.details', params: { gameId: id } }" tag="li"><a>Details</a></router-link>
             </ul>
           </div>
         </div>

@@ -1,18 +1,17 @@
 <style scoped lang="scss">
-  .rank-icon {
-    display: inline-block;
-    height: 2em;
-    vertical-align: middle;
-  }
+.rank-icon {
+  display: inline-block;
+  height: 1.5em;
+  vertical-align: bottom;
+}
 </style>
 
 <template>
-  <object
+  <img
     :class="'rank-icon rank-' + rank"
-    :data="'/static/img/ranks/season-4/' + rank + '.svg'"
+    :src="'/static/img/ranks/season-4/' + rank + '.svg'"
     type="image/svg+xml"
-  >
-  </object>
+    >
 </template>
 
 <script>

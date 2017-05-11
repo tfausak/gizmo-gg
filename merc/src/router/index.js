@@ -6,6 +6,7 @@ import DefaultPage from '../pages/templates/Default'
 import DesktopAppPage from '../pages/DesktopApp'
 import GamePage from '../pages/Game'
 import GameSummaryPage from '../pages/game/Summary'
+import GameDetailsPage from '../pages/game/Details'
 import IndexPage from '../pages/Index'
 import PlayerPage from '../pages/Player'
 import PlayerSummaryPage from '../pages/player/Summary'
@@ -85,6 +86,11 @@ export default new Router({
               path: 'summary',
               name: 'game.summary',
               component: GameSummaryPage
+            },
+            {
+              path: 'details',
+              name: 'game.details',
+              component: GameDetailsPage
             }
           ]
         },
