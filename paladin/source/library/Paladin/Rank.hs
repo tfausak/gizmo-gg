@@ -7,6 +7,7 @@ module Paladin.Rank
   , getPlayerSkills
   ) where
 
+import qualified Control.Exception as Exception
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Types as Aeson
 import qualified Data.ByteString as ByteString
@@ -28,9 +29,12 @@ getPlayerSkills manager apiToken platform player = do
   let url = concat ["https://api.rocketleaguegame.com/api/v1/" , platform , "/playerskills/" , player , "/"]
   initialRequest <- Client.parseRequest url
   let request = initialRequest { Client.requestHeaders = [(HTTP.hAuthorization, bs ("Token " ++ apiToken))] }
-  response <- Client.httpLbs request manager
-  let body = Client.responseBody response
-  pure (Aeson.eitherDecode body)
+  Exception.handle
+    (\e -> pure (Left (show (e :: Exception.SomeException))))
+    (do
+      response <- Client.httpLbs request manager
+      let body = Client.responseBody response
+      pure (Aeson.eitherDecode body))
 
 newtype Single a = Single
   { singleValue :: a
