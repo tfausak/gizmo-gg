@@ -10,6 +10,7 @@ import Data.Aeson.Types
 import Data.List
 import Data.Text (Text)
 import Data.Text.Encoding
+import Data.Time
 import Database.PostgreSQL.Simple hiding (query)
 import Database.PostgreSQL.Simple.SqlQQ
 import GHC.Generics
@@ -47,20 +48,26 @@ handleException exception = do
 
 type PlayerName = Text
 
-getPlayers :: Connection -> PlatformName -> IO [(PlayerId, PlayerName)]
+getPlayers :: Connection -> PlatformName -> IO [(PlayerId, PlayerName, UTCTime)]
 getPlayers connection platform = query
   connection
   [sql|
-    select players.id, games_players.name
+    select
+      players.id,
+      max(case
+        when platforms.name = 'Xbox' then games_players.name
+        else players.remote_id
+        end) as name,
+      max(player_skills.created_at) as updated_at
     from players
     inner join platforms on platforms.id = players.platform_id
-    -- TODO: Only get the latest game/player for each player.
     inner join games_players on games_players.player_id = players.id
-    -- TODO: Only get the latest player/skill for each player.
-    left join player_skills on player_skills.player_id = players.id
+    left outer join player_skills on player_skills.player_id = players.id
     where platforms.name = ?
-    -- TODO: Make sure this sorts null correctly.
-    order by player_skills.created_at asc
+    group by players.id
+    order by
+      updated_at asc nulls first,
+      players.id asc
     limit 100
   |]
   [platform]
@@ -69,7 +76,7 @@ getSkills
   :: Manager
   -> Token
   -> PlatformName
-  -> [(PlayerId, PlayerName)]
+  -> [(PlayerId, PlayerName, UTCTime)]
   -> IO [PlayerSkills]
 getSkills manager token platform players = do
   initialRequest <- parseUrlThrow $ concat
@@ -82,7 +89,7 @@ getSkills manager token platform players = do
         , requestHeaders =
           [ (hAuthorization, encodeUtf8 . Text.pack $ "Token " ++ token)
           ]
-        , requestBody = RequestBodyLBS . encode $ playerIds platform players
+        , requestBody = RequestBodyLBS . encode $ playerIds players
         }
   response <- httpLbs request manager
   case eitherDecode $ responseBody response of
@@ -96,12 +103,8 @@ platformSlug platform = case platform of
   Xbox -> "xboxone"
   _ -> error $ "unsupported platform: " ++ show platform
 
-playerIds :: PlatformName -> [(PlayerId, PlayerName)] -> PlayerIds
-playerIds platform players = PlayerIds $ case platform of
-  PlayStation -> map snd players
-  Steam -> map (Text.pack . show . tagValue . fst) players
-  Xbox -> map snd players
-  _ -> error $ "unsupported platform: " ++ show platform
+playerIds :: [(PlayerId, PlayerName, UTCTime)] -> PlayerIds
+playerIds players = PlayerIds $ map (\(_, x, _) -> x) players
 
 newtype PlayerIds = PlayerIds
   { playerIdsPlayerIds :: [Text]
