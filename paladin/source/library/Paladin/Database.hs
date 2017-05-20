@@ -37,6 +37,15 @@ execute connection q row = do
   _ <- Sql.execute connection q row
   pure ()
 
+executeMany
+  :: Sql.ToRow row
+  => Sql.Connection -> Sql.Query -> [row] -> IO ()
+executeMany connection q rows = do
+  sql <- Sql.formatMany connection q rows
+  ByteString.putStrLn sql
+  _ <- Sql.executeMany connection q rows
+  pure ()
+
 query
   :: (Sql.ToRow rowIn, Sql.FromRow rowOut)
   => Sql.Connection -> Sql.Query -> rowIn -> IO [rowOut]

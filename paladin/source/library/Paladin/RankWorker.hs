@@ -14,7 +14,7 @@ import Data.Map (Map)
 import Data.Text (Text)
 import Data.Text.Encoding
 import Data.Time
-import Database.PostgreSQL.Simple hiding (query)
+import Database.PostgreSQL.Simple hiding (executeMany, query)
 import Database.PostgreSQL.Simple.SqlQQ
 import GHC.Generics
 import Network.HTTP.Client
@@ -32,39 +32,41 @@ type Token = String
 updatePlayerSkills :: Connection -> Manager -> Token -> IO ()
 updatePlayerSkills connection manager token = do
   forM_ platforms $ \platform -> do
-    handle handleException (do
+    handle handleException $ do
       players <- getPlayers connection platform
       let playerIds = getPlayerIds players
       skills <- getSkills manager token platform playerIds
       let playerIdsByName = getPlayerIdsByName players
       insertSkills connection playerIdsByName skills
-      print skills)
     sleep 1
 
 insertSkills :: Connection -> Map PlayerName PlayerId -> [PlayerSkills] -> IO ()
-insertSkills connection playerIdsByName skills = void $ executeMany
-  connection
-  [sql|
-    insert into player_skills (
-      player_id,
-      playlist_id,
-      matches_played,
-      division,
-      tier,
-      mmr,
-      mu,
-      sigma
-    ) values ( ?, ?, ?, ?, ?, ?, 0, 0 )
-  |]
-  (convertSkillsToRows playerIdsByName skills)
+insertSkills connection playerIdsByName skills =
+  case convertSkillsToRows playerIdsByName skills of
+    [] -> pure ()
+    rows -> void $ executeMany
+      connection
+      [sql|
+        insert into player_skills (
+          player_id,
+          playlist_id,
+          matches_played,
+          division,
+          tier,
+          mmr,
+          mu,
+          sigma
+        ) values ( ?, ?, ?, ?, ?, ?, ?, ? )
+      |]
+      rows
 
-convertSkillsToRows :: Map PlayerName PlayerId -> [PlayerSkills] -> [(PlayerId, Integer, Integer, Integer, Integer, Integer)]
+convertSkillsToRows :: Map PlayerName PlayerId -> [PlayerSkills] -> [(PlayerId, Integer, Integer, Integer, Integer, Integer, Integer, Integer)]
 convertSkillsToRows playerIdsByName skills
   -- Turn the skill values into the format that the database wants.
   = concatMap (\(pid, xs) -> case xs of
     -- If they didn't have any skill values, insert all zeros to avoid fetching
     -- them again next time.
-    [] -> [(pid, 0, 0, 0, 0, 0)]
+    [] -> [(pid, 1, 0, 0, 0, 0, 0, 0)]
     _ -> flip map xs (\x ->
       ( pid
       , skillPlaylist x
@@ -72,6 +74,8 @@ convertSkillsToRows playerIdsByName skills
       , skillDivision x
       , skillTier x
       , skillSkill x
+      , 0
+      , 0
       )))
   -- Extract the actual skill values out of their wrapper.
   . map (\(pid, xs) -> (pid, concatMap playerSkillsPlayerSkills xs))
@@ -79,7 +83,7 @@ convertSkillsToRows playerIdsByName skills
   . map (\(name, pid) ->
     (pid, flip filter skills (\skill -> case playerSkillsUserId skill of
       Nothing -> playerSkillsUserName skill == name
-      Just x -> x == fromIntegral (tagValue pid))))
+      Just x -> Text.pack (show x) == name)))
   -- Start with every player just in case some didn't come back in the API
   -- response.
   $ Map.assocs playerIdsByName
@@ -132,7 +136,7 @@ getSkills
   -> IO [PlayerSkills]
 getSkills manager token platform playerIds = do
   initialRequest <- parseUrlThrow $ concat
-    [ "https://api.rocketleaguegame.com/api/v1/"
+    [ "https://api.rocketleague.com/api/v1/"
     , platformSlug platform
     , "/playerskills/"
     ]
@@ -150,7 +154,7 @@ getSkills manager token platform playerIds = do
 
 platformSlug :: PlatformName -> String
 platformSlug platform = case platform of
-  PlayStation -> "playstation"
+  PlayStation -> "ps4"
   Steam -> "steam"
   Xbox -> "xboxone"
   _ -> error $ "unsupported platform: " ++ show platform
