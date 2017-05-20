@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Paladin.RankWorker where
+module Paladin.RankWorker
+  ( updatePlayerSkills
+  ) where
 
 import Control.Exception
 import Control.Monad
@@ -157,11 +159,11 @@ getPlayerIds :: [(PlayerId, PlayerName, UTCTime)] -> PlayerIds
 getPlayerIds players = PlayerIds $ map (\(_, x, _) -> x) players
 
 newtype PlayerIds = PlayerIds
-  { playerIdsPlayerIds :: [Text]
+  { _playerIdsPlayerIds :: [Text]
   } deriving (Eq, Generic, Show)
 
 instance ToJSON PlayerIds where
-  toJSON = genericToJSON $ jsonOptions "playerIds"
+  toJSON = genericToJSON $ jsonOptions "_playerIds"
 
 data PlayerSkills = PlayerSkills
   { playerSkillsUserId :: Maybe Integer
@@ -178,7 +180,7 @@ data Skill = Skill
   , skillPlaylist :: Integer
   , skillSkill :: Integer
   , skillTier :: Integer
-  , skillTierMax :: Integer
+  -- , skillTierMax :: Integer
   } deriving (Eq, Generic, Show)
 
 instance FromJSON Skill where
