@@ -8,6 +8,7 @@ import Control.Monad
 import Data.Aeson
 import Data.Aeson.Types
 import Data.List
+import Data.Map (Map)
 import Data.Text (Text)
 import Data.Text.Encoding
 import Data.Time
@@ -21,6 +22,7 @@ import Paladin.Entity.Platform
 import Paladin.Entity.Player
 import Paladin.Utility
 
+import qualified Data.Map as Map
 import qualified Data.Text as Text
 
 type Token = String
@@ -30,10 +32,58 @@ updatePlayerSkills connection manager token = do
   forM_ platforms $ \platform -> do
     handle handleException (do
       players <- getPlayers connection platform
-      skills <- getSkills manager token platform players
-      -- TODO: Insert skills into database.
+      let playerIds = getPlayerIds players
+      skills <- getSkills manager token platform playerIds
+      let playerIdsByName = getPlayerIdsByName players
+      insertSkills connection playerIdsByName skills
       print skills)
     sleep 1
+
+insertSkills :: Connection -> Map PlayerName PlayerId -> [PlayerSkills] -> IO ()
+insertSkills connection playerIdsByName skills = void $ executeMany
+  connection
+  [sql|
+    insert into player_skills (
+      player_id,
+      playlist_id,
+      matches_played,
+      division,
+      tier,
+      mmr,
+      mu,
+      sigma
+    ) values ( ?, ?, ?, ?, ?, ?, 0, 0 )
+  |]
+  (convertSkillsToRows playerIdsByName skills)
+
+convertSkillsToRows :: Map PlayerName PlayerId -> [PlayerSkills] -> [(PlayerId, Integer, Integer, Integer, Integer, Integer)]
+convertSkillsToRows playerIdsByName skills
+  -- Turn the skill values into the format that the database wants.
+  = concatMap (\(pid, xs) -> case xs of
+    -- If they didn't have any skill values, insert all zeros to avoid fetching
+    -- them again next time.
+    [] -> [(pid, 0, 0, 0, 0, 0)]
+    _ -> flip map xs (\x ->
+      ( pid
+      , skillPlaylist x
+      , skillMatchesPlayed x
+      , skillDivision x
+      , skillTier x
+      , skillSkill x
+      )))
+  -- Extract the actual skill values out of their wrapper.
+  . map (\(pid, xs) -> (pid, concatMap playerSkillsPlayerSkills xs))
+  -- Find all the skills for each player.
+  . map (\(name, pid) ->
+    (pid, flip filter skills (\skill -> case playerSkillsUserId skill of
+      Nothing -> playerSkillsUserName skill == name
+      Just x -> x == fromIntegral (tagValue pid))))
+  -- Start with every player just in case some didn't come back in the API
+  -- response.
+  $ Map.assocs playerIdsByName
+
+getPlayerIdsByName :: [(PlayerId, PlayerName, UTCTime)] -> Map PlayerName PlayerId
+getPlayerIdsByName = Map.fromList . map (\(v, k, _) -> (k, v))
 
 platforms :: [PlatformName]
 platforms =
@@ -76,9 +126,9 @@ getSkills
   :: Manager
   -> Token
   -> PlatformName
-  -> [(PlayerId, PlayerName, UTCTime)]
+  -> PlayerIds
   -> IO [PlayerSkills]
-getSkills manager token platform players = do
+getSkills manager token platform playerIds = do
   initialRequest <- parseUrlThrow $ concat
     [ "https://api.rocketleaguegame.com/api/v1/"
     , platformSlug platform
@@ -89,7 +139,7 @@ getSkills manager token platform players = do
         , requestHeaders =
           [ (hAuthorization, encodeUtf8 . Text.pack $ "Token " ++ token)
           ]
-        , requestBody = RequestBodyLBS . encode $ playerIds players
+        , requestBody = RequestBodyLBS $ encode playerIds
         }
   response <- httpLbs request manager
   case eitherDecode $ responseBody response of
@@ -103,8 +153,8 @@ platformSlug platform = case platform of
   Xbox -> "xboxone"
   _ -> error $ "unsupported platform: " ++ show platform
 
-playerIds :: [(PlayerId, PlayerName, UTCTime)] -> PlayerIds
-playerIds players = PlayerIds $ map (\(_, x, _) -> x) players
+getPlayerIds :: [(PlayerId, PlayerName, UTCTime)] -> PlayerIds
+getPlayerIds players = PlayerIds $ map (\(_, x, _) -> x) players
 
 newtype PlayerIds = PlayerIds
   { playerIdsPlayerIds :: [Text]
@@ -115,7 +165,7 @@ instance ToJSON PlayerIds where
 
 data PlayerSkills = PlayerSkills
   { playerSkillsUserId :: Maybe Integer
-  , playerSkillsUserName :: Text
+  , playerSkillsUserName :: PlayerName
   , playerSkillsPlayerSkills :: [Skill]
   } deriving (Eq, Generic, Show)
 
