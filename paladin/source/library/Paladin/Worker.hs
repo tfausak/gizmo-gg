@@ -53,7 +53,7 @@ startWorker config connection = do
 updatePlayerSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
 updatePlayerSkills connection manager apiToken = do
   RankWorker.updatePlayerSkills connection manager apiToken
-  Utility.sleep 1
+  Utility.sleep 3600
   updatePlayerSkills connection manager apiToken
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
