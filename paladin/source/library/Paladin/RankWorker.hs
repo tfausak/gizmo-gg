@@ -88,7 +88,7 @@ convertSkillsToRows playerIdsByName skills
   -- response.
   $ Map.assocs playerIdsByName
 
-getPlayerIdsByName :: [(PlayerId, PlayerName, UTCTime)] -> Map PlayerName PlayerId
+getPlayerIdsByName :: [(PlayerId, PlayerName, Maybe UTCTime)] -> Map PlayerName PlayerId
 getPlayerIdsByName = Map.fromList . map (\(v, k, _) -> (k, v))
 
 platforms :: [PlatformName]
@@ -104,7 +104,7 @@ handleException exception = do
 
 type PlayerName = Text
 
-getPlayers :: Connection -> PlatformName -> IO [(PlayerId, PlayerName, UTCTime)]
+getPlayers :: Connection -> PlatformName -> IO [(PlayerId, PlayerName, Maybe UTCTime)]
 getPlayers connection platform = query
   connection
   [sql|
@@ -159,7 +159,7 @@ platformSlug platform = case platform of
   Xbox -> "xboxone"
   _ -> error $ "unsupported platform: " ++ show platform
 
-getPlayerIds :: [(PlayerId, PlayerName, UTCTime)] -> PlayerIds
+getPlayerIds :: [(PlayerId, PlayerName, Maybe UTCTime)] -> PlayerIds
 getPlayerIds players = PlayerIds $ map (\(_, x, _) -> x) players
 
 newtype PlayerIds = PlayerIds
