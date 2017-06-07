@@ -2,7 +2,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Paladin.RankWorker
-  ( updatePlayersSkills
+  ( updatePlayerSkills
+  , updatePlayersSkills
   ) where
 
 import Control.Exception
@@ -26,8 +27,40 @@ import Paladin.Utility
 
 import qualified Data.Map as Map
 import qualified Data.Text as Text
+import qualified Paladin.Analysis as Analysis
+import qualified Rattletrap
 
 type Token = String
+
+updatePlayerSkills :: Connection -> Manager -> Token -> Analysis.PlayerAnalysis -> IO ()
+updatePlayerSkills connection manager token player = handle handleException $ do
+  let
+    (platform, remoteId) = case Analysis.playerAnalysisRemoteId player of
+      Rattletrap.PlayStationId x _ -> (PlayStation, x)
+      Rattletrap.SplitscreenId x -> (Splitscreen, Text.pack (show x))
+      Rattletrap.SteamId x -> (Steam, Text.pack (show (Rattletrap.word64Value x)))
+      Rattletrap.XboxId x -> (Xbox, Text.pack (show (Rattletrap.word64Value x)))
+  playerIds <- query connection [sql|
+    select players.id
+    from players
+    inner join platforms
+    on platforms.id = players.platform_id
+    where platforms.name = ?
+    and remote_id = ?
+    and local_id = 0
+    limit 1 |] (platform, remoteId)
+  case playerIds of
+    [[playerId_]] -> do
+      let
+        playerName = case platform of
+          PlayStation -> remoteId
+          Splitscreen -> remoteId
+          Steam -> remoteId
+          Xbox -> Analysis.playerAnalysisName player
+        players = [(playerId_, playerName, Nothing)]
+      skills <- getSkills manager token platform (PlayerIds [playerName])
+      insertSkills connection (getPlayerIdsByName players) skills
+    _ -> pure ()
 
 updatePlayersSkills :: Connection -> Manager -> Token -> IO ()
 updatePlayersSkills connection manager token = do

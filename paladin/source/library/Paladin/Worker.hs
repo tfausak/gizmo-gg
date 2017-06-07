@@ -47,7 +47,7 @@ startWorker config connection = do
   manager <- Client.newManager TLS.tlsManagerSettings
   let apiToken = Config.configApiToken config
   _ <- Concurrent.forkIO (updatePlayersSkills connection manager apiToken)
-  _ <- Concurrent.forkIO (parseUploads config connection)
+  _ <- Concurrent.forkIO (parseUploads config connection manager apiToken)
   pure ()
 
 updatePlayersSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
@@ -56,8 +56,8 @@ updatePlayersSkills connection manager apiToken = do
   Utility.sleep 3600
   updatePlayersSkills connection manager apiToken
 
-parseUploads :: Config.Config -> Sql.Connection -> IO ()
-parseUploads config connection = do
+parseUploads :: Config.Config -> Sql.Connection -> Client.Manager -> String -> IO ()
+parseUploads config connection manager apiToken = do
   uploads <-
     Sql.query
       connection
@@ -79,20 +79,22 @@ parseUploads config connection = do
       [parser]
   case uploads of
     [] -> Utility.sleep 1
-    _ -> mapM_ (parseUpload config connection) uploads
-  parseUploads config connection
+    _ -> mapM_ (parseUpload config connection manager apiToken) uploads
+  parseUploads config connection manager apiToken
 
 parseUpload
   :: Config.Config
   -> Sql.Connection
+  -> Client.Manager
+  -> String
   -> (Int, Utility.Tagged Hash.SHA1 String)
   -> IO ()
-parseUpload config connection (uploadId, hash) =
+parseUpload config connection manager apiToken (uploadId, hash) =
   Exception.catch
     (do contents <- Storage.getUploadFile config hash
         replay <- parseReplay contents
         analysis <- Analysis.makeReplayAnalysis replay
-        insertReplay connection uploadId analysis)
+        insertReplay connection manager apiToken uploadId analysis)
     (insertError connection uploadId)
 
 parseReplay
@@ -103,8 +105,8 @@ parseReplay contents =
     Left message -> fail message
     Right replay -> pure replay
 
-insertReplay :: Sql.Connection -> Int -> Analysis.ReplayAnalysis -> IO ()
-insertReplay connection uploadId replay = do
+insertReplay :: Sql.Connection -> Client.Manager -> String -> Int -> Analysis.ReplayAnalysis -> IO ()
+insertReplay connection manager apiToken uploadId replay = do
   let arena = Analysis.replayAnalysisArena replay
   Database.execute
     connection
@@ -233,6 +235,7 @@ insertReplay connection uploadId replay = do
     |]
     insertGameRow
   mapM_ (insertGamePlayer connection hash blueWin) players
+  mapM_ (RankWorker.updatePlayerSkills connection manager apiToken) players
   let uuid = Analysis.replayAnalysisUuid replay
   let majorVersion = Analysis.replayAnalysisMajorVersion replay
   let minorVersion = Analysis.replayAnalysisMinorVersion replay
