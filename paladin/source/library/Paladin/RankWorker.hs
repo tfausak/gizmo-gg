@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Paladin.RankWorker
-  ( updatePlayerSkills
+  ( updatePlayersSkills
   ) where
 
 import Control.Exception
@@ -29,8 +29,8 @@ import qualified Data.Text as Text
 
 type Token = String
 
-updatePlayerSkills :: Connection -> Manager -> Token -> IO ()
-updatePlayerSkills connection manager token = do
+updatePlayersSkills :: Connection -> Manager -> Token -> IO ()
+updatePlayersSkills connection manager token = do
   forM_ platforms $ \platform -> do
     handle handleException $ do
       players <- getPlayers connection platform

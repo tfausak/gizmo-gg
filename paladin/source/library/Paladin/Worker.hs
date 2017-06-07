@@ -46,15 +46,15 @@ startWorker config connection = do
     [parser]
   manager <- Client.newManager TLS.tlsManagerSettings
   let apiToken = Config.configApiToken config
-  _ <- Concurrent.forkIO (updatePlayerSkills connection manager apiToken)
+  _ <- Concurrent.forkIO (updatePlayersSkills connection manager apiToken)
   _ <- Concurrent.forkIO (parseUploads config connection)
   pure ()
 
-updatePlayerSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
-updatePlayerSkills connection manager apiToken = do
-  RankWorker.updatePlayerSkills connection manager apiToken
+updatePlayersSkills :: Sql.Connection -> Client.Manager -> String -> IO ()
+updatePlayersSkills connection manager apiToken = do
+  RankWorker.updatePlayersSkills connection manager apiToken
   Utility.sleep 3600
-  updatePlayerSkills connection manager apiToken
+  updatePlayersSkills connection manager apiToken
 
 parseUploads :: Config.Config -> Sql.Connection -> IO ()
 parseUploads config connection = do
