@@ -262,7 +262,7 @@ export default {
                     tmpUploaded[key].status = upload.status
                   }
                 })
-                vm.$cookie.set('uploaded', JSON.stringify(tmpUploaded))
+                vm.$cookie.set('uploaded', JSON.stringify(tmpUploaded), { expires: '7D' })
               }
               return data
             })
@@ -291,7 +291,7 @@ export default {
           'fileName': vm.uploading.name
         })
         vm.uploaded = _.slice(vm.uploaded, 0, 100)
-        vm.$cookie.set('uploaded', JSON.stringify(vm.uploaded))
+        vm.$cookie.set('uploaded', JSON.stringify(vm.uploaded), { expires: '7D' })
         vm.uploading = null
         vm.uploadFile()
       }

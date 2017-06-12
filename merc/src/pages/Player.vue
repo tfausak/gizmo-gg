@@ -270,7 +270,7 @@ export default {
           newRecent.push(value)
         })
         newRecent = _.slice(newRecent, 0, 5)
-        vm.$cookie.set('recent', JSON.stringify(newRecent))
+        vm.$cookie.set('recent', JSON.stringify(newRecent), { expires: '1Y' })
         EventBus.$emit('recent-updated')
 
         vm.compileData()
