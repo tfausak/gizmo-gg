@@ -101,19 +101,21 @@ export default {
       if (this.loading) {
         return {}
       }
-      let vm = this
-      let data = []
-      _.each(this.GET_PLAYER_RANK[vm.playlist], function (value, key) {
-        data.push([value.at, value.mmr])
-      })
+      let data = _
+        .chain(this.GET_PLAYER_RANK[this.playlist])
+        .reverse()
+        .map((value, index) => [index, value.mmr])
+        .value()
       this.chartOptions = {
         xAxis: {
-          type: 'time',
-          name: 'Time'
+          type: 'value',
+          name: ''
         },
         yAxis: {
           type: 'value',
-          name: 'MMR'
+          name: 'MMR',
+          min: _.chain(data).map(value => value[1]).min().value() - 10,
+          max: _.chain(data).map(value => value[1]).max().value() + 10
         },
         series: [
           {
