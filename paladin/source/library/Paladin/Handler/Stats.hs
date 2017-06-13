@@ -14,6 +14,7 @@ module Paladin.Handler.Stats
   , getGamesPlayers
   , makePlayerOutputWithSkill
   , getStatsPlayersHistoryHandler
+  , getStatsPlayersRankHandler
   ) where
 
 import Data.Function ((&))
@@ -30,6 +31,59 @@ import qualified Network.Wai as Wai
 import qualified Paladin.Database as Database
 import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
+
+getStatsPlayersRankHandler :: Common.Text -> Common.Handler
+getStatsPlayersRankHandler rawPlayerId _config connection _request = do
+  maybePlayerId <- getPlayerId connection rawPlayerId
+  case maybePlayerId of
+    Nothing -> pure notFound
+    Just playerId -> do
+      rows <- Database.query connection [Common.sql|
+        select created_at, playlist_id, mmr, tier, division
+        from player_skills
+        where player_id = ?
+        and playlist_id in ?
+        order by created_at desc
+        limit 400
+      |] (playerId, Common.In competitivePlaylists)
+      pure (Common.jsonResponse Http.status200 [] (Aeson.toJSON (toRankOutputs rows)))
+
+toRankOutputs :: [RankRow] -> Map.Map Common.Text [RankOutput]
+toRankOutputs rows =
+  let toElement x = (toPlaylistKey (rankOutputPlaylist x), [x])
+  in Map.fromListWith (flip (++)) (map (toElement . toRankOutput) rows)
+
+toRankOutput :: RankRow -> RankOutput
+toRankOutput (at, playlist, mmr, tier, division) = RankOutput
+  { rankOutputAt = at
+  , rankOutputPlaylist = playlist
+  , rankOutputMmr = mmr
+  , rankOutputTier = tier
+  , rankOutputDivision = division
+  }
+
+toPlaylistKey :: Common.PlaylistId -> Common.Text
+toPlaylistKey (Common.Tagged playlistId) =
+  Text.pack (
+    if playlistId == competitiveSoloDuel then "ranked1v1" else
+    if playlistId == competitiveDoubles then "ranked2v2" else
+    if playlistId == competitiveSoloStandard then "ranked3v3solo" else
+    if playlistId == competitiveStandard then "ranked3v3" else
+    "unknown"
+  )
+
+type RankRow = (Common.UTCTime, Common.PlaylistId, Double, Int, Int)
+
+data RankOutput = RankOutput
+  { rankOutputAt :: Common.UTCTime
+  , rankOutputPlaylist :: Common.PlaylistId
+  , rankOutputMmr :: Double
+  , rankOutputTier :: Int
+  , rankOutputDivision :: Int
+  } deriving (Eq, Common.Generic, Show)
+
+instance Common.ToJSON RankOutput where
+  toJSON = Common.genericToJSON "rankOutput"
 
 getStatsPlayersHistoryHandler :: Common.Text -> Common.Handler
 getStatsPlayersHistoryHandler rawPlayerId _config connection request = do

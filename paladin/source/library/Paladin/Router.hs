@@ -23,6 +23,8 @@ route request =
       Handler.getStatsPlayersHistoryHandler playerId
     ("GET", ["stats", "players", playerId, "poll"]) ->
       Handler.getStatsPlayersPollHandler playerId
+    ("GET", ["stats", "players", playerId, "rank"]) ->
+      Handler.getStatsPlayersRankHandler playerId
     ("GET", ["stats", "summary"]) -> Handler.getStatsSummaryHandler
     ("POST", ["uploads"]) -> Handler.postUploadHandler
     ("GET", ["uploads", uploadId]) -> Handler.getUploadHandler uploadId
