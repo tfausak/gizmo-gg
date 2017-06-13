@@ -1,7 +1,5 @@
 <script>
-import options from '../../store/options.js'
-
-var _ = require('lodash')
+import PlaylistOptionsMixin from './PlaylistOptionsMixin'
 
 export default {
   computed: {
@@ -10,16 +8,11 @@ export default {
     }
   },
   data: function () {
-    let playlistOptions = options.playlists()
-    let playlistOptionsSpec = _.omit(playlistOptions, 'all')
-    let playlistDefault = _.head(_.keys(playlistOptions))
     return {
-      playlistOptions: playlistOptions,
-      playlistOptionsSpec: playlistOptionsSpec,
-      playlistDefault: playlistDefault,
-      playlist: this.$route.query.playlist || playlistDefault
+      playlist: this.$route.query.playlist || this.playlistDefault
     }
   },
+  mixins: [ PlaylistOptionsMixin ],
   watch: {
     playlist: function (val) {
       let data = Object.assign({}, this.$route.query)
