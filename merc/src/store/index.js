@@ -74,6 +74,13 @@ const store = new Vuex.Store({
       return dispatch('GRAB', endpoint)
     },
 
+    GET_PLAYER_RANK: function ({ dispatch }, params) {
+      let endpoint = 'stats/players/' + params.id + '/rank'
+      delete params.id
+      endpoint += getQueryString(params)
+      return dispatch('GRAB', endpoint)
+    },
+
     GET_SEARCH: function ({ dispatch }, params) {
       let endpoint = 'search' + getQueryString(params)
       return dispatch('FETCH', endpoint)

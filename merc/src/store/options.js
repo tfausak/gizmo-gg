@@ -1,4 +1,12 @@
 export default {
+  shortTimes: function () {
+    return {
+      season: 'All',
+      month: '1M',
+      week: '1W',
+      day: '1D'
+    }
+  },
   times: function () {
     return {
       season: 'Current Season',

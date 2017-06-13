@@ -11,9 +11,11 @@ export default {
   },
   data: function () {
     let timeOptions = options.times()
+    let shortTimeOptions = options.shortTimes()
     let timeDefault = _.head(_.keys(timeOptions))
     return {
       timeOptions: timeOptions,
+      shortTimeOptions: shortTimeOptions,
       timeDefault: timeDefault,
       time: this.$route.query.time || timeDefault
     }
