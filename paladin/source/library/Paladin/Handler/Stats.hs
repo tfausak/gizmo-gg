@@ -33,19 +33,20 @@ import qualified Paladin.Handler.Common as Common
 import qualified Text.Read as Read
 
 getStatsPlayersRankHandler :: Common.Text -> Common.Handler
-getStatsPlayersRankHandler rawPlayerId _config connection _request = do
+getStatsPlayersRankHandler rawPlayerId _config connection request = do
   maybePlayerId <- getPlayerId connection rawPlayerId
   case maybePlayerId of
     Nothing -> pure notFound
     Just playerId -> do
+      day <- getDay (Wai.queryString request)
       rows <- Database.query connection [Common.sql|
         select created_at, playlist_id, mmr, tier, division
         from player_skills
         where player_id = ?
         and playlist_id in ?
+        and created_at >= ?
         order by created_at desc
-        limit 400
-      |] (playerId, Common.In competitivePlaylists)
+      |] (playerId, Common.In competitivePlaylists, day)
       pure (Common.jsonResponse Http.status200 [] (Aeson.toJSON (toRankOutputs rows)))
 
 toRankOutputs :: [RankRow] -> Map.Map Common.Text [RankOutput]
