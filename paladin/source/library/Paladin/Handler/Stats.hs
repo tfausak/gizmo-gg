@@ -51,8 +51,17 @@ getStatsPlayersRankHandler rawPlayerId _config connection request = do
 
 toRankOutputs :: [RankRow] -> Map.Map Common.Text [RankOutput]
 toRankOutputs rows =
-  let toElement x = (toPlaylistKey (rankOutputPlaylist x), [x])
-  in Map.fromListWith (flip (++)) (map (toElement . toRankOutput) rows)
+  let
+    toElement x = (toPlaylistKey (rankOutputPlaylist x), [x])
+    removeDuplicates xs = case xs of
+      x : y : zs -> if rankOutputMmr x == rankOutputMmr y
+        then removeDuplicates (x : zs)
+        else x : removeDuplicates (y : zs)
+      _ -> xs
+  in
+    Map.map removeDuplicates
+      (Map.fromListWith (flip (++))
+        (map (toElement . toRankOutput) rows))
 
 toRankOutput :: RankRow -> RankOutput
 toRankOutput (at, playlist, mmr, tier, division) = RankOutput
