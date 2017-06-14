@@ -55,7 +55,9 @@ import LoadingComponent from '../components/Loading'
 import FilterTimeMixin from '../mixins/FilterTimeMixin'
 import PlaylistOptionsMixin from '../mixins/PlaylistOptionsMixin'
 import ranks from '../../store/ranks.js'
+import chartFuncs from '../../store/chart-funcs.js'
 
+var moment = require('moment')
 var _ = require('lodash')
 
 export default {
@@ -104,38 +106,6 @@ export default {
       if (this.loading) {
         return {}
       }
-      let arr = this.generateChartSeries(this.playlist)
-      let series = arr[0]
-      let visualMap = arr[1]
-      this.chartOptions = {
-        xAxis: {
-          type: 'time',
-          splitLine: { show: false },
-          axisTick: { show: false },
-          axisLabel: { show: false },
-          axisPointer: {
-            show: true,
-            snap: true,
-            lineStyle: {
-              type: 'dashed'
-            }
-          }
-        },
-        yAxis: {
-          type: 'value',
-          name: 'MMR',
-          min: 'dataMin',
-          max: 'dataMax',
-          splitLine: { show: false }
-        },
-        visualMap: visualMap,
-        series: [ series ]
-      }
-    },
-    generateChartSeries: function (playlist) {
-      if (this.loading) {
-        return {}
-      }
       let visualMap = {
         type: 'piecewise',
         outOfRange: { color: '#000' },
@@ -144,8 +114,8 @@ export default {
         right: 10
       }
       let brackets = {}
-      let data = []
-      _.each(this.GET_PLAYER_RANK[playlist], function (pt, key) {
+      let byDate = {}
+      _.each(this.GET_PLAYER_RANK[this.playlist], function (pt, key) {
         if (!_.has(brackets, pt.tier)) {
           brackets[pt.tier] = {
             gt: pt.mmr,
@@ -154,8 +124,20 @@ export default {
         }
         brackets[pt.tier].gt = Math.min(brackets[pt.tier].gt, pt.mmr)
         brackets[pt.tier].lte = Math.max(brackets[pt.tier].lte, pt.mmr)
-        data.push([pt.at, pt.mmr])
+        let date = moment(pt.at).format('YYYY-MM-DD')
+        if (!_.has(byDate, date)) {
+          byDate[date] = [pt.mmr, pt.mmr, pt.mmr, pt.mmr]
+        }
+        byDate[date][1] = pt.mmr
+        byDate[date][2] = Math.min(byDate[date][2], pt.mmr)
+        byDate[date][3] = Math.max(byDate[date][3], pt.mmr)
       })
+      byDate = _(byDate).toPairs().sortBy(0).fromPairs().value()
+      let data0 = []
+      _.each(byDate, function (value, date) {
+        data0.push([date, value[0], value[1], value[2], value[3]])
+      })
+      data0 = chartFuncs.splitData(data0)
       _.each(brackets, function (bracket, tier) {
         let rankObj = ranks.getRankObjFromTier(tier)
         if (!rankObj) return
@@ -166,12 +148,90 @@ export default {
           color: rankObj.color
         })
       })
-      let series = {
-        animation: false,
-        type: 'line',
-        data: data
+
+      // -------------
+      // CHART OPTIONS
+      // -------------
+
+      this.chartOptions = {
+        xAxis: {
+          type: 'category',
+          data: data0.categoryData,
+          scale: true,
+          boundaryGap: false,
+          axisLine: { onZero: false },
+          splitLine: { show: false },
+          splitNumber: 20,
+          min: 'dataMin',
+          max: 'dataMax'
+        },
+        yAxis: {
+          scale: true,
+          splitArea: { show: true }
+        },
+        dataZoom: [
+          {
+            type: 'inside',
+            start: 50,
+            end: 100
+          },
+          {
+            show: true,
+            type: 'slider',
+            y: '90%',
+            start: 50,
+            end: 100
+          }
+        ],
+        series: [
+          {
+            animation: false,
+            type: 'candlestick',
+            data: data0.values,
+            markLine: {
+              symbol: [ 'none', 'none' ],
+              lineStyle: {
+                normal: { color: '#444' }
+              },
+              data: [
+                {
+                  name: 'min line at end',
+                  type: 'min',
+                  valueDim: 'close'
+                },
+                {
+                  name: 'max line at end',
+                  type: 'max',
+                  valueDim: 'close'
+                }
+              ]
+            },
+            markArea: {
+              silent: true,
+              data: [
+                [ { yAxis: 1000, itemStyle: { normal: { color: '#204A87' } } }, { yAxis: 1200 } ],
+                [ { yAxis: 1200, itemStyle: { normal: { color: '#5c3566' } } }, { yAxis: 1400 } ]
+              ]
+            }
+          },
+          {
+            type: 'line',
+            data: chartFuncs.calculateMA(data0, 1),
+            smooth: true,
+            lineStyle: {
+              normal: { color: 'rgba(0, 0, 0, 0.4)' }
+            }
+          },
+          {
+            type: 'line',
+            data: chartFuncs.calculateMA(data0, 5),
+            smooth: true,
+            lineStyle: {
+              normal: { color: 'rgba(255, 255, 255, 0.4)' }
+            }
+          }
+        ]
       }
-      return [series, visualMap]
     }
   },
   mixins: [ FilterTimeMixin, PlaylistOptionsMixin ],

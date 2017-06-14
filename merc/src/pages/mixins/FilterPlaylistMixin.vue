@@ -9,8 +9,11 @@ export default {
   },
   data: function () {
     return {
-      playlist: this.$route.query.playlist || this.playlistDefault
+      playlist: this.$route.query.playlist
     }
+  },
+  created: function () {
+    if (!this.playlist) this.playlist = this.playlistDefault
   },
   mixins: [ PlaylistOptionsMixin ],
   watch: {
