@@ -78,7 +78,7 @@ const store = new Vuex.Store({
       let endpoint = 'stats/players/' + params.id + '/rank'
       delete params.id
       endpoint += getQueryString(params)
-      return dispatch('GRAB', endpoint)
+      return dispatch('FETCH', endpoint)
     },
 
     GET_SEARCH: function ({ dispatch }, params) {
@@ -105,6 +105,7 @@ const store = new Vuex.Store({
       commit('CLEAR_CACHE', endpoint)
     },
 
+    // No cache
     GRAB: function ({ commit, state }, endpoint) {
       let promise = getResource(endpoint)
         .then(function (data) {
@@ -113,6 +114,7 @@ const store = new Vuex.Store({
       return promise
     },
 
+    // Cached
     FETCH: function ({ commit, state }, endpoint) {
       if (endpoint in state.cache) {
         return state.cache[endpoint]
