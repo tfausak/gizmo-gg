@@ -155,7 +155,7 @@ const getBodyStats = (req, res, next) => {
     .with('totals', (totals) => {
       totals
         .select('games_players.body_id')
-        .countDistinct('games_players.game_id as games')
+        .count('games_players.game_id as games')
         .select(db.raw(
           'count(case when games_players.did_win then 1 end) as wins'))
         .select(db.raw(
