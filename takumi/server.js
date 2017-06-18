@@ -6,20 +6,25 @@ const express = require('express');
 const knex = require('knex');
 const morgan = require('morgan');
 
-const app = express();
-const db = knex({
-  client: 'pg',
-  connection: process.env.TAKUMI_DATABASE || 'postgres://'
-});
-const todo = (res) => res.status(501).json(null);
+// Application
 
-db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
+const app = express();
 app.disable('x-powered-by');
 app.use(compression());
 app.use(cors());
 app.use(morgan('tiny'));
 
-app.get('/arenas', (_req, res, next) => {
+// Database
+
+const db = knex({
+  client: 'pg',
+  connection: process.env.TAKUMI_DATABASE || 'postgres://'
+});
+db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
+
+// Handlers
+
+const getArenas = (_req, res, next) => {
   db
     .select(
       'arenas.id',
@@ -40,69 +45,39 @@ app.get('/arenas', (_req, res, next) => {
     .orderBy('arenas.name', 'asc')
     .then((arenas) => res.json(arenas))
     .catch((err) => next(err));
-});
+};
 
-app.get('/games/:id', (_req, res) => {
-  todo(res);
-});
+// Default handlers
 
-app.get('/search', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/arenas', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/bodies', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/players', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/players/:id/arenas', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/players/:id/bodies', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/players/:id/history', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/players/:id/poll', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/players/:id/rank', (_req, res) => {
-  todo(res);
-});
-
-app.get('/stats/summary', (_req, res) => {
-  todo(res);
-});
-
-app.post('/uploads', (_req, res) => {
-  todo(res);
-});
-
-app.get('/uploads', (_req, res) => {
-  todo(res);
-});
-
-app.use((_req, res, _next) => {
-  res.status(404).json(null);
-});
-
-app.use((err, _req, res, _next) => {
+const notFound = (_req, res) => res.status(404).json(null);
+const internalServerError = (err, _req, res, _next) => {
   console.error(err);
   res.status(500).json(null);
-});
+};
+const notImplemented = (_req, res) => res.status(501).json(null);
 
-app.listen(8080, () => {
-  console.log('Listening on port 8080 ...');
-});
+// Routes
+
+app.get('/arenas', getArenas);
+app.get('/games/:id', notImplemented);
+app.get('/search', notImplemented);
+app.get('/stats/arenas', notImplemented);
+app.get('/stats/bodies', notImplemented);
+app.get('/stats/players', notImplemented);
+app.get('/stats/players/:id/arenas', notImplemented);
+app.get('/stats/players/:id/bodies', notImplemented);
+app.get('/stats/players/:id/history', notImplemented);
+app.get('/stats/players/:id/poll', notImplemented);
+app.get('/stats/players/:id/rank', notImplemented);
+app.get('/stats/summary', notImplemented);
+app.post('/uploads', notImplemented);
+app.get('/uploads', notImplemented);
+
+// Default routes
+
+app.use(notFound);
+app.use(internalServerError);
+
+// Server
+
+app.listen(8080, () => console.log('Listening on port 8080 ...'));
