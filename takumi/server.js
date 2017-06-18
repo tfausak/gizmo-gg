@@ -9,7 +9,7 @@ const morgan = require('morgan');
 const app = express();
 const db = knex({
   client: 'pg',
-  connection: process.env.TAKUMI_DATABASE
+  connection: process.env.TAKUMI_DATABASE || 'postgres://'
 });
 const todo = (res) => res.status(501).json(null);
 
@@ -19,7 +19,7 @@ app.use(compression());
 app.use(cors());
 app.use(morgan('tiny'));
 
-app.get('/arenas', (_req, res) => {
+app.get('/arenas', (_req, res, next) => {
   db
     .select(
       'arenas.id',
@@ -38,7 +38,8 @@ app.get('/arenas', (_req, res) => {
     .leftOuterJoin('arena_skins',
       'arenas.skin_id', 'arena_skins.id')
     .orderBy('arenas.name', 'asc')
-    .then((arenas) => res.json(arenas));
+    .then((arenas) => res.json(arenas))
+    .catch((err) => next(err));
 });
 
 app.get('/games/:id', (_req, res) => {
