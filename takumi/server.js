@@ -27,8 +27,24 @@ db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
 
 // Constants
 
-const arenaNamesToIgnore = ['stadium_winter_p'];
-const bodyNamesToIgnore = ['Armadillo', 'Hogsticker', 'Sweet Tooth'];
+const arenaNamesToIgnore = [
+  'HoopsStadium_P',
+  'labs_circlepillars_p',
+  'labs_cosmic_p',
+  'labs_cosmic_v4_p',
+  'labs_doublegoal_p',
+  'labs_Octagon_02_P',
+  'labs_Octagon_P',
+  'labs_underpass_p',
+  'labs_utopia_p',
+  'Neotokyo_p',
+  'stadium_winter_p'
+];
+const bodyNamesToIgnore = [
+  'Armadillo',
+  'Hogsticker',
+  'Sweet Tooth'
+];
 
 const startOfSeason4 = moment('2017-03-22', 'YYYY-MM-DD');
 
@@ -84,7 +100,7 @@ const getTemplateNames = (req) => {
 
 // Handlers
 
-const getArenas = (_req, res, next) => {
+const getArenasHandler = (_req, res, next) => {
   db
     .select(
       'arenas.id',
@@ -105,7 +121,7 @@ const getArenas = (_req, res, next) => {
     .catch((err) => next(err));
 };
 
-const getArenaStats = (req, res, next) => {
+const getArenaStatsHandler = (req, res, next) => {
   const cutoff = getCutoffTime(req);
   const playlists = getPlaylistIds(req);
   const templates = getTemplateNames(req);
@@ -114,7 +130,7 @@ const getArenaStats = (req, res, next) => {
     .with('totals', (totals) => {
       totals
         .select('games.arena_id')
-        .countDistinct('games.id as games')
+        .count('games.id as games')
         .sum('games_players.score as score')
         .sum('games_players.goals as goals')
         .sum('games_players.assists as assists')
@@ -122,7 +138,6 @@ const getArenaStats = (req, res, next) => {
         .sum('games_players.shots as shots')
         .from('games_players')
         .innerJoin('games', 'games.id', 'games_players.game_id')
-        .where('games_players.is_present_at_end', 'true')
         .whereIn('games.playlist_id', playlists)
         .where('games.played_at', '>=', cutoff.format())
         .groupBy('games.arena_id');
@@ -146,7 +161,7 @@ const getArenaStats = (req, res, next) => {
     .catch((err) => next(err));
 };
 
-const getBodyStats = (req, res, next) => {
+const getBodyStatsHandler = (req, res, next) => {
   const cutoff = getCutoffTime(req);
   const playlists = getPlaylistIds(req);
   const templates = getTemplateNames(req);
@@ -170,7 +185,6 @@ const getBodyStats = (req, res, next) => {
         .innerJoin('arenas', 'arenas.id', 'games.arena_id')
         .innerJoin(
           'arena_templates', 'arena_templates.id', 'arenas.template_id')
-        .where('games_players.is_present_at_end', 'true')
         .whereIn('games.playlist_id', playlists)
         .where('games.played_at', '>=', cutoff.format())
         .whereNotIn('arenas.name', arenaNamesToIgnore)
@@ -196,6 +210,78 @@ const getBodyStats = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getSummaryStatsHandler = (req, res, next) => {
+  const cutoff = getCutoffTime(req);
+  const playlists = getPlaylistIds(req);
+
+  const getArenaStats = db
+    .with('totals', (totals) => {
+      totals
+        .select('games.arena_id')
+        .count('games.id as games')
+        .from('games')
+        .whereIn('games.playlist_id', playlists)
+        .where('games.played_at', '>=', cutoff.format())
+        .groupBy('games.arena_id');
+    })
+    .select('arenas.name')
+    .select('totals.games as games')
+    .from('arenas')
+    .leftOuterJoin('totals', 'totals.arena_id', 'arenas.id')
+    .whereNotIn('arenas.name', arenaNamesToIgnore)
+    .orderBy('arenas.name');
+  const getBodyStats = db
+    .with('totals', (totals) => {
+      totals
+        .select('games_players.body_id')
+        .count('games_players.id as players')
+        .from('games_players')
+        .innerJoin('games', 'games.id', 'games_players.game_id')
+        .whereIn('games.playlist_id', playlists)
+        .where('games.played_at', '>=', cutoff.format())
+        .groupBy('games_players.body_id');
+    })
+    .select('bodies.name')
+    .select('totals.players as players')
+    .from('bodies')
+    .leftOuterJoin('totals', 'totals.body_id', 'bodies.id')
+    .whereNotIn('bodies.name', bodyNamesToIgnore)
+    .orderBy('bodies.name');
+  const getGameStats = db
+    .count('games.id as total')
+    .select(db.raw(
+      'count(case when games.blue_win then 1 end) as blue_wins'))
+    .select(db.raw(
+      'count(case when not games.blue_win then 1 end) as orange_wins'))
+    .from('games')
+    .where('games.played_at', '>=', cutoff.format())
+    .whereIn('games.playlist_id', playlists);
+
+  Promise
+    .all([getArenaStats, getBodyStats, getGameStats])
+    .then(([arenas, bodies, [games]]) => {
+      const numGames = games.total;
+      const numPlayers = bodies.reduce((sum, body) => sum + body.players, 0);
+
+      res.json({
+        numGames,
+        winPct: {
+          blue: games.blue_wins / (numGames || 1),
+          orange: (games.orange_wins || 0) / (numGames || 1)
+        },
+        mapFreqPct: arenas.reduce((object, arena) => {
+          object[arena.name] = arena.games / (numGames || 1);
+          return object;
+        }, {}),
+        bodyFreqPct: bodies.reduce((object, body) => {
+          object[body.name] = body.players / (numPlayers || 1);
+          return object;
+        }, {})
+      });
+    })
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -207,18 +293,18 @@ const notImplemented = (_req, res) => res.status(501).json(null);
 
 // Routes
 
-app.get('/arenas', getArenas);
+app.get('/arenas', getArenasHandler);
 app.get('/games/:id', notImplemented);
 app.get('/search', notImplemented);
-app.get('/stats/arenas', getArenaStats);
-app.get('/stats/bodies', getBodyStats);
+app.get('/stats/arenas', getArenaStatsHandler);
+app.get('/stats/bodies', getBodyStatsHandler);
 app.get('/stats/players', notImplemented);
 app.get('/stats/players/:id/arenas', notImplemented);
 app.get('/stats/players/:id/bodies', notImplemented);
 app.get('/stats/players/:id/history', notImplemented);
 app.get('/stats/players/:id/poll', notImplemented);
 app.get('/stats/players/:id/rank', notImplemented);
-app.get('/stats/summary', notImplemented);
+app.get('/stats/summary', getSummaryStatsHandler);
 app.post('/uploads', notImplemented);
 app.get('/uploads', notImplemented);
 
