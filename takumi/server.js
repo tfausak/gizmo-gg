@@ -1,5 +1,7 @@
 'use strict';
 
+const compression = require('compression');
+const cors = require('cors');
 const express = require('express');
 const knex = require('knex');
 const morgan = require('morgan');
@@ -13,19 +15,21 @@ const todo = (res) => res.status(501).json(null);
 
 db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
 app.disable('x-powered-by');
+app.use(compression());
+app.use(cors());
 app.use(morgan('tiny'));
 
-app.get('/arenas', (_, res) => {
+app.get('/arenas', (_req, res) => {
   db
     .select(
       'arenas.id',
       'arenas.name',
-      'arenas.template_id as template_id',
-      'arena_templates.name as template_name',
-      'arenas.model_id as model_id',
-      'arena_models.name as model_name',
-      'arenas.skin_id as skin_id',
-      'arena_skins.name as skin_name')
+      'arenas.template_id as templateId',
+      'arena_templates.name as templateName',
+      'arenas.model_id as modelId',
+      'arena_models.name as modelName',
+      'arenas.skin_id as skinId',
+      'arena_skins.name as skinName')
     .from('arenas')
     .leftOuterJoin('arena_templates',
       'arenas.template_id', 'arena_templates.id')
@@ -37,56 +41,65 @@ app.get('/arenas', (_, res) => {
     .then((arenas) => res.json(arenas));
 });
 
-app.get('/games', (_, res) => {
+app.get('/games/:id', (_req, res) => {
   todo(res);
 });
 
-app.get('/search', (_, res) => {
+app.get('/search', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/arenas', (_, res) => {
+app.get('/stats/arenas', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/bodies', (_, res) => {
+app.get('/stats/bodies', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/players', (_, res) => {
+app.get('/stats/players', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/players/:id/arenas', (_, res) => {
+app.get('/stats/players/:id/arenas', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/players/:id/bodies', (_, res) => {
+app.get('/stats/players/:id/bodies', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/players/:id/history', (_, res) => {
+app.get('/stats/players/:id/history', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/players/:id/poll', (_, res) => {
+app.get('/stats/players/:id/poll', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/players/:id/rank', (_, res) => {
+app.get('/stats/players/:id/rank', (_req, res) => {
   todo(res);
 });
 
-app.get('/stats/summary', (_, res) => {
+app.get('/stats/summary', (_req, res) => {
   todo(res);
 });
 
-app.post('/uploads', (_, res) => {
+app.post('/uploads', (_req, res) => {
   todo(res);
 });
 
-app.get('/uploads', (_, res) => {
+app.get('/uploads', (_req, res) => {
   todo(res);
+});
+
+app.use((_req, res, _next) => {
+  res.status(404).json(null);
+});
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json(null);
 });
 
 app.listen(8080, () => {
