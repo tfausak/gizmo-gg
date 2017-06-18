@@ -6,6 +6,7 @@ const express = require('express');
 const knex = require('knex');
 const moment = require('moment');
 const morgan = require('morgan');
+const pg = require('pg');
 
 // Application
 
@@ -17,6 +18,7 @@ app.use(morgan('tiny'));
 
 // Database
 
+pg.types.setTypeParser(20, (x) => parseInt(x, 10));
 const db = knex({
   client: 'pg',
   connection: process.env.TAKUMI_DATABASE || 'postgres://'
