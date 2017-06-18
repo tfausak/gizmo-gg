@@ -122,6 +122,7 @@ const getArenaStats = (req, res, next) => {
         .sum('games_players.shots as shots')
         .from('games_players')
         .innerJoin('games', 'games.id', 'games_players.game_id')
+        .where('games_players.is_present_at_end', 'true')
         .whereIn('games.playlist_id', playlists)
         .where('games.played_at', '>=', cutoff.format())
         .groupBy('games.arena_id');
@@ -169,6 +170,7 @@ const getBodyStats = (req, res, next) => {
         .innerJoin('arenas', 'arenas.id', 'games.arena_id')
         .innerJoin(
           'arena_templates', 'arena_templates.id', 'arenas.template_id')
+        .where('games_players.is_present_at_end', 'true')
         .whereIn('games.playlist_id', playlists)
         .where('games.played_at', '>=', cutoff.format())
         .whereNotIn('arenas.name', arenaNamesToIgnore)
