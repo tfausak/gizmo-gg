@@ -18,7 +18,7 @@ app.use(morgan('tiny'));
 
 // Database
 
-pg.types.setTypeParser(20, (x) => parseInt(x, 10));
+pg.types.setTypeParser(20, (val) => parseInt(val, 10));
 const db = knex({
   client: 'pg',
   connection: process.env.TAKUMI_DATABASE || 'postgres://'
@@ -28,6 +28,7 @@ db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
 // Constants
 
 const arenaNamesToIgnore = ['stadium_winter_p'];
+const bodyNamesToIgnore = ['Armadillo', 'Hogsticker', 'Sweet Tooth'];
 
 const startOfSeason4 = moment('2017-03-22', 'YYYY-MM-DD');
 
@@ -140,7 +141,56 @@ const getArenaStats = (req, res, next) => {
     .whereNotIn('arenas.name', arenaNamesToIgnore)
     .whereIn('arena_templates.name', templates)
     .orderBy('arenas.name', 'asc')
-    .then((stats) => res.json(stats))
+    .then((arenas) => res.json(arenas))
+    .catch((err) => next(err));
+};
+
+const getBodyStats = (req, res, next) => {
+  const cutoff = getCutoffTime(req);
+  const playlists = getPlaylistIds(req);
+  const templates = getTemplateNames(req);
+
+  db
+    .with('totals', (totals) => {
+      totals
+        .select('games_players.body_id')
+        .countDistinct('games_players.game_id as games')
+        .select(db.raw(
+          'count(case when games_players.did_win then 1 end) as wins'))
+        .select(db.raw(
+          'count(case when not games_players.did_win then 1 end) as losses'))
+        .sum('games_players.score as score')
+        .sum('games_players.goals as goals')
+        .sum('games_players.assists as assists')
+        .sum('games_players.saves as saves')
+        .sum('games_players.shots as shots')
+        .from('games_players')
+        .innerJoin('games', 'games.id', 'games_players.game_id')
+        .innerJoin('arenas', 'arenas.id', 'games.arena_id')
+        .innerJoin(
+          'arena_templates', 'arena_templates.id', 'arenas.template_id')
+        .whereIn('games.playlist_id', playlists)
+        .where('games.played_at', '>=', cutoff.format())
+        .whereNotIn('arenas.name', arenaNamesToIgnore)
+        .whereIn('arena_templates.name', templates)
+        .groupBy('games_players.body_id');
+    })
+    .select(
+      'bodies.id as bodyId',
+      'bodies.name as bodyName',
+      db.raw('coalesce(totals.games, 0) as "numGames"'),
+      db.raw('coalesce(totals.wins, 0) as "numWins"'),
+      db.raw('coalesce(totals.losses, 0) as "numLosses"'),
+      db.raw('coalesce(totals.score, 0) as "totalScore"'),
+      db.raw('coalesce(totals.goals, 0) as "totalGoals"'),
+      db.raw('coalesce(totals.assists, 0) as "totalAssists"'),
+      db.raw('coalesce(totals.saves, 0) as "totalSaves"'),
+      db.raw('coalesce(totals.shots, 0) as "totalShots"'))
+    .from('bodies')
+    .leftOuterJoin('totals', 'totals.body_id', 'bodies.id')
+    .whereNotIn('bodies.name', bodyNamesToIgnore)
+    .orderBy('bodies.name', 'asc')
+    .then((bodies) => res.json(bodies))
     .catch((err) => next(err));
 };
 
@@ -159,7 +209,7 @@ app.get('/arenas', getArenas);
 app.get('/games/:id', notImplemented);
 app.get('/search', notImplemented);
 app.get('/stats/arenas', getArenaStats);
-app.get('/stats/bodies', notImplemented);
+app.get('/stats/bodies', getBodyStats);
 app.get('/stats/players', notImplemented);
 app.get('/stats/players/:id/arenas', notImplemented);
 app.get('/stats/players/:id/bodies', notImplemented);
