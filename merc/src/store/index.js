@@ -99,7 +99,8 @@ const store = new Vuex.Store({
 
     GET_STATS_ARENAS: function ({ dispatch }, params) {
       let endpoint = 'stats/arenas' + getQueryString(params)
-      return dispatch('FETCH', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('FETCH_URL', url)
     },
 
     CLEAR_ENDPOINT: function ({ commit, state }, endpoint) {
