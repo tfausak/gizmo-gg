@@ -1,6 +1,16 @@
 version: '2.1'
 services:
 
+  takumi:
+    image: gizmo-gg/takumi
+    build: takumi
+    ports:
+      - 8080
+    depends_on:
+      - postgres
+    environment:
+      TAKUMI_DATABASE: postgres://postgres@postgres:5432/postgres
+
   paladin-server:
     image: gizmo-gg/paladin
     build: paladin
@@ -62,6 +72,7 @@ services:
     depends_on:
       - paladin-server
       - merc
+      - takumi
 
 volumes:
   paladin-data: null

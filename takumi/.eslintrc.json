@@ -1,0 +1,17 @@
+{
+  "env": { "node": true },
+  "extends": "eslint:all",
+  "parserOptions": { "ecmaVersion": 6 },
+  "rules": {
+    "dot-location": ["error", "property"],
+    "id-length": ["error", { "exceptions": ["_"] }],
+    "indent": ["error", 2],
+    "no-console": "off",
+    "no-magic-numbers": "off",
+    "no-process-env": "off",
+    "one-var": ["error", "never"],
+    "padded-blocks": ["error", "never"],
+    "quote-props": ["error", "as-needed"],
+    "quotes": ["error", "single"]
+  }
+}
