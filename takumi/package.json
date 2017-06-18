@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "compression": "1.6.2",
+    "cors": "2.8.3",
+    "express": "4.15.3",
+    "knex": "0.13.0",
+    "morgan": "1.8.2",
+    "pg": "6.2.4"
+  },
+  "devDependencies": {
+    "eslint": "4.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "test": "eslint server.js"
+  }
+}

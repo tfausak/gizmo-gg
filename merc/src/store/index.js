@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { getResource } from './api'
+import { getEndpointUrl, getRaw, getResource } from './api'
 var _ = require('lodash')
 
 Vue.use(Vuex)
@@ -29,7 +29,8 @@ const store = new Vuex.Store({
   actions: {
     GET_ARENAS: function ({ dispatch }, params) {
       let endpoint = 'arenas'
-      return dispatch('FETCH', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('FETCH_URL', url)
     },
 
     GET_UPLOAD: function ({ dispatch }, params) {
@@ -124,6 +125,19 @@ const store = new Vuex.Store({
           return data
         })
       commit('SAVE_CACHE', { k: endpoint, v: promise })
+      return promise
+    },
+
+    // Cached by full URL
+    FETCH_URL: function ({ commit, state }, url) {
+      if (url in state.cache) {
+        return state.cache[url]
+      }
+      let promise = getRaw(url)
+        .then(function (data) {
+          return data
+        })
+      commit('SAVE_CACHE', { k: url, v: promise })
       return promise
     }
   },
