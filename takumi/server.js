@@ -264,19 +264,19 @@ const getSummaryStatsHandler = (req, res, next) => {
       const numPlayers = bodies.reduce((sum, body) => sum + body.players, 0);
 
       res.json({
-        numGames,
-        winPct: {
-          blue: games.blue_wins / (numGames || 1),
-          orange: (games.orange_wins || 0) / (numGames || 1)
-        },
+        bodyFreqPct: bodies.reduce((object, body) => {
+          object[body.name] = body.players / (numPlayers || 1);
+          return object;
+        }, {}),
         mapFreqPct: arenas.reduce((object, arena) => {
           object[arena.name] = arena.games / (numGames || 1);
           return object;
         }, {}),
-        bodyFreqPct: bodies.reduce((object, body) => {
-          object[body.name] = body.players / (numPlayers || 1);
-          return object;
-        }, {})
+        numGames,
+        winPct: {
+          blue: games.blue_wins / (numGames || 1),
+          orange: (games.orange_wins || 0) / (numGames || 1)
+        }
       });
     })
     .catch((err) => next(err));
