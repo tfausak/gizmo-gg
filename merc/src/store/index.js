@@ -35,9 +35,8 @@ const store = new Vuex.Store({
 
     GET_UPLOAD: function ({ dispatch }, params) {
       let endpoint = 'uploads/' + params.id
-      delete params.id
-      endpoint += getQueryString(params)
-      return dispatch('FETCH', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('FETCH_URL', url)
     },
 
     GET_GAME: function ({ dispatch }, params) {

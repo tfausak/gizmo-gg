@@ -239,12 +239,9 @@ export default {
               let commit = false
               if (data) {
                 if (data.state === 'success') {
-                  let m = data.game.match(/games\/(\d+)/)
-                  if (m && m.length > 1) {
-                    upload.gameId = m[1]
-                    upload.status = 'success'
-                    commit = true
-                  }
+                  upload.gameId = data.gameId
+                  upload.status = 'success'
+                  commit = true
                 } else if (data.state === 'failure') {
                   upload.status = 'processing-failure'
                   commit = true
@@ -286,7 +283,7 @@ export default {
       let handler = function (response) {
         vm.uploaded.unshift({
           'gameId': null,
-          'url': response.request.responseURL,
+          'url': response.request.responseURL.replace('/api/', '/takumi/'),
           'status': response.ok ? 'processing' : 'failed',
           'fileName': vm.uploading.name
         })

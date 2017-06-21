@@ -116,6 +116,16 @@ const getTemplateNames = (req) => {
   }
 };
 
+const getUploadState = (upload) => {
+  if (upload.replay_id) {
+    return 'success';
+  }
+  if (upload.finished_parsing_at) {
+    return 'failure';
+  }
+  return 'pending';
+};
+
 // Handlers
 
 const getArenasHandler = (_req, res, next) => {
@@ -302,7 +312,7 @@ const getSummaryStatsHandler = (req, res, next) => {
 
 const getSearchHandler = (req, res, next) => {
   const name = req.query.name || '';
-  const pattern = `%${name.replace(/[_%\\]/, '\\$&')}%`;
+  const pattern = `%${name.replace(/[_%\\]/g, '\\$&')}%`;
   const platforms = getPlatformNames(req);
 
   db
@@ -323,6 +333,30 @@ const getSearchHandler = (req, res, next) => {
     .whereIn('platforms.name', platforms)
     .limit(20)
     .then((results) => res.json(results))
+    .catch((err) => next(err));
+};
+
+const getUploadHandler = (req, res, next) => {
+  db
+    .select('finished_parsing_at', 'replay_id')
+    .from('uploads')
+    .where('id', req.params.id)
+    .then((uploads) => uploads.length === 1 ? uploads[0] : next())
+    .then((upload) => {
+      if (!upload.replay_id) {
+        return { replay: null, upload };
+      }
+      return db
+        .select('game_id')
+        .from('replays')
+        .where('id', upload.replay_id)
+        .then((replays) => replays.length === 1 ? replays[0] : next())
+        .then((replay) => ({ replay, upload }));
+    })
+    .then(({ replay, upload }) => res.json({
+      gameId: replay ? replay.game_id : null,
+      state: getUploadState(upload)
+    }))
     .catch((err) => next(err));
 };
 
@@ -350,7 +384,7 @@ app.get('/stats/players/:id/poll', notImplemented);
 app.get('/stats/players/:id/rank', notImplemented);
 app.get('/stats/summary', getSummaryStatsHandler);
 app.post('/uploads', notImplemented);
-app.get('/uploads', notImplemented);
+app.get('/uploads/:id', getUploadHandler);
 
 // Default routes
 
