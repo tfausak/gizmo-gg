@@ -48,6 +48,15 @@ const bodyNamesToIgnore = [
 
 const startOfSeason4 = moment('2017-03-22', 'YYYY-MM-DD');
 
+const playStationPlatformName = 'PlayStation';
+const steamPlatformName = 'Steam';
+const xboxPlatformName = 'Xbox';
+const allPlatformNames = [
+  playStationPlatformName,
+  steamPlatformName,
+  xboxPlatformName
+];
+
 const soloDuelPlaylistId = 10;
 const doublesPlaylistId = 11;
 const soloStandardPlaylistId = 12;
@@ -76,6 +85,15 @@ const getCutoffTime = (req) => {
   case 'week': return moment().subtract(1, 'week');
   case 'month': return moment().subtract(1, 'month');
   default: return startOfSeason4;
+  }
+};
+
+const getPlatformNames = (req) => {
+  switch (req.query.platform) {
+  case 'playstation': return [playStationPlatformName];
+  case 'steam': return [steamPlatformName];
+  case 'xbox': return [xboxPlatformName];
+  default: return allPlatformNames;
   }
 };
 
@@ -282,6 +300,32 @@ const getSummaryStatsHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getSearchHandler = (req, res, next) => {
+  const name = req.query.name || '';
+  const pattern = `%${name.replace(/[_%\\]/, '\\$&')}%`;
+  const platforms = getPlatformNames(req);
+
+  db
+    .select(
+      db.raw('distinct on (players.id) players.id'),
+      'players.platform_id as platformId',
+      'platforms.name as platformName',
+      'players.remote_id as remoteId',
+      'players.local_id as localId',
+      'games_players.name',
+      'games_players.xp',
+      'games.played_at as lastSeen')
+    .from('games_players')
+    .innerJoin('games', 'games.id', 'games_players.game_id')
+    .innerJoin('players', 'players.id', 'games_players.player_id')
+    .innerJoin('platforms', 'platforms.id', 'players.platform_id')
+    .where('games_players.name', 'ilike', pattern)
+    .whereIn('platforms.name', platforms)
+    .limit(20)
+    .then((results) => res.json(results))
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -295,10 +339,10 @@ const notImplemented = (_req, res) => res.status(501).json(null);
 
 app.get('/arenas', getArenasHandler);
 app.get('/games/:id', notImplemented);
-app.get('/search', notImplemented);
+app.get('/search', getSearchHandler);
 app.get('/stats/arenas', getArenaStatsHandler);
 app.get('/stats/bodies', getBodyStatsHandler);
-app.get('/stats/players', notImplemented);
+app.get('/stats/players/:id', notImplemented);
 app.get('/stats/players/:id/arenas', notImplemented);
 app.get('/stats/players/:id/bodies', notImplemented);
 app.get('/stats/players/:id/history', notImplemented);

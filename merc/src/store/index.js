@@ -84,7 +84,8 @@ const store = new Vuex.Store({
 
     GET_SEARCH: function ({ dispatch }, params) {
       let endpoint = 'search' + getQueryString(params)
-      return dispatch('FETCH', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('FETCH_URL', url)
     },
 
     GET_STATS_SUMMARY: function ({ dispatch }, params) {
