@@ -4,6 +4,7 @@
   "parserOptions": { "ecmaVersion": 6 },
   "rules": {
     "array-element-newline": "off",
+    "capitalized-comments": "off",
     "consistent-return": "off",
     "dot-location": ["error", "property"],
     "func-names": ["error", "never"],

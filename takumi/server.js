@@ -360,6 +360,23 @@ const getUploadHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getPlayerPollHandler = (req, res, next) => {
+  db
+    .max('games.played_at as lastPlayedAt')
+    .from('games')
+    .innerJoin('games_players', 'games_players.game_id', 'games.id')
+    .where('games_players.player_id', req.params.id)
+    .then((results) => results.length === 1 ? results[0] : next())
+    .then((result) => {
+      // This formatting is only necessary to match what Paladin returns. Once
+      // all endpoints are served by Takumi this can just return
+      // `res.json(result.lastPlayedAt)`.
+      const lastPlayedAt = moment(result.lastPlayedAt);
+      return res.json(lastPlayedAt.utc().format('YYYY-MM-DDTHH:mm:ss'));
+    })
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -380,7 +397,7 @@ app.get('/stats/players/:id', notImplemented);
 app.get('/stats/players/:id/arenas', notImplemented);
 app.get('/stats/players/:id/bodies', notImplemented);
 app.get('/stats/players/:id/history', notImplemented);
-app.get('/stats/players/:id/poll', notImplemented);
+app.get('/stats/players/:id/poll', getPlayerPollHandler);
 app.get('/stats/players/:id/rank', notImplemented);
 app.get('/stats/summary', getSummaryStatsHandler);
 app.post('/uploads', notImplemented);

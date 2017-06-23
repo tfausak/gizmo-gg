@@ -69,9 +69,8 @@ const store = new Vuex.Store({
 
     GET_PLAYER_POLL: function ({ dispatch }, params) {
       let endpoint = 'stats/players/' + params.id + '/poll'
-      delete params.id
-      endpoint += getQueryString(params)
-      return dispatch('GRAB', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('GRAB_URL', url)
     },
 
     GET_PLAYER_RANK: function ({ dispatch }, params) {
@@ -112,6 +111,14 @@ const store = new Vuex.Store({
     // No cache
     GRAB: function ({ commit, state }, endpoint) {
       let promise = getResource(endpoint)
+        .then(function (data) {
+          return data
+        })
+      return promise
+    },
+
+    GRAB_URL: function({ commit, state }, url) {
+      let promise = getRaw(url)
         .then(function (data) {
           return data
         })
