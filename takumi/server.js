@@ -68,6 +68,13 @@ const competitivePlaylistIds = [
   standardPlaylistId
 ];
 
+const playlistNames = {
+  [doublesPlaylistId]: 'ranked2v2',
+  [soloDuelPlaylistId]: 'ranked1v1',
+  [soloStandardPlaylistId]: 'ranked3v3solo',
+  [standardPlaylistId]: 'ranked3v3'
+};
+
 const arcTemplateName = 'Starbase ARC';
 const standardTemplateName = 'Standard';
 const wastelandTemplateName = 'Wasteland';
@@ -99,10 +106,10 @@ const getPlatformNames = (req) => {
 
 const getPlaylistIds = (req) => {
   switch (req.query.playlist) {
-  case 'ranked1v1': return [soloDuelPlaylistId];
-  case 'ranked2v2': return [doublesPlaylistId];
-  case 'ranked3v3solo': return [soloStandardPlaylistId];
-  case 'ranked3v3': return [standardPlaylistId];
+  case playlistNames[soloDuelPlaylistId]: return [soloDuelPlaylistId];
+  case playlistNames[doublesPlaylistId]: return [doublesPlaylistId];
+  case playlistNames[soloStandardPlaylistId]: return [soloStandardPlaylistId];
+  case playlistNames[standardPlaylistId]: return [standardPlaylistId];
   default: return competitivePlaylistIds;
   }
 };
@@ -377,6 +384,44 @@ const getPlayerPollHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getPlayerRankHandler = (req, res, next) => {
+  const cutoff = getCutoffTime(req);
+  const playlists = getPlaylistIds(req);
+
+  db
+    .select('created_at', 'playlist_id', 'mmr', 'tier', 'division')
+    .from('player_skills')
+    .where('player_id', req.params.id)
+    .whereIn('playlist_id', playlists)
+    .where('created_at', '>=', cutoff.format())
+    .orderBy('created_at', 'desc')
+    .then((results) => results ? results : next())
+    .then((results) => results.reduce(
+      (object, skill) => {
+        const key = playlistNames[skill.playlist_id];
+        const value = {
+          at: skill.created_at,
+          division: skill.division,
+          mmr: skill.mmr,
+          playlist: skill.playlist_id,
+          tier: skill.tier
+        };
+
+        if (object[key]) {
+          if (value.mmr !== object[key][object[key].length - 1].mmr) {
+            object[key].push(value);
+          }
+        } else {
+          object[key] = [value];
+        }
+
+        return object;
+      },
+      {}))
+    .then((results) => res.json(results))
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -398,7 +443,7 @@ app.get('/stats/players/:id/arenas', notImplemented);
 app.get('/stats/players/:id/bodies', notImplemented);
 app.get('/stats/players/:id/history', notImplemented);
 app.get('/stats/players/:id/poll', getPlayerPollHandler);
-app.get('/stats/players/:id/rank', notImplemented);
+app.get('/stats/players/:id/rank', getPlayerRankHandler);
 app.get('/stats/summary', getSummaryStatsHandler);
 app.post('/uploads', notImplemented);
 app.get('/uploads/:id', getUploadHandler);
