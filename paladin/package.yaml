@@ -34,6 +34,7 @@ library:
     - http-types
     - postgresql-simple
     - postgresql-simple-migration
+    - random
     - rattletrap
     - scientific
     - text

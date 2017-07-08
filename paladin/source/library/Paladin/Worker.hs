@@ -33,6 +33,7 @@ import qualified Paladin.RankWorker as RankWorker
 import qualified Paladin.Storage as Storage
 import qualified Paladin.Utility as Utility
 import qualified Rattletrap
+import qualified System.Random as Random
 
 startWorker :: Config.Config -> Sql.Connection -> IO ()
 startWorker config connection = do
@@ -118,19 +119,12 @@ insertReplay connection manager apiToken uploadId replay = do
     [arena]
   let maybeServerId = Analysis.replayAnalysisServerId replay
   let serverName = Analysis.replayAnalysisServerName replay
-  case maybeServerId of
-    Just serverId ->
-      Database.execute
-        connection
-        [Sql.sql|
-          INSERT INTO servers (id, name)
-          VALUES (?, ?)
-          ON CONFLICT DO NOTHING
-        |]
-        (serverId, serverName)
-    Nothing -> Database.execute connection
-      [Sql.sql| insert into servers (name) values (?) |]
-      [serverName]
+  serverId <- case maybeServerId of
+    Just serverId -> pure serverId
+    Nothing -> Random.randomRIO (-2147483648, -1)
+  Database.execute connection
+    [Sql.sql| insert into servers (id, name) values (?, ?) on conflict do nothing |]
+    (serverId, serverName)
   let playlist = Analysis.replayAnalysisPlaylist replay
   Database.execute
     connection
