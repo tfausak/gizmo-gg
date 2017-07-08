@@ -118,7 +118,7 @@ const store = new Vuex.Store({
       return promise
     },
 
-    GRAB_URL: function({ commit, state }, url) {
+    GRAB_URL: function ({ commit, state }, url) {
       let promise = getRaw(url)
         .then(function (data) {
           return data
