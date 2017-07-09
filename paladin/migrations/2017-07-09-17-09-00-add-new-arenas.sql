@@ -3,16 +3,16 @@
 -- arenas
 
 insert into arenas (name) values
-  ( 'cs_p'
-  , 'EuroStadium_Night_P'
-  , 'EuroStadium_P'
-  , 'Park_P'
-  , 'Stadium_Foggy_P'
-  , 'Stadium_P'
-  , 'Underwater_P'
-  , 'UtopiaStadium_Dusk_P'
-  , 'UtopiaStadium_P'
-  ) on conflict do nothing;
+  ('cs_p'),
+  ('EuroStadium_Night_P'),
+  ('EuroStadium_P'),
+  ('Park_P'),
+  ('Stadium_Foggy_P'),
+  ('Stadium_P'),
+  ('Underwater_P'),
+  ('UtopiaStadium_Dusk_P'),
+  ('UtopiaStadium_P')
+  on conflict do nothing;
 
 -- templates
 
