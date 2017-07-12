@@ -46,7 +46,10 @@ const bodyNamesToIgnore = [
   'Sweet Tooth'
 ];
 
-const startOfSeason4 = moment('2017-03-22', 'YYYY-MM-DD');
+// const startOfSeason2 = moment('2016-02-10', 'YYYY-MM-DD');
+// const startOfSeason3 = moment('2016-06-20', 'YYYY-MM-DD');
+// const startOfSeason4 = moment('2017-03-22', 'YYYY-MM-DD');
+const startOfSeason5 = moment('2017-07-05', 'YYYY-MM-DD');
 
 const playStationPlatformName = 'PlayStation';
 const steamPlatformName = 'Steam';
@@ -91,7 +94,7 @@ const getCutoffTime = (req) => {
   case 'day': return moment().subtract(1, 'day');
   case 'week': return moment().subtract(1, 'week');
   case 'month': return moment().subtract(1, 'month');
-  default: return startOfSeason4;
+  default: return startOfSeason5;
   }
 };
 
