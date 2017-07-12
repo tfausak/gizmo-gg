@@ -425,6 +425,37 @@ const getPlayerRankHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getPlayerHistoryHandler = (req, res, next) => {
+  const cutoff = getCutoffTime(req);
+  const playlists = getPlaylistIds(req);
+  const templates = getTemplateNames(req);
+
+  db
+    .select('games.played_at as at')
+    .select(db.raw(`
+      case when games_players.is_blue
+      then games.blue_goals
+      else games.orange_goals
+      end as my_goals`))
+    .select(db.raw(`
+      case when games_players.is_blue
+      then games.orange_goals
+      else games.blue_goals
+      end as their_goals`))
+    .from('games_players')
+    .innerJoin('games', 'games.id', 'games_players.game_id')
+    .innerJoin('arenas', 'arenas.id', 'games.arena_id')
+    .innerJoin('arena_templates', 'arena_templates.id', 'arenas.template_id')
+    .where('games_players.player_id', req.params.id)
+    .where('games_players.is_present_at_end', true)
+    .where('games_players.played_at', '>=', cutoff)
+    .whereIn('games_players.playlist_id', playlists)
+    .whereIn('arena_templates.name', templates)
+    .orderBy('games.played_at', 'desc')
+    .then((results) => res.json(results))
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -444,7 +475,7 @@ app.get('/stats/bodies', getBodyStatsHandler);
 app.get('/stats/players/:id', notImplemented);
 app.get('/stats/players/:id/arenas', notImplemented);
 app.get('/stats/players/:id/bodies', notImplemented);
-app.get('/stats/players/:id/history', notImplemented);
+app.get('/stats/players/:id/history', getPlayerHistoryHandler);
 app.get('/stats/players/:id/poll', getPlayerPollHandler);
 app.get('/stats/players/:id/rank', getPlayerRankHandler);
 app.get('/stats/summary', getSummaryStatsHandler);
