@@ -448,7 +448,7 @@ const getPlayerHistoryHandler = (req, res, next) => {
     .innerJoin('arena_templates', 'arena_templates.id', 'arenas.template_id')
     .where('games_players.player_id', req.params.id)
     .where('games_players.is_present_at_end', true)
-    .where('games_players.played_at', '>=', cutoff)
+    .where('games_players.played_at', '>=', cutoff.format())
     .whereIn('games_players.playlist_id', playlists)
     .whereIn('arena_templates.name', templates)
     .orderBy('games.played_at', 'desc')
