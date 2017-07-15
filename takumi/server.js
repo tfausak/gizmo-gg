@@ -431,17 +431,17 @@ const getPlayerHistoryHandler = (req, res, next) => {
   const templates = getTemplateNames(req);
 
   db
-    .select('games.played_at as at')
+    .select('games.played_at as playedAt')
     .select(db.raw(`
       case when games_players.is_blue
       then games.blue_goals
       else games.orange_goals
-      end as my_goals`))
+      end as myGoals`))
     .select(db.raw(`
       case when games_players.is_blue
       then games.orange_goals
       else games.blue_goals
-      end as their_goals`))
+      end as theirGoals`))
     .from('games_players')
     .innerJoin('games', 'games.id', 'games_players.game_id')
     .innerJoin('arenas', 'arenas.id', 'games.arena_id')
