@@ -506,6 +506,53 @@ const getPlayerArenasHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getPlayerBodiesHandler = (req, res, next) => {
+  const cutoff = getCutoffTime(req);
+  const playlists = getPlaylistIds(req);
+
+  db
+    .with('totals', (totals) => {
+      totals
+        .select('games_players.body_id')
+        .count('games_players.game_id as games')
+        .select(db.raw(
+          'count(case when games_players.did_win then 1 end) as wins'))
+        .select(db.raw(
+          'count(case when not games_players.did_win then 1 end) as losses'))
+        .sum('games_players.score as score')
+        .sum('games_players.goals as goals')
+        .sum('games_players.assists as assists')
+        .sum('games_players.saves as saves')
+        .sum('games_players.shots as shots')
+        .sum('games.duration as duration')
+        .from('games_players')
+        .innerJoin('games', 'games.id', 'games_players.game_id')
+        .where('games_players.player_id', req.params.id)
+        .where('games_players.is_present_at_end', 'true')
+        .where('games.played_at', '>=', cutoff.format())
+        .whereIn('games.playlist_id', playlists)
+        .groupBy('games_players.body_id');
+    })
+    .select(
+      'bodies.id as bodyId',
+      'bodies.name as bodyName',
+      db.raw('coalesce(totals.games, 0) as "numGames"'),
+      db.raw('coalesce(totals.wins, 0) as "numWins"'),
+      db.raw('coalesce(totals.losses, 0) as "numLosses"'),
+      db.raw('coalesce(totals.score, 0) as "totalScore"'),
+      db.raw('coalesce(totals.goals, 0) as "totalGoals"'),
+      db.raw('coalesce(totals.assists, 0) as "totalAssists"'),
+      db.raw('coalesce(totals.saves, 0) as "totalSaves"'),
+      db.raw('coalesce(totals.shots, 0) as "totalShots"'),
+      db.raw('coalesce(totals.duration, 0) as "totalDuration"'))
+    .from('bodies')
+    .leftOuterJoin('totals', 'totals.body_id', 'bodies.id')
+    .whereNotIn('bodies.name', bodyNamesToIgnore)
+    .orderBy('bodies.name', 'asc')
+    .then((bodies) => res.json(bodies))
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -524,7 +571,7 @@ app.get('/stats/arenas', getArenaStatsHandler);
 app.get('/stats/bodies', getBodyStatsHandler);
 app.get('/stats/players/:id', notImplemented);
 app.get('/stats/players/:id/arenas', getPlayerArenasHandler);
-app.get('/stats/players/:id/bodies', notImplemented);
+app.get('/stats/players/:id/bodies', getPlayerBodiesHandler);
 app.get('/stats/players/:id/history', getPlayerHistoryHandler);
 app.get('/stats/players/:id/poll', getPlayerPollHandler);
 app.get('/stats/players/:id/rank', getPlayerRankHandler);
