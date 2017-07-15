@@ -57,7 +57,8 @@ const store = new Vuex.Store({
       let endpoint = 'stats/players/' + params.id + '/arenas'
       delete params.id
       endpoint += getQueryString(params)
-      return dispatch('FETCH', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('FETCH_URL', url)
     },
 
     GET_PLAYER_BODIES: function ({ dispatch }, params) {
