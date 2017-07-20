@@ -1,30 +1,3 @@
 {
-  "env": { "es6": true, "node": true },
-  "extends": "eslint:all",
-  "parserOptions": { "ecmaVersion": 6 },
-  "rules": {
-    "array-element-newline": "off",
-    "capitalized-comments": "off",
-    "consistent-return": "off",
-    "dot-location": ["error", "property"],
-    "func-names": ["error", "never"],
-    "indent": ["error", 2],
-    "linebreak-style": "off",
-    "max-lines": "off",
-    "max-params": "off",
-    "multiline-ternary": "off",
-    "no-confusing-arrow": "off",
-    "no-console": "off",
-    "no-invalid-this": "off",
-    "no-magic-numbers": "off",
-    "no-process-env": "off",
-    "no-ternary": "off",
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "object-curly-spacing": ["error", "always"],
-    "object-property-newline": "off",
-    "one-var": ["error", "never"],
-    "padded-blocks": ["error", "never"],
-    "quote-props": ["error", "as-needed"],
-    "quotes": ["error", "single"]
-  }
+  "extends": "taylorfausak"
 }
