@@ -10,8 +10,8 @@
     "pg": "7.0.2"
   },
   "devDependencies": {
-    "eslint": "4.2.0",
-    "eslint-config-taylorfausak": "0.0.1"
+    "eslint": "4.3.0",
+    "eslint-config-taylorfausak": "0.0.3"
   },
   "private": true,
   "scripts": {
