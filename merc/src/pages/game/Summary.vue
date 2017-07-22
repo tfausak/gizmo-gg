@@ -45,7 +45,7 @@ export default {
   methods: {
     compileData: function () {
       let vm = this
-      vm.game = vm.GET_GAME.games[0]
+      vm.game = vm.GET_GAME
       let totalScore = 0
       let blueTeam = []
       let orangeTeam = []

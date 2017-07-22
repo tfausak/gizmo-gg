@@ -164,7 +164,7 @@ export default {
   },
   methods: {
     compileData: function () {
-      this.game = this.GET_GAME.games[0]
+      this.game = this.GET_GAME
       this.game.templateSlug = slugger.slugMap(this.game.arena.templateName)
       this.game.modelSlug = slugger.slugMapModel(this.game.arena.modelName)
       this.game.playlistSlug = slugger.slugPlaylist(this.game.playlistName)

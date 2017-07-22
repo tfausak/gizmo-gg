@@ -660,77 +660,68 @@ const getGameHandler = (req, res, next) => {
       }, {}))
       .then((skills) => ({ game, players, skills })))
     .then(({ game, players, skills }) => res.json({
-      aliases: [],
-      games: [
-        {
-          arena: {
-            id: game.arenaId,
-            modelId: game.arenaModelId,
-            modelName: game.arenaModelName,
-            name: game.arenaName,
-            skinId: game.arenaSkinId,
-            skinName: game.arenaSkinName,
-            templateId: game.arenaTemplateId,
-            templateName: game.arenaTemplateName
-          },
-          blueGoals: game.blueGoals,
-          duration: game.duration,
-          id: game.id,
-          orangeGoals: game.orangeGoals,
-          playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
-          players: players.map((player) => ({
-            assists: player.assists,
-            camera: {
-              angle: player.cameraAngle,
-              distance: player.cameraDistance,
-              fov: player.cameraFov,
-              height: player.cameraHeight,
-              stiffness: player.cameraStiffness,
-              swivelSpeed: player.cameraSwivelSpeed
-            },
-            goals: player.goals,
-            isOnBlueTeam: player.isOnBlueTeam,
-            isPresentAtEnd: player.isPresentAtEnd,
-            loadout: {
-              accentColorId: player.loadoutAccentColorId,
-              accentFinishId: player.loadoutAccentFinishId,
-              antennaId: player.loadoutAntennaId,
-              antennaName: player.loadoutAntennaName,
-              bodyId: player.loadoutBodyId,
-              bodyName: player.loadoutBodyName,
-              decalId: player.loadoutDecalId,
-              decalName: player.loadoutDecalName,
-              primaryColorId: player.loadoutPrimaryColorId,
-              primaryFinishId: player.loadoutPrimaryFinishId,
-              rocketTrailId: player.loadoutRocketTrailId,
-              rocketTrailName: player.loadoutRocketTrailName,
-              topperId: player.loadoutTopperId,
-              topperName: player.loadoutTopperName,
-              topperPaintId: player.loadoutTopperPaintId,
-              wheelId: player.loadoutWheelId,
-              wheelName: player.loadoutWheelName,
-              wheelPaintId: player.loadoutWheelPaintId
-            },
-            localId: player.localId,
-            name: player.name,
-            platformId: player.platformId,
-            platformName: player.platformName,
-            playerId: player.playerId,
-            remoteId: player.remoteId,
-            saves: player.saves,
-            score: player.score,
-            shots: player.shots,
-            skill: skills[player.playerId],
-            xp: player.xp
-          })),
-          playlistId: game.playlistId,
-          playlistName: game.playlistName
-        }
-      ],
-      lastPlayedAt: '1970-01-01T00:00:00',
-      name: '',
-      platform: { id: 0, name: 'Splitscreen' },
-      skills: {}
+      arena: {
+        id: game.arenaId,
+        modelId: game.arenaModelId,
+        modelName: game.arenaModelName,
+        name: game.arenaName,
+        skinId: game.arenaSkinId,
+        skinName: game.arenaSkinName,
+        templateId: game.arenaTemplateId,
+        templateName: game.arenaTemplateName
+      },
+      blueGoals: game.blueGoals,
+      duration: game.duration,
+      id: game.id,
+      orangeGoals: game.orangeGoals,
+      playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
+      players: players.map((player) => ({
+        assists: player.assists,
+        camera: {
+          angle: player.cameraAngle,
+          distance: player.cameraDistance,
+          fov: player.cameraFov,
+          height: player.cameraHeight,
+          stiffness: player.cameraStiffness,
+          swivelSpeed: player.cameraSwivelSpeed
+        },
+        goals: player.goals,
+        isOnBlueTeam: player.isOnBlueTeam,
+        isPresentAtEnd: player.isPresentAtEnd,
+        loadout: {
+          accentColorId: player.loadoutAccentColorId,
+          accentFinishId: player.loadoutAccentFinishId,
+          antennaId: player.loadoutAntennaId,
+          antennaName: player.loadoutAntennaName,
+          bodyId: player.loadoutBodyId,
+          bodyName: player.loadoutBodyName,
+          decalId: player.loadoutDecalId,
+          decalName: player.loadoutDecalName,
+          primaryColorId: player.loadoutPrimaryColorId,
+          primaryFinishId: player.loadoutPrimaryFinishId,
+          rocketTrailId: player.loadoutRocketTrailId,
+          rocketTrailName: player.loadoutRocketTrailName,
+          topperId: player.loadoutTopperId,
+          topperName: player.loadoutTopperName,
+          topperPaintId: player.loadoutTopperPaintId,
+          wheelId: player.loadoutWheelId,
+          wheelName: player.loadoutWheelName,
+          wheelPaintId: player.loadoutWheelPaintId
+        },
+        localId: player.localId,
+        name: player.name,
+        platformId: player.platformId,
+        platformName: player.platformName,
+        playerId: player.playerId,
+        remoteId: player.remoteId,
+        saves: player.saves,
+        score: player.score,
+        shots: player.shots,
+        skill: skills[player.playerId],
+        xp: player.xp
+      })),
+      playlistId: game.playlistId,
+      playlistName: game.playlistName
     }))
     .catch((err) => next(err));
 };
