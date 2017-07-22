@@ -43,7 +43,8 @@ const store = new Vuex.Store({
       let endpoint = 'games/' + params.id
       delete params.id
       endpoint += getQueryString(params)
-      return dispatch('FETCH', endpoint)
+      let url = getEndpointUrl(endpoint).replace('/api/', '/takumi/')
+      return dispatch('FETCH_URL', url)
     },
 
     GET_PLAYER: function ({ dispatch }, params) {

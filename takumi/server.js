@@ -553,6 +553,188 @@ const getPlayerBodiesHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getGameHandler = (req, res, next) => {
+  db
+    .select(
+      'arena_models.id as arenaModelId',
+      'arena_models.name as arenaModelName',
+      'arena_skins.id as arenaSkinId',
+      'arena_skins.name as arenaSkinName',
+      'arena_templates.id as arenaTemplateId',
+      'arena_templates.name as arenaTemplateName',
+      'arenas.id as arenaId',
+      'arenas.name as arenaName',
+      'games.blue_goals as blueGoals',
+      'games.duration',
+      'games.id',
+      'games.orange_goals as orangeGoals',
+      'games.played_at as playedAt',
+      'games.playlist_id as playlistId',
+      'playlists.id as playlistId',
+      'playlists.name as playlistName')
+    .from('games')
+    .innerJoin('playlists', 'playlists.id', 'games.playlist_id')
+    .innerJoin('arenas', 'arenas.id', 'games.arena_id')
+    .innerJoin('arena_templates', 'arena_templates.id', 'arenas.template_id')
+    .innerJoin('arena_models', 'arena_models.id', 'arenas.model_id')
+    .leftOuterJoin('arena_skins', 'arena_skins.id', 'arenas.skin_id')
+    .where('games.id', req.params.id)
+    .then((games) => games.length === 1 ? games[0] : next())
+    .then((game) => db
+      .select(
+        'antennas.name as loadoutAntennaName',
+        'bodies.name as loadoutBodyName',
+        'decals.name as loadoutDecalName',
+        'games_players.accent_color_id as loadoutAccentColorId',
+        'games_players.accent_finish_id as loadoutAccentFinishId',
+        'games_players.angle as cameraAngle',
+        'games_players.antenna_id as loadoutAntennaId',
+        'games_players.assists',
+        'games_players.body_id as loadoutBodyId',
+        'games_players.decal_id as loadoutDecalId',
+        'games_players.distance as cameraDistance',
+        'games_players.fov as cameraFov',
+        'games_players.goals',
+        'games_players.height as cameraHeight',
+        'games_players.is_blue as isOnBlueTeam',
+        'games_players.is_present_at_end as isPresentAtEnd',
+        'games_players.name',
+        'games_players.player_id as playerId',
+        'games_players.primary_color_id as loadoutPrimaryColorId',
+        'games_players.primary_finish_id as loadoutPrimaryFinishId',
+        'games_players.rocket_trail_id as loadoutRocketTrailId',
+        'games_players.saves',
+        'games_players.score',
+        'games_players.shots',
+        'games_players.stiffness as cameraStiffness',
+        'games_players.swivel_speed as cameraSwivelSpeed',
+        'games_players.topper_id as loadoutTopperId',
+        'games_players.topper_paint_id as loadoutTopperPaintId',
+        'games_players.wheel_id as loadoutWheelId',
+        'games_players.wheel_paint_id as loadoutWheelPaintId',
+        'games_players.xp',
+        'platforms.name as platformName',
+        'players.local_id as localId',
+        'players.platform_id as platformId',
+        'players.remote_id as remoteId',
+        'rocket_trails.name as loadoutRocketTrailName',
+        'toppers.name as loadoutTopperName',
+        'wheels.name as loadoutWheelName')
+      .from('games_players')
+      .innerJoin('players', 'players.id', 'games_players.player_id')
+      .innerJoin('platforms', 'platforms.id', 'players.platform_id')
+      .leftOuterJoin('antennas', 'antennas.id', 'games_players.antenna_id')
+      .leftOuterJoin('bodies', 'bodies.id', 'games_players.body_id')
+      .leftOuterJoin('decals', 'decals.id', 'games_players.decal_id')
+      .leftOuterJoin(
+        'rocket_trails', 'rocket_trails.id', 'games_players.rocket_trail_id')
+      .leftOuterJoin('toppers', 'toppers.id', 'games_players.topper_id')
+      .leftOuterJoin('wheels', 'wheels.id', 'games_players.wheel_id')
+      .where('games_players.game_id', game.id)
+      .orderBy('games_players.player_id', 'asc')
+      .then((players) => ({ game, players })))
+    .then(({ game, players }) => db
+      .select(
+        db.raw('distinct on (player_id) player_id as "playerId"'),
+        'division',
+        'matches_played as matchesPlayed',
+        'mmr',
+        'tier')
+      .from('player_skills')
+      .whereIn('player_id', players.map((player) => player.playerId))
+      .where('playlist_id', game.playlistId)
+      .where('created_at', '>=', moment(game.playedAt).subtract(1, 'week'))
+      .where('created_at', '<=', moment(game.playedAt).add(1, 'week'))
+      .orderBy('player_id', 'asc')
+      .orderBy(
+        db.raw('abs(extract(epoch from created_at - ?))', game.playedAt),
+        'asc')
+      .then((skills) => skills.reduce((object, skill) => {
+        object[skill.playerId] = {
+          division: skill.division,
+          matchesPlayed: skill.matchesPlayed,
+          mmr: skill.mmr,
+          tier: skill.tier
+        };
+        return object;
+      }, {}))
+      .then((skills) => ({ game, players, skills })))
+    .then(({ game, players, skills }) => res.json({
+      aliases: [],
+      games: [
+        {
+          arena: {
+            id: game.arenaId,
+            modelId: game.arenaModelId,
+            modelName: game.arenaModelName,
+            name: game.arenaName,
+            skinId: game.arenaSkinId,
+            skinName: game.arenaSkinName,
+            templateId: game.arenaTemplateId,
+            templateName: game.arenaTemplateName
+          },
+          blueGoals: game.blueGoals,
+          duration: game.duration,
+          id: game.id,
+          orangeGoals: game.orangeGoals,
+          playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
+          players: players.map((player) => ({
+            assists: player.assists,
+            camera: {
+              angle: player.cameraAngle,
+              distance: player.cameraDistance,
+              fov: player.cameraFov,
+              height: player.cameraHeight,
+              stiffness: player.cameraStiffness,
+              swivelSpeed: player.cameraSwivelSpeed
+            },
+            goals: player.goals,
+            isOnBlueTeam: player.isOnBlueTeam,
+            isPresentAtEnd: player.isPresentAtEnd,
+            loadout: {
+              accentColorId: player.loadoutAccentColorId,
+              accentFinishId: player.loadoutAccentFinishId,
+              antennaId: player.loadoutAntennaId,
+              antennaName: player.loadoutAntennaName,
+              bodyId: player.loadoutBodyId,
+              bodyName: player.loadoutBodyName,
+              decalId: player.loadoutDecalId,
+              decalName: player.loadoutDecalName,
+              primaryColorId: player.loadoutPrimaryColorId,
+              primaryFinishId: player.loadoutPrimaryFinishId,
+              rocketTrailId: player.loadoutRocketTrailId,
+              rocketTrailName: player.loadoutRocketTrailName,
+              topperId: player.loadoutTopperId,
+              topperName: player.loadoutTopperName,
+              topperPaintId: player.loadoutTopperPaintId,
+              wheelId: player.loadoutWheelId,
+              wheelName: player.loadoutWheelName,
+              wheelPaintId: player.loadoutWheelPaintId
+            },
+            localId: player.localId,
+            name: player.name,
+            platformId: player.platformId,
+            platformName: player.platformName,
+            playerId: player.playerId,
+            remoteId: player.remoteId,
+            saves: player.saves,
+            score: player.score,
+            shots: player.shots,
+            skill: skills[player.playerId],
+            xp: player.xp
+          })),
+          playlistId: game.playlistId,
+          playlistName: game.playlistName
+        }
+      ],
+      lastPlayedAt: '1970-01-01T00:00:00',
+      name: '',
+      platform: { id: 0, name: 'Splitscreen' },
+      skills: {}
+    }))
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -565,7 +747,7 @@ const notImplemented = (_req, res) => res.status(501).json(null);
 // Routes
 
 app.get('/arenas', getArenasHandler);
-app.get('/games/:id', notImplemented);
+app.get('/games/:id', getGameHandler);
 app.get('/search', getSearchHandler);
 app.get('/stats/arenas', getArenaStatsHandler);
 app.get('/stats/bodies', getBodyStatsHandler);
