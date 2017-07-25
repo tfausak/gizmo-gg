@@ -8,14 +8,6 @@ const moment = require('moment');
 const morgan = require('morgan');
 const pg = require('pg');
 
-// Application
-
-const app = express();
-app.disable('x-powered-by');
-app.use(compression());
-app.use(cors());
-app.use(morgan('tiny'));
-
 // Database
 
 pg.types.setTypeParser(20, (val) => parseInt(val, 10));
@@ -735,28 +727,27 @@ const internalServerError = (err, _req, res, _next) => {
 };
 const notImplemented = (_req, res) => res.status(501).json(null);
 
-// Routes
+// Application
 
-app.get('/arenas', getArenasHandler);
-app.get('/games/:id', getGameHandler);
-app.get('/search', getSearchHandler);
-app.get('/stats/arenas', getArenaStatsHandler);
-app.get('/stats/bodies', getBodyStatsHandler);
-app.get('/stats/players/:id', notImplemented);
-app.get('/stats/players/:id/arenas', getPlayerArenasHandler);
-app.get('/stats/players/:id/bodies', getPlayerBodiesHandler);
-app.get('/stats/players/:id/history', getPlayerHistoryHandler);
-app.get('/stats/players/:id/poll', getPlayerPollHandler);
-app.get('/stats/players/:id/rank', getPlayerRankHandler);
-app.get('/stats/summary', getSummaryStatsHandler);
-app.post('/uploads', notImplemented);
-app.get('/uploads/:id', getUploadHandler);
-
-// Default routes
-
-app.use(notFound);
-app.use(internalServerError);
-
-// Server
-
-app.listen(8080, () => console.log('Listening on port 8080 ...'));
+express()
+  .disable('x-powered-by')
+  .use(compression())
+  .use(cors())
+  .use(morgan('tiny'))
+  .get('/arenas', getArenasHandler)
+  .get('/games/:id', getGameHandler)
+  .get('/search', getSearchHandler)
+  .get('/stats/arenas', getArenaStatsHandler)
+  .get('/stats/bodies', getBodyStatsHandler)
+  .get('/stats/players/:id', notImplemented)
+  .get('/stats/players/:id/arenas', getPlayerArenasHandler)
+  .get('/stats/players/:id/bodies', getPlayerBodiesHandler)
+  .get('/stats/players/:id/history', getPlayerHistoryHandler)
+  .get('/stats/players/:id/poll', getPlayerPollHandler)
+  .get('/stats/players/:id/rank', getPlayerRankHandler)
+  .get('/stats/summary', getSummaryStatsHandler)
+  .post('/uploads', notImplemented)
+  .get('/uploads/:id', getUploadHandler)
+  .use(notFound)
+  .use(internalServerError)
+  .listen(8080, () => console.log('Listening on port 8080 ...'));
