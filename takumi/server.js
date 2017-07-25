@@ -718,6 +718,13 @@ const getGameHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getHealthCheckHandler = (_req, res, next) => {
+  db
+    .select(db.raw('1'))
+    .then(() => res.json(null))
+    .catch((err) => next(err));
+};
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
@@ -736,6 +743,7 @@ express()
   .use(morgan('tiny'))
   .get('/arenas', getArenasHandler)
   .get('/games/:id', getGameHandler)
+  .get('/health-check', getHealthCheckHandler)
   .get('/search', getSearchHandler)
   .get('/stats/arenas', getArenaStatsHandler)
   .get('/stats/bodies', getBodyStatsHandler)
