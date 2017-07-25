@@ -718,6 +718,21 @@ const getGameHandler = (req, res, next) => {
     .catch((err) => next(err));
 };
 
+const getPlayerHandler = (req, res, next) => {
+  const TODO = null;
+  db
+    .select(db.raw('1'))
+    .then(() => res.json({
+      aliases: TODO,
+      games: TODO,
+      lastPlayedAt: TODO,
+      name: TODO,
+      platform: TODO,
+      skills: TODO
+    }))
+    .catch((err) => next(err));
+};
+
 const getHealthCheckHandler = (_req, res, next) => {
   db
     .select(db.raw('1'))
@@ -747,7 +762,7 @@ express()
   .get('/search', getSearchHandler)
   .get('/stats/arenas', getArenaStatsHandler)
   .get('/stats/bodies', getBodyStatsHandler)
-  .get('/stats/players/:id', notImplemented)
+  .get('/stats/players/:id', getPlayerHandler)
   .get('/stats/players/:id/arenas', getPlayerArenasHandler)
   .get('/stats/players/:id/bodies', getPlayerBodiesHandler)
   .get('/stats/players/:id/history', getPlayerHistoryHandler)
