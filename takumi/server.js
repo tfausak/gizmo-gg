@@ -749,13 +749,37 @@ const getPlayerHandler = (req, res, next) => {
       .where('players.id', playerId)
       .then((platforms) => platforms.length === 1 ? platforms[0] : next())
       .then((platform) => ({ aliases, lastPlayedAt, name, platform })))
-    .then(({ aliases, lastPlayedAt, name, platform }) => res.json({
+    .then(({ aliases, lastPlayedAt, name, platform }) => db
+      .select(
+        db.raw('distinct on (playlists.id) playlists.id'),
+        'playlists.name as playlistName',
+        'player_skills.matches_played as matchesPlayed',
+        'player_skills.division',
+        'player_skills.tier',
+        'player_skills.mmr')
+      .from('player_skills')
+      .innerJoin('playlists', 'playlists.id', 'player_skills.playlist_id')
+      .where('player_skills.player_id', playerId)
+      .whereIn('playlists.id', competitivePlaylistIds)
+      .orderBy('playlists.id', 'asc')
+      .orderBy('player_skills.created_at', 'desc')
+      .then((skills) => skills.reduce((object, skill) => {
+        object[skill.playlistName] = {
+          division: skill.division,
+          matchesPlayed: skill.matchesPlayed,
+          mmr: skill.mmr,
+          tier: skill.tier
+        };
+        return object;
+      }, {}))
+      .then((skills) => ({ aliases, lastPlayedAt, name, platform, skills })))
+    .then(({ aliases, lastPlayedAt, name, platform, skills }) => res.json({
       aliases,
       games: TODO,
       lastPlayedAt,
       name,
       platform,
-      skills: TODO
+      skills
     }))
     .catch((err) => next(err));
 };
