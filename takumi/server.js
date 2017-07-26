@@ -720,6 +720,7 @@ const getGameHandler = (req, res, next) => {
 
 const getPlayerHandler = (req, res, next) => {
   const TODO = null;
+  const playerId = req.params.id;
 
   db
     .with('sightings', (sightings) => sightings
@@ -728,7 +729,7 @@ const getPlayerHandler = (req, res, next) => {
         'games.played_at as playedAt')
       .from('games_players')
       .innerJoin('games', 'games.id', 'games_players.game_id')
-      .where('games_players.player_id', req.params.id)
+      .where('games_players.player_id', playerId)
       .orderBy('games_players.name', 'asc')
       .orderBy('games.played_at', 'desc'))
     .select()
@@ -741,12 +742,19 @@ const getPlayerHandler = (req, res, next) => {
         name: first.name
       }
       : next())
-    .then(({ aliases, lastPlayedAt, name }) => res.json({
+    .then(({ aliases, lastPlayedAt, name }) => db
+      .select('platforms.*')
+      .from('platforms')
+      .innerJoin('players', 'players.platform_id', 'platforms.id')
+      .where('players.id', playerId)
+      .then((platforms) => platforms.length === 1 ? platforms[0] : next())
+      .then((platform) => ({ aliases, lastPlayedAt, name, platform })))
+    .then(({ aliases, lastPlayedAt, name, platform }) => res.json({
       aliases,
       games: TODO,
       lastPlayedAt,
       name,
-      platform: TODO,
+      platform,
       skills: TODO
     }))
     .catch((err) => next(err));
