@@ -720,13 +720,32 @@ const getGameHandler = (req, res, next) => {
 
 const getPlayerHandler = (req, res, next) => {
   const TODO = null;
+
   db
-    .select(db.raw('1'))
-    .then(() => res.json({
-      aliases: TODO,
+    .with('sightings', (sightings) => sightings
+      .select(
+        db.raw('distinct on (games_players.name) games_players.name'),
+        'games.played_at as playedAt')
+      .from('games_players')
+      .innerJoin('games', 'games.id', 'games_players.game_id')
+      .where('games_players.player_id', req.params.id)
+      .orderBy('games_players.name', 'asc')
+      .orderBy('games.played_at', 'desc'))
+    .select()
+    .from('sightings')
+    .orderBy('sightings.playedAt', 'desc')
+    .then(([first, ...rest]) => first
+      ? {
+        aliases: rest.map((row) => row.name),
+        lastPlayedAt: first.playedAt,
+        name: first.name
+      }
+      : next())
+    .then(({ aliases, lastPlayedAt, name }) => res.json({
+      aliases,
       games: TODO,
-      lastPlayedAt: TODO,
-      name: TODO,
+      lastPlayedAt,
+      name,
       platform: TODO,
       skills: TODO
     }))
