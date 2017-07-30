@@ -817,7 +817,69 @@ const getPlayerHandler = (req, res, next) => {
       .whereIn('arena_templates.name', templates)
       .orderBy('games.played_at', 'desc')
       .limit(10)
-      .then((games) => ({
+      .then((games) => db
+        .select(
+          'antennas.id as loadoutAntennaId',
+          'antennas.name as loadoutAntennaName',
+          'bodies.id as loadoutBodyId',
+          'bodies.name as loadoutBodyName',
+          'decals.id as loadoutDecalId',
+          'decals.name as loadoutDecalName',
+          'games_players.accent_color_id as loadoutAccentColorId',
+          'games_players.accent_finish_id as loadoutAccentFinishId',
+          'games_players.angle as cameraAngle',
+          'games_players.assists',
+          'games_players.distance as cameraDistance',
+          'games_players.fov as cameraFov',
+          'games_players.game_id as gameId',
+          'games_players.goals',
+          'games_players.height as cameraHeight',
+          'games_players.is_blue as isOnBlueTeam',
+          'games_players.is_present_at_end as isPresentAtEnd',
+          'games_players.name',
+          'games_players.primary_color_id as loadoutPrimaryColorId',
+          'games_players.primary_finish_id as loadoutPrimaryFinishId',
+          'games_players.saves',
+          'games_players.score',
+          'games_players.shots',
+          'games_players.stiffness as cameraStiffness',
+          'games_players.swivel_speed as cameraSwivelSpeed',
+          'games_players.topper_id as loadoutTopperId',
+          'games_players.topper_paint_id as loadoutTopperPaintId',
+          'games_players.wheel_id as loadoutWheelId',
+          'games_players.wheel_paint_id as loadoutWheelPaintId',
+          'games_players.xp',
+          'platforms.name as platformName',
+          'players.id as playerId',
+          'players.local_id as localId',
+          'players.platform_id as platformId',
+          'players.remote_id as remoteId',
+          'rocket_trails.id as loadoutRocketTrailId',
+          'rocket_trails.name as loadoutRocketTrailName',
+          'toppers.name as loadoutTopperName',
+          'wheels.name as loadoutWheelName')
+        .from('games_players')
+        .innerJoin('players', 'players.id', 'games_players.player_id')
+        .innerJoin('platforms', 'platforms.id', 'players.platform_id')
+        .leftOuterJoin('antennas', 'antennas.id', 'games_players.antenna_id')
+        .leftOuterJoin('bodies', 'bodies.id', 'games_players.body_id')
+        .leftOuterJoin('decals', 'decals.id', 'games_players.decal_id')
+        .leftOuterJoin(
+          'rocket_trails', 'rocket_trails.id', 'games_players.rocket_trail_id')
+        .leftOuterJoin('toppers', 'toppers.id', 'games_players.topper_id')
+        .leftOuterJoin('wheels', 'wheels.id', 'games_players.wheel_id')
+        .whereIn('games_players.game_id', games.map((game) => game.id))
+        .orderBy('games_players.game_id', 'asc')
+        .orderBy('games_players.player_id', 'asc')
+        .then((players) => players.reduce((object, player) => {
+          if (!object[player.gameId]) {
+            object[player.gameId] = [];
+          }
+          object[player.gameId].push(player);
+          return object;
+        }, {}))
+        .then((players) => ({ games, players })))
+      .then(({ games, players }) => ({
         aliases,
         games: games.map((game) => ({
           arena: {
@@ -835,7 +897,51 @@ const getPlayerHandler = (req, res, next) => {
           id: game.id,
           orangeGoals: game.orangeGoals,
           playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
-          players: [], // TODO
+          players: (players[game.id] || []).map((player) => ({
+            assists: player.assists,
+            camera: {
+              angle: player.cameraAngle,
+              distance: player.cameraDistance,
+              fov: player.cameraFov,
+              height: player.cameraHeight,
+              stiffness: player.cameraStiffness,
+              swivelSpeed: player.cameraSwivelSpeed
+            },
+            goals: player.goals,
+            isOnBlueTeam: player.isOnBlueTeam,
+            isPresentAtEnd: player.isPresentAtEnd,
+            loadout: {
+              accentColorId: player.loadoutAccentColorId,
+              accentFinishId: player.loadoutAccentFinishId,
+              antennaId: player.loadoutAntennaId,
+              antennaName: player.loadoutAntennaName,
+              bodyId: player.loadoutBodyId,
+              bodyName: player.loadoutBodyName,
+              decalId: player.loadoutDecalId,
+              decalName: player.loadoutDecalName,
+              primaryColorId: player.loadoutPrimaryColorId,
+              primaryFinishId: player.loadoutPrimaryFinishId,
+              rocketTrailId: player.loadoutRocketTrailId,
+              rocketTrailName: player.loadoutRocketTrailName,
+              topperId: player.loadoutTopperId,
+              topperName: player.loadoutTopperName,
+              topperPaintId: player.loadoutTopperPaintId,
+              wheelId: player.loadoutWheelId,
+              wheelName: player.loadoutWheelName,
+              wheelPaintId: player.loadoutWheelPaintId
+            },
+            localId: player.localId,
+            name: player.name,
+            platformId: player.platformId,
+            platformName: player.platformName,
+            playerId: player.playerId,
+            remoteId: player.remoteId,
+            saves: player.saves,
+            score: player.score,
+            shots: player.shots,
+            skill: null, // TODO
+            xp: player.xp
+          })),
           playlistId: game.playlistId,
           playlistName: game.playlistName
         })),
