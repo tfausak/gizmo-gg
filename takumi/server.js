@@ -879,7 +879,51 @@ const getPlayerHandler = (req, res, next) => {
           return object;
         }, {}))
         .then((players) => ({ games, players })))
-      .then(({ games, players }) => ({
+      .then(({ games, players }) => db
+        .select(
+          db.raw(
+            'distinct on (games.id, player_skills.player_id) ' +
+            'games.id as "gameId"'),
+          'player_skills.player_id as playerId',
+          'player_skills.division',
+          'player_skills.matches_played as matchesPlayed',
+          'player_skills.mmr',
+          'player_skills.tier')
+        .from('player_skills')
+        .innerJoin(
+          'games_players', 'games_players.player_id', 'player_skills.player_id')
+        .innerJoin('games', 'games.id', 'games_players.game_id')
+        .whereIn('games.id', games.map((game) => game.id))
+        .whereIn(
+          'player_skills.player_id',
+          Object.keys(Object.keys(players).reduce((object, gameId) => {
+            for (const player of players[gameId]) {
+              object[player.playerId] = true;
+            }
+            return object;
+          }, {})))
+        .where(db.raw('player_skills.playlist_id = games.playlist_id'))
+        .orderBy('games.id', 'asc')
+        .orderBy('player_skills.player_id', 'asc')
+        .orderBy(
+          db.raw(
+            'abs(extract(epoch from ' +
+            'player_skills.created_at - games.played_at))'),
+          'asc')
+        .then((playerSkills) => playerSkills.reduce((object, skill) => {
+          if (!object[skill.gameId]) {
+            object[skill.gameId] = {};
+          }
+          object[skill.gameId][skill.playerId] = {
+            division: skill.division,
+            matchesPlayed: skill.matchesPlayed,
+            mmr: skill.mmr,
+            tier: skill.tier
+          };
+          return object;
+        }, {}))
+        .then((playerSkills) => ({ games, playerSkills, players })))
+      .then(({ games, playerSkills, players }) => ({
         aliases,
         games: games.map((game) => ({
           arena: {
@@ -939,7 +983,7 @@ const getPlayerHandler = (req, res, next) => {
             saves: player.saves,
             score: player.score,
             shots: player.shots,
-            skill: null, // TODO
+            skill: (playerSkills[game.id] || {})[player.playerId],
             xp: player.xp
           })),
           playlistId: game.playlistId,
