@@ -386,13 +386,7 @@ const getPlayerPollHandler = (req, res, next) => {
     .innerJoin('games_players', 'games_players.game_id', 'games.id')
     .where('games_players.player_id', req.params.id)
     .then((results) => results.length === 1 ? results[0] : Promise.reject())
-    .then((result) => {
-      // This formatting is only necessary to match what Paladin returns. Once
-      // all endpoints are served by Takumi this can just return
-      // `res.json(result.lastPlayedAt)`.
-      const lastPlayedAt = moment(result.lastPlayedAt);
-      return res.json(lastPlayedAt.utc().format('YYYY-MM-DDTHH:mm:ss'));
-    })
+    .then((result) => res.json(result.lastPlayedAt))
     .catch((err) => next(err));
 };
 
@@ -683,7 +677,7 @@ const getGameHandler = (req, res, next) => {
       duration: game.duration,
       id: game.id,
       orangeGoals: game.orangeGoals,
-      playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
+      playedAt: game.playedAt,
       players: players.map((player) => ({
         assists: player.assists,
         camera: {
@@ -950,7 +944,7 @@ const getPlayerHandler = (req, res, next) => {
           duration: game.duration,
           id: game.id,
           orangeGoals: game.orangeGoals,
-          playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
+          playedAt: game.playedAt,
           players: (players[game.id] || []).map((player) => ({
             assists: player.assists,
             camera: {
