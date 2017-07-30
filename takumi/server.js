@@ -343,7 +343,7 @@ const getUploadHandler = (req, res, next) => {
     .select('finished_parsing_at', 'replay_id')
     .from('uploads')
     .where('id', req.params.id)
-    .then((uploads) => uploads.length === 1 ? uploads[0] : next())
+    .then((uploads) => uploads.length === 1 ? uploads[0] : Promise.reject())
     .then((upload) => {
       if (!upload.replay_id) {
         return { replay: null, upload };
@@ -352,7 +352,7 @@ const getUploadHandler = (req, res, next) => {
         .select('game_id')
         .from('replays')
         .where('id', upload.replay_id)
-        .then((replays) => replays.length === 1 ? replays[0] : next())
+        .then((replays) => replays.length === 1 ? replays[0] : Promise.reject())
         .then((replay) => ({ replay, upload }));
     })
     .then(({ replay, upload }) => res.json({
@@ -368,7 +368,7 @@ const getPlayerPollHandler = (req, res, next) => {
     .from('games')
     .innerJoin('games_players', 'games_players.game_id', 'games.id')
     .where('games_players.player_id', req.params.id)
-    .then((results) => results.length === 1 ? results[0] : next())
+    .then((results) => results.length === 1 ? results[0] : Promise.reject())
     .then((result) => {
       // This formatting is only necessary to match what Paladin returns. Once
       // all endpoints are served by Takumi this can just return
@@ -390,7 +390,7 @@ const getPlayerRankHandler = (req, res, next) => {
     .whereIn('playlist_id', playlists)
     .where('created_at', '>=', cutoff.format())
     .orderBy('created_at', 'desc')
-    .then((results) => results ? results : next())
+    .then((results) => results ? results : Promise.reject())
     .then((results) => results.reduce(
       (object, skill) => {
         const key = playlistNames[skill.playlist_id];
@@ -571,7 +571,7 @@ const getGameHandler = (req, res, next) => {
     .innerJoin('arena_models', 'arena_models.id', 'arenas.model_id')
     .leftOuterJoin('arena_skins', 'arena_skins.id', 'arenas.skin_id')
     .where('games.id', req.params.id)
-    .then((games) => games.length === 1 ? games[0] : next())
+    .then((games) => games.length === 1 ? games[0] : Promise.reject())
     .then((game) => db
       .select(
         'antennas.name as loadoutAntennaName',
@@ -741,13 +741,15 @@ const getPlayerHandler = (req, res, next) => {
         lastPlayedAt: first.playedAt,
         name: first.name
       }
-      : next())
+      : Promise.reject())
     .then(({ aliases, lastPlayedAt, name }) => db
       .select('platforms.*')
       .from('platforms')
       .innerJoin('players', 'players.platform_id', 'platforms.id')
       .where('players.id', playerId)
-      .then((platforms) => platforms.length === 1 ? platforms[0] : next())
+      .then((platforms) => platforms.length === 1
+        ? platforms[0]
+        : Promise.reject())
       .then((platform) => ({ aliases, lastPlayedAt, name, platform })))
     .then(({ aliases, lastPlayedAt, name, platform }) => db
       .select(

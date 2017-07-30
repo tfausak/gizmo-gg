@@ -1,3 +1,6 @@
 {
-  "extends": "taylorfausak"
+  "extends": "taylorfausak",
+  "rules": {
+    "prefer-promise-reject-errors": ["error", { "allowEmptyReject": true }]
+  }
 }
