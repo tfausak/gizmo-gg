@@ -81,6 +81,13 @@ const competitiveTemplateNames = [
 
 // Helpers
 
+const getAfter = (req) => {
+  if (req.query.after) {
+    return moment(req.query.after);
+  }
+  return moment().add(1, 'year');
+};
+
 const getCutoffTime = (req) => {
   switch (req.query.time) {
   case 'day': return moment().subtract(1, 'day');
@@ -719,8 +726,11 @@ const getGameHandler = (req, res, next) => {
 };
 
 const getPlayerHandler = (req, res, next) => {
-  const TODO = null;
+  const after = getAfter(req);
+  const cutoff = getCutoffTime(req);
   const playerId = req.params.id;
+  const playlists = getPlaylistIds(req);
+  const templates = getTemplateNames(req);
 
   db
     .with('sightings', (sightings) => sightings
@@ -775,9 +785,70 @@ const getPlayerHandler = (req, res, next) => {
         return object;
       }, {}))
       .then((skills) => ({ aliases, lastPlayedAt, name, platform, skills })))
-    .then(({ aliases, lastPlayedAt, name, platform, skills }) => res.json({
+    .then(({ aliases, lastPlayedAt, name, platform, skills }) => db
+      .select(
+        'arena_models.id as arenaModelId',
+        'arena_models.name as arenaModelName',
+        'arena_skins.id as arenaSkinId',
+        'arena_skins.name as arenaSkinName',
+        'arena_templates.id as arenaTemplateId',
+        'arena_templates.name as arenaTemplateName',
+        'arenas.id as arenaId',
+        'arenas.name as arenaName',
+        'games.blue_goals as blueGoals',
+        'games.duration',
+        'games.id',
+        'games.orange_goals as orangeGoals',
+        'games.played_at as playedAt',
+        'games.playlist_id as playlistId',
+        'playlists.id as playlistId',
+        'playlists.name as playlistName')
+      .from('games')
+      .innerJoin('games_players', 'games_players.game_id', 'games.id')
+      .innerJoin('playlists', 'playlists.id', 'games.playlist_id')
+      .innerJoin('arenas', 'arenas.id', 'games.arena_id')
+      .innerJoin('arena_templates', 'arena_templates.id', 'arenas.template_id')
+      .innerJoin('arena_models', 'arena_models.id', 'arenas.model_id')
+      .leftOuterJoin('arena_skins', 'arena_skins.id', 'arenas.skin_id')
+      .where('games.played_at', '>=', cutoff.format())
+      .where('games.played_at', '<', after.format())
+      .where('games_players.player_id', playerId)
+      .whereIn('playlists.id', playlists)
+      .whereIn('arena_templates.name', templates)
+      .orderBy('games.played_at', 'desc')
+      .limit(10)
+      .then((games) => ({
+        aliases,
+        games: games.map((game) => ({
+          arena: {
+            id: game.arenaId,
+            modelId: game.arenaModelId,
+            modelName: game.arenaModelName,
+            name: game.arenaName,
+            skinId: game.arenaSkinId,
+            skinName: game.arenaSkinName,
+            templateId: game.arenaTemplateId,
+            templateName: game.arenaTemplateName
+          },
+          blueGoals: game.blueGoals,
+          duration: game.duration,
+          id: game.id,
+          orangeGoals: game.orangeGoals,
+          playedAt: moment(game.playedAt).utc().format('YYYY-MM-DDTHH:mm:ss'),
+          players: [], // TODO
+          playlistId: game.playlistId,
+          playlistName: game.playlistName
+        })),
+        lastPlayedAt,
+        name,
+        platform,
+        skills
+      })))
+    .then(({
+      aliases, games, lastPlayedAt, name, platform, skills
+    }) => res.json({
       aliases,
-      games: TODO,
+      games,
       lastPlayedAt,
       name,
       platform,
