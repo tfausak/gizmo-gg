@@ -292,7 +292,7 @@ export default {
         vm.uploading = null
         vm.uploadFile()
       }
-      this.$http.post(getEndpointUrl('uploads'), formData)
+      this.$http.post(getEndpointUrl('uploads').replace('/api/', '/takumi/'), formData)
         .then(function (response) {
           response.ok = true
           handler(response)

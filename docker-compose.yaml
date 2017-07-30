@@ -10,6 +10,9 @@ services:
       - postgres
     environment:
       TAKUMI_DATABASE: postgres://postgres@postgres:5432/postgres
+      TAKUMI_URL: ${TAKUMI_URL:-http://localhost:8080/takumi}
+    volumes:
+      - paladin-data:/project/data
 
   paladin-server:
     image: gizmo-gg/paladin

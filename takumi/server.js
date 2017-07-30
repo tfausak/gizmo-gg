@@ -19,6 +19,7 @@ const util = require('util');
 const databaseUrl = process.env.TAKUMI_DATABASE || 'postgres://';
 const dataDirectory = process.env.TAKUMI_DIRECTORY || 'data';
 const port = process.env.TAKUMI_PORT || '8080';
+const rootUrl = process.env.TAKUMI_URL || `http://localhost:${port}`
 
 // Database
 
@@ -1038,7 +1039,8 @@ const postUploadHandler = (req, res, next) => {
       'insert into uploads (hash, name, size) values (?, ?, ?) ' +
       'on conflict (hash) do update set hash = excluded.hash returning id',
       [hash, req.file.originalname, req.file.size]))
-    .then((id) => res.redirect(303, `/uploads/${id}`))
+    .then((result) => res.redirect(
+      303, `${rootUrl}/uploads/${result.rows[0].id}`))
     .catch((err) => next(err));
 };
 
