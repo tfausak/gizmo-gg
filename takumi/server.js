@@ -2,19 +2,28 @@
 
 const compression = require('compression');
 const cors = require('cors');
+const crypto = require('crypto');
 const express = require('express');
+const fs = require('fs');
 const knex = require('knex');
+const mkdirp = require('mkdirp');
 const moment = require('moment');
 const morgan = require('morgan');
+const multer = require('multer');
+const path = require('path');
 const pg = require('pg');
+const util = require('util');
+
+// Config
+
+const databaseUrl = process.env.TAKUMI_DATABASE || 'postgres://';
+const dataDirectory = process.env.TAKUMI_DIRECTORY || 'data';
+const port = process.env.TAKUMI_PORT || '8080';
 
 // Database
 
 pg.types.setTypeParser(20, (val) => parseInt(val, 10));
-const db = knex({
-  client: 'pg',
-  connection: process.env.TAKUMI_DATABASE || 'postgres://'
-});
+const db = knex({ client: 'pg', connection: databaseUrl });
 db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
 
 // Constants
@@ -1014,14 +1023,42 @@ const getHealthCheckHandler = (_req, res, next) => {
     .catch((err) => next(err));
 };
 
+const postUploadHandler = (req, res, next) => {
+  const hash = crypto.createHash('sha1').update(req.file.buffer).digest('hex');
+  const directory = path.join(dataDirectory, 'uploads', hash.substring(0, 2));
+  const file = path.join(directory, hash);
+
+  util.promisify(mkdirp)(directory)
+    .then(() => util.promisify(fs.access)(file)
+      .then(() => false)
+      .catch(() => true))
+    .then((exists) => exists &&
+      util.promisify(fs.writeFile)(file, req.file.buffer))
+    .then(() => db.raw(
+      'insert into uploads (hash, name, size) values (?, ?, ?) ' +
+      'on conflict (hash) do update set hash = excluded.hash returning id',
+      [hash, req.file.originalname, req.file.size]))
+    .then((id) => res.redirect(303, `/uploads/${id}`))
+    .catch((err) => next(err));
+};
+
+// Middleware
+
+const uploadMiddleware = multer({
+  fileFilter: (_req, file, cb) => {
+    cb(null, file.originalname.match(/[.]replay/i));
+  },
+  limits: { fileSize: 10000000 }
+}).single('replay');
+
 // Default handlers
 
 const notFound = (_req, res) => res.status(404).json(null);
+
 const internalServerError = (err, _req, res, _next) => {
   console.error(err);
   res.status(500).json(null);
 };
-const notImplemented = (_req, res) => res.status(501).json(null);
 
 // Application
 
@@ -1043,8 +1080,8 @@ express()
   .get('/stats/players/:id/poll', getPlayerPollHandler)
   .get('/stats/players/:id/rank', getPlayerRankHandler)
   .get('/stats/summary', getSummaryStatsHandler)
-  .post('/uploads', notImplemented)
+  .post('/uploads', uploadMiddleware, postUploadHandler)
   .get('/uploads/:id', getUploadHandler)
   .use(notFound)
   .use(internalServerError)
-  .listen(8080, () => console.log('Listening on port 8080 ...'));
+  .listen(port, () => console.log(`Listening on port ${port} ...`));
