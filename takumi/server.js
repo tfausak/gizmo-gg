@@ -19,7 +19,7 @@ const util = require('util');
 const databaseUrl = process.env.TAKUMI_DATABASE || 'postgres://';
 const dataDirectory = process.env.TAKUMI_DIRECTORY || 'data';
 const port = process.env.TAKUMI_PORT || '8080';
-const rootUrl = process.env.TAKUMI_URL || `http://localhost:${port}`
+const rootUrl = process.env.TAKUMI_URL || `http://localhost:${port}`;
 
 // Database
 
@@ -90,6 +90,8 @@ const competitiveTemplateNames = [
 ];
 
 // Helpers
+
+const formatTime = (time) => moment(time).utc().format('YYYY-MM-DDTHH:mm:ss');
 
 const getAfter = (req) => {
   if (req.query.after) {
@@ -351,7 +353,10 @@ const getSearchHandler = (req, res, next) => {
     .where('games_players.name', 'ilike', pattern)
     .whereIn('platforms.name', platforms)
     .limit(20)
-    .then((results) => res.json(results))
+    .then((rows) => res.json(rows.map((row) => {
+      row.lastSeen = formatTime(row.lastSeen);
+      return row;
+    })))
     .catch((err) => next(err));
 };
 
@@ -386,7 +391,7 @@ const getPlayerPollHandler = (req, res, next) => {
     .innerJoin('games_players', 'games_players.game_id', 'games.id')
     .where('games_players.player_id', req.params.id)
     .then((results) => results.length === 1 ? results[0] : Promise.reject())
-    .then((result) => res.json(result.lastPlayedAt))
+    .then((result) => res.json(formatTime(result.lastPlayedAt)))
     .catch((err) => next(err));
 };
 
@@ -455,7 +460,10 @@ const getPlayerHistoryHandler = (req, res, next) => {
     .whereIn('games.playlist_id', playlists)
     .whereIn('arena_templates.name', templates)
     .orderBy('games.played_at', 'desc')
-    .then((results) => res.json(results))
+    .then((rows) => res.json(rows.map((row) => {
+      row.playedAt = formatTime(row.playedAt);
+      return row;
+    })))
     .catch((err) => next(err));
 };
 
@@ -646,11 +654,10 @@ const getGameHandler = (req, res, next) => {
       .from('player_skills')
       .whereIn('player_id', players.map((player) => player.playerId))
       .where('playlist_id', game.playlistId)
-      .where('created_at', '>=', moment(game.playedAt).subtract(1, 'week'))
-      .where('created_at', '<=', moment(game.playedAt).add(1, 'week'))
       .orderBy('player_id', 'asc')
       .orderBy(
-        db.raw('abs(extract(epoch from created_at - ?))', game.playedAt),
+        db.raw(
+          'abs(extract(epoch from created_at - ?))', game.playedAt.format()),
         'asc')
       .then((skills) => skills.reduce((object, skill) => {
         object[skill.playerId] = {
@@ -677,7 +684,7 @@ const getGameHandler = (req, res, next) => {
       duration: game.duration,
       id: game.id,
       orangeGoals: game.orangeGoals,
-      playedAt: game.playedAt,
+      playedAt: formatTime(game.playedAt),
       players: players.map((player) => ({
         assists: player.assists,
         camera: {
@@ -944,7 +951,7 @@ const getPlayerHandler = (req, res, next) => {
           duration: game.duration,
           id: game.id,
           orangeGoals: game.orangeGoals,
-          playedAt: game.playedAt,
+          playedAt: formatTime(game.playedAt),
           players: (players[game.id] || []).map((player) => ({
             assists: player.assists,
             camera: {
@@ -1003,7 +1010,7 @@ const getPlayerHandler = (req, res, next) => {
     }) => res.json({
       aliases,
       games,
-      lastPlayedAt,
+      lastPlayedAt: formatTime(lastPlayedAt),
       name,
       platform,
       skills
