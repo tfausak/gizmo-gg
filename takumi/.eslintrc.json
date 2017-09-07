@@ -1,6 +1,7 @@
 {
   "extends": "taylorfausak",
   "rules": {
+    "function-paren-newline": "off",
     "linebreak-style": "off",
     "prefer-promise-reject-errors": ["error", { "allowEmptyReject": true }]
   }
