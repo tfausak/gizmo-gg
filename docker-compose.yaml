@@ -9,7 +9,9 @@ services:
     depends_on:
       - postgres
     environment:
+      TAKUMI_ACCESS_KEY_ID: ${TAKUMI_ACCESS_KEY_ID}
       TAKUMI_DATABASE: postgres://postgres@postgres:5432/postgres
+      TAKUMI_SECRET_ACCESS_KEY: ${TAKUMI_SECRET_ACCESS_KEY}
       TAKUMI_URL: ${TAKUMI_URL:-http://localhost:8080/takumi}
     volumes:
       - paladin-data:/project/data

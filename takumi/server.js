@@ -1,5 +1,6 @@
 'use strict';
 
+const aws = require('aws-sdk');
 const compression = require('compression');
 const cors = require('cors');
 const crypto = require('crypto');
@@ -20,12 +21,23 @@ const databaseUrl = process.env.TAKUMI_DATABASE || 'postgres://';
 const dataDirectory = process.env.TAKUMI_DIRECTORY || 'data';
 const port = process.env.TAKUMI_PORT || '8080';
 const rootUrl = process.env.TAKUMI_URL || `http://localhost:${port}`;
+const s3AccessKeyId = process.env.TAKUMI_ACCESS_KEY_ID || '';
+const s3SecretAccessKey = process.env.TAKUMI_SECRET_ACCESS_KEY || '';
 
 // Database
 
 pg.types.setTypeParser(20, (val) => parseInt(val, 10));
 const db = knex({ client: 'pg', connection: databaseUrl });
 db.on('query', (query) => console.log(`${query.sql} -- [${query.bindings}]`));
+
+// S3
+
+const s3 = new aws.S3({
+  accessKeyId: 'DSB6VFGXPVCDP4M5P7W7',
+  endpoint: 'https://{region}.digitaloceanspaces.com',
+  region: 'nyc3',
+  secretAccessKey: 'Zoa4QhLMSAXOsZ59vO5y+eAGXrZbLjJxmJiSZDlRubE'
+});
 
 // Constants
 
@@ -1029,13 +1041,21 @@ const postUploadHandler = (req, res, next) => {
   const hash = crypto.createHash('sha1').update(req.file.buffer).digest('hex');
   const directory = path.join(dataDirectory, 'uploads', hash.substring(0, 2));
   const file = path.join(directory, hash);
+  const key = `replays/${hash.substring(0, 2)}/${hash}`;
+  console.log(key);
 
   util.promisify(mkdirp)(directory)
     .then(() => util.promisify(fs.access)(file)
-      .then(() => false)
-      .catch(() => true))
-    .then((exists) => exists &&
+      .then(() => true)
+      .catch(() => false))
+    .then((exists) => exists ||
       util.promisify(fs.writeFile)(file, req.file.buffer))
+    .then(() => s3.putObject({
+      ACL: 'public-read',
+      Body: req.file.buffer,
+      Bucket: 'gizmo',
+      Key: key
+    }).promise())
     .then(() => db.raw(
       'insert into uploads (hash, name, size) values (?, ?, ?) ' +
       'on conflict (hash) do update set hash = excluded.hash returning id',

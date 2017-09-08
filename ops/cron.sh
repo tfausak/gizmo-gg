@@ -6,6 +6,8 @@ GITHUB_USER="$2"
 GITHUB_TOKEN="$3"
 DISCORD_ID="$4"
 DISCORD_TOKEN="$5"
+S3_ACCESS_KEY_ID="$6"
+S3_SECRET_ACCESS_KEY="$7"
 
 echo "$(date)"
 
@@ -20,7 +22,7 @@ NEW="$(git rev-parse HEAD)"
 if test "$NEW" != "$OLD" -o "$FORCE" = 'true'
 then
   sh "$REPO_DIR/ops/notify.sh" "$DISCORD_ID" "$DISCORD_TOKEN" 'Deploying `'"$NEW"'` ...'
-  sh "$REPO_DIR/ops/deploy.sh" "$REPO_DIR"
+  sh "$REPO_DIR/ops/deploy.sh" "$REPO_DIR" "$S3_ACCESS_KEY_ID" "$S3_SECRET_ACCESS_KEY"
   sh "$REPO_DIR/ops/notify.sh" "$DISCORD_ID" "$DISCORD_TOKEN" 'Finished deploying `'"$NEW"'`.'
 else
   echo 'Not deploying. Re-run with FORCE=true to deploy.'
