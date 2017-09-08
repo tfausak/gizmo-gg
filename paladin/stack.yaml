@@ -1,4 +1,7 @@
-resolver: lts-9.0
+resolver: lts-8.21
+
+extra-deps:
+  - rattletrap-2.4.0
 
 allow-different-user: true
 install-ghc: true
